@@ -1,6 +1,8 @@
 
 import bigsmiles
 
+bigsmiles.Config.color_output = True
+
 
 def main():
     polymer_string = "CC{[>][<]CC(C)[>][<]}CC(C)=C"

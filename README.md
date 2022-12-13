@@ -69,8 +69,18 @@ BigSMILES: CC{[>][<]CC(C)[>][<]}CC(C)=C
 ```
 
 ---
+---
 
 ## Abstract Syntax Tree
+
+root node: `BigSMILES` 
+
+intermediate nodes: `StochasticObject`, `StochasticFragment`, `Branch`
+
+leaf nodes: `BondDescriptor`, `Atom`, `Bond`
+
+The tree structure is built through the `nodes` attribute.
+
 
 ```mermaid
 classDiagram
@@ -145,3 +155,33 @@ classDiagram
     Branch --|> Atom
     
 ```
+
+---
+---
+
+## Advanced Options
+
+### Colored outputs
+```python
+import bigsmiles
+
+bigsmiles.Config.color_output = True
+```
+
+BigSMILES: CC
+<span style="color:red">{</span>
+<span style="color:green">[>]</span>
+<span style="color:green">[<]</span>
+CC(C)
+<span style="color:green">[>]</span>
+<span style="color:green">[<]</span>
+<span style="color:red">}</span>
+CC(C)=C
+
+
+## Features NOT implemented yet
+* Implicit endgroups
+* Cis/Trans
+* ladder polymers
+* mixture notation '.'
+* reactions

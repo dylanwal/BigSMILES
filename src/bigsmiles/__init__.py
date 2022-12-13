@@ -1,3 +1,6 @@
+import pkg_resources  # part of setuptools
+__version__ = pkg_resources.require("bigsmiles")[0].version
+
 from bigsmiles.config import Config
 from bigsmiles.tokenizer import BigSMILESTokenizeError
 from bigsmiles.bigsmiles import Atom, Bond, Branch, BondDescriptor, StochasticObject, StochasticFragment, BigSMILES, \

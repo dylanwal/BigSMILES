@@ -1,0 +1,107 @@
+"""
+
+Code for tokenizing a BigSMILES string.
+
+"""
+
+import enum
+import re
+
+from bigsmiles.config import Config
+
+
+class BigSMILESTokenizeError(Exception):
+    def __init__(self, text: str):
+        self.text = text
+
+    def __str__(self):
+        return self.text
+
+
+class TokenKind(enum.Enum):
+    Bond = 0
+    Atom = 1
+    Aromatic = 2
+    AtomExtend = 3
+    BranchStart = 4
+    BranchEnd = 5
+    Ring = 6
+    Ring2 = 7
+    BondEZ = 8
+    Mix = 9
+    Rxn = 10
+    BondDescriptor = 11
+    StochasticSeperator = 12
+    StochasticStart = 13
+    StochasticEnd = 14
+    ImplictEndGroup = 15
+    BondDescriptorLadder = 16
+
+
+_isotope_pattern = r'(?P<isotope>[\d]{1,3})?'
+_element_pattern = r'(?P<element>' + "|".join(Config.elements) + "|".join(Config.aromatic) + '{1})'
+_stereo_pattern = r'(?P<stereo>@{1,2})?'
+_hydrogen_pattern = r'(?P<hcount>H[\d]?)?'
+_charge_pattern = r'(?P<charge>[-|\+]{1,3}[\d]?)?'
+atom_pattern = r"(?:\[)" + _isotope_pattern + _element_pattern + _stereo_pattern + \
+               _hydrogen_pattern + _charge_pattern + r"(?:\])"
+
+token_specification = [
+    (TokenKind.Bond.name, r'[=|#]'),
+    (TokenKind.Atom.name, "|".join(Config.elements)),
+    (TokenKind.Aromatic.name, "|".join(Config.aromatic)),
+    (TokenKind.AtomExtend.name, atom_pattern),  # Atom in brackets
+    (TokenKind.BranchStart.name, r'\('),
+    (TokenKind.BranchEnd.name, r'\)'),
+    (TokenKind.Ring.name, r'[\d]{1}'),
+    (TokenKind.Ring2.name, r'%[\d]{2}'),  # ring with two-digit numbers
+    (TokenKind.BondEZ.name, r'/|\\'),  # cis trans
+    (TokenKind.Mix.name, r"\."),  # mixture
+    (TokenKind.Rxn.name, r">|>>"),  # reaction -->
+
+    (TokenKind.BondDescriptorLadder.name, r"\[[$<>][\d]\[[$<>][\d]?\][\d]?\]"),  # Ladder
+    (TokenKind.BondDescriptor.name, r"\[[$<>][\d]?\]"),
+    (TokenKind.StochasticSeperator.name, r",|;"),
+    (TokenKind.StochasticStart.name, r'\{'),
+    (TokenKind.StochasticEnd.name, r'\}'),
+    (TokenKind.ImplictEndGroup.name, r'\[\]'),
+
+    ('SKIP', r'[ \t]+'),  # Skip over spaces and tabs
+    ('MISMATCH', r'.'),  # Any other character
+]
+
+tok_regex = '|'.join('(?P<%s>%s)' % pair for pair in token_specification)
+
+
+class Token:
+    __slots__ = ("kind", "value")
+
+    def __init__(self, kind: TokenKind, value: str):
+        self.kind = kind
+        self.value = value
+
+    def __str__(self):
+        return f"{self.kind}: {self.value}"
+
+
+def tokenize(text: str) -> list[Token]:
+    result = []
+    prior = 0
+    for match in re.finditer(tok_regex, text.strip()):
+        kind = match.lastgroup
+
+        value = match.group()
+        if kind == 'SKIP':
+            continue
+        elif kind == 'MISMATCH':
+            raise BigSMILESTokenizeError(f'Invalid symbol. ({value!r}; index: {match.span()[0]})')
+        elif prior != match.span()[0]:
+            raise BigSMILESTokenizeError(f'Issue tokenizing range: {prior} to {match.span()[0]} '
+                                         f'({text[prior:match.span()[0]]})')
+        prior = match.span()[1]
+
+        result.append(
+            Token(TokenKind[kind], value)
+        )
+
+    return result

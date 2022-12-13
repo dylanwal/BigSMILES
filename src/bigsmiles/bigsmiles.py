@@ -3,14 +3,6 @@ import enum
 import re
 
 from bigsmiles.config import Config
-from bigsmiles.tokenizer import Token, tokenize, TokenKind
-
-
-class BigSMILESError(Exception):
-    def __init__(self, text: str, optional: str = None):
-        if optional is not None:
-            text += "(" + optional + ")"
-        super().__init__(text)
 
 
 class AtomChirality(enum.Enum):
@@ -135,18 +127,6 @@ class Atom:
 
         return ring_index
 
-    def _add_bond(self, bond: Bond):
-        if self.bonds_available is not None and self.bonds_available == 0:
-            if self.valance == self.valance_possible[-1] or self.valance_possible[-1] + bond.value:
-                raise BigSMILESError("Too many bonds trying to be made.", repr(self))
-
-            for val in self.valance_possible:
-                if val > self.valance:
-                    self.valance = val
-                    break
-
-        self.bonds.append(bond)
-
     def to_string(self, show_hydrogens: bool = False) -> str:
         text = self.symbol
         bracket_flag = False
@@ -200,21 +180,19 @@ bond_mapping = {
 
 
 class Bond:
-    __slots__ = ["id_", "type_", "symbol", "_atom1", "_atom2", "ring"]
+    __slots__ = ["id_", "type_", "symbol", "atom1", "atom2", "ring"]
     _tree_print_label = True
 
     def __init__(self,
                  symbol: str,
                  atom1: Atom | BondDescriptor | StochasticObject,
                  atom2: Atom | BondDescriptor | StochasticObject | None = None,
-                 ring: int = None,
-                 id_: int = None
+                 id_: int = None,
+                 ring: int = None
                  ):
         self.id_ = id_
         self.type_ = bond_mapping[symbol]
         self.symbol = symbol
-        self._atom1 = None
-        self._atom2 = None
         self.atom1 = atom1
         self.atom2 = atom2
         self.ring = ring
@@ -239,38 +217,22 @@ class Bond:
 
         return text
 
-    @property
-    def value(self) -> int:
-        return self.type_.value
-
-    @property
-    def atom1(self) -> Atom:
-        return self._atom1
-
-    @atom1.setter
-    def atom1(self, atom: Atom | BondDescriptor):
-        atom._add_bond(self)
-        self._atom1 = atom
-
-    @property
-    def atom2(self) -> Atom:
-        return self._atom2
-
-    @atom2.setter
-    def atom2(self, atom: Atom | BondDescriptor | None):
-        if atom is not None:
-            atom._add_bond(self)
-            self._atom2 = atom
+    def __iter__(self):
+        return iter((self.atom1, self.atom2))
 
 
 class BondDescriptorTypes(enum.Enum):
     Left = "<"
     Right = ">"
     Dollar = "$"
+    Implicit = ""
 
 
 def process_bonding_descriptor_symbol(symbol: str) -> tuple[str, int]:
     symbol = symbol.replace("[", "").replace("]", "")
+    if not symbol:
+        return symbol, 0
+
     if symbol[-1].isdigit():
         return symbol[0], int(symbol[-1])
 
@@ -306,44 +268,15 @@ class BondDescriptor:
 
         return text
 
-    def _add_bond(self, bond: Bond):
-        self.bond = bond
 
-
-class GetParentID:
+class Branch:
     _tree_print_label = False
+    __slots__ = ["nodes", "id_", "parent"]
 
-    def __init__(self, parent: BigSMILES | StochasticFragment | Branch | StochasticObject):
-        self.parent = parent
-        if isinstance(parent, BigSMILES):
-            self.root = parent
-        else:
-            self.root = parent.root
-
-    def _get_atom_id(self) -> int:
-        return self.root._get_atom_id()
-
-    def _get_bond_id(self) -> int:
-        return self.root._get_bond_id()
-
-    def _get_bond_descriptor_id(self) -> int:
-        return self.root._get_bond_descriptor_id()
-
-    def _get_branch_id(self) -> int:
-        return self.root._get_branch_id()
-
-    def _get_stochastic_fragment_id(self) -> int:
-        return self.root._get_stochastic_fragment_id()
-
-    def _get_stochastic_object_id(self) -> int:
-        return self.root._get_stochastic_object_id()
-
-
-class Branch(GetParentID):
     def __init__(self, parent: BigSMILES | StochasticFragment | Branch, id_: int = None):
         self.nodes: list[Atom | Bond | Branch | StochasticObject | BondDescriptor] = []
         self.id_ = id_
-        super().__init__(parent)
+        self.parent = parent
 
     def __str__(self):
         return "(" + "".join((str(node) for node in self.nodes)) + ")"
@@ -356,19 +289,19 @@ class Branch(GetParentID):
     def in_stochastic_object(self) -> bool:
         return self.parent.in_stochastic_object
 
-    def _get_ring(self, id_: int) -> Bond | None:
-        return self.root._get_ring(id_)
-
-    def _add_ring(self, ring: Bond):
-        self.root.rings.append(ring)
+    @property
+    def root(self) -> BigSMILES:
+        return self.parent.root
 
 
-class StochasticFragment(GetParentID):
+class StochasticFragment:
+    _tree_print_label = False
+    __slots__ = ["nodes", "id_", "parent"]
 
     def __init__(self, parent: StochasticObject, id_: int = None):
         self.nodes: list[Atom | Bond | BondDescriptor | Branch | StochasticObject] = []
         self.id_ = id_
-        super().__init__(parent)
+        self.parent = parent
 
     def __str__(self):
         return "".join((str(node) for node in self.nodes))
@@ -380,8 +313,14 @@ class StochasticFragment(GetParentID):
     def in_stochastic_object(self) -> bool:
         return self.parent.in_stochastic_object
 
+    @property
+    def root(self) -> BigSMILES:
+        return self.parent.root
 
-class StochasticObject(GetParentID):
+
+class StochasticObject:
+    _tree_print_label = False
+    __slots__ = ["nodes", "id_", "parent", "end_group_left", "end_group_right", "bond_left", "bond_right"]
 
     def __init__(self, parent: BigSMILES | StochasticFragment | Branch, id_: int = None):
         self.nodes: list[StochasticFragment] = []
@@ -390,7 +329,7 @@ class StochasticObject(GetParentID):
         self.id_ = id_
         self.bond_left = None
         self.bond_right = None
-        super().__init__(parent)
+        self.parent = parent
 
     def __str__(self):
         if Config.color_output:
@@ -418,15 +357,14 @@ class StochasticObject(GetParentID):
     def in_stochastic_object(self) -> bool:
         return True
 
-    def _add_bond(self, bond: Bond):
-        if self.bond_left is None:
-            self.bond_left = bond
-        else:
-            self.bond_right = bond
+    @property
+    def root(self) -> BigSMILES:
+        return self.parent.root
 
 
 class BigSMILES:
     _tree_print_label = False
+    __slots__ = ["nodes", "atoms", "bonds", "rings", "input_text", "_tokens"]
 
     def __init__(self, input_text: str):
         self.nodes: list[Atom | Bond | StochasticObject | Branch] = []
@@ -434,20 +372,12 @@ class BigSMILES:
         self.bonds: list[Bond] = []
         self.rings: list[Bond] = []
 
-        # setup id counters
-        self._atom_counter = 0
-        self._bond_counter = 0
-        self._bond_descriptor = 0
-        self._branch_counter = 0
-        self._stochastic_fragment = 0
-        self._stochastic_object = 0
-
         # process input string
         self.input_text = input_text
-        self._tokens = tokenize(input_text)
+        self._tokens = []
 
-        import bigsmiles.tokens_to_objects
-        bigsmiles.tokens_to_objects.tokens_to_objects(self, self._tokens)
+        from bigsmiles.create_parse_tree import create_parse_tree
+        create_parse_tree(self)
 
     def __str__(self):
         return "".join((str(node) for node in self.nodes))
@@ -465,48 +395,9 @@ class BigSMILES:
     def in_stochastic_object(self) -> bool:
         return False
 
-    def _get_atom_id(self) -> int:
-        self._atom_counter += 1
-        return self._atom_counter - 1
-
-    def _get_bond_id(self) -> int:
-        self._bond_counter += 1
-        return self._bond_counter - 1
-
-    def _get_bond_descriptor_id(self) -> int:
-        self._bond_descriptor += 1
-        return self._bond_descriptor - 1
-
-    def _get_branch_id(self) -> int:
-        self._branch_counter += 1
-        return self._branch_counter - 1
-
-    def _get_stochastic_fragment_id(self) -> int:
-        self._stochastic_object += 1
-        return self._stochastic_object - 1
-
-    def _get_stochastic_object_id(self) -> int:
-        self._stochastic_object += 1
-        return self._stochastic_object - 1
-
-    def _get_ring(self, id_: int) -> Bond | None:
-        for ring in self.rings:
-            if ring.ring == id_:
-                return ring
-
-        return None
-
-    def _add_ring(self, ring: Bond):
-        self.rings.append(ring)
-
-    def add_atom(self):
-        pass
-
-    def add_bond(self):
-        pass
-
-    def add_bond_atom_pair(self):
-        pass
+    @property
+    def root(self) -> BigSMILES:
+        return self
 
     def print_tree(self, show_object_label: bool = True, print_repr: bool = False):
         """

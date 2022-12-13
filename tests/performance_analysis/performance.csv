@@ -3,4 +3,6 @@ date/time (UTF), package version, time per parse (us), memory usage per bigsmile
 2022-12-13 15:52:02.381073, 0.0.1, 0.31270, 6275, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel
 2022-12-13 16:01:46.489528, 0.0.1, 0.28784, 6275, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel
 2022-12-13 16:03:14.753212, 0.0.1, 0.27485, 6275, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel
-2022-12-13 16:05:09.570027, 0.0.1, 0.36161, 9555, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel
+2022-12-13 21:31:23.009523, 0.0.2, 0.31450, 5702, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel
+2022-12-13 21:32:01.900715, 0.0.2, 0.30643, 5702, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel
+2022-12-13 22:13:58.425217, 0.0.2, 0.33733, 5702, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel

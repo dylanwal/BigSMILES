@@ -39,7 +39,7 @@ class TokenKind(enum.Enum):
 
 
 _isotope_pattern = r'(?P<isotope>[\d]{1,3})?'
-_element_pattern = r'(?P<element>' + "|".join(Config.elements) + "|".join(Config.aromatic) + '{1})'
+_element_pattern = r'(?P<element>' + "|".join(Config.elements_ordered) + "|".join(Config.aromatic) + '{1})'
 _stereo_pattern = r'(?P<stereo>@{1,2})?'
 _hydrogen_pattern = r'(?P<hcount>H[\d]?)?'
 _charge_pattern = r'(?P<charge>[-|\+]{1,3}[\d]?)?'
@@ -48,7 +48,7 @@ atom_pattern = r"(?:\[)" + _isotope_pattern + _element_pattern + _stereo_pattern
 
 token_specification = [
     (TokenKind.Bond.name, r'[=|#]'),
-    (TokenKind.Atom.name, "|".join(Config.elements)),
+    (TokenKind.Atom.name, "|".join(Config.elements_ordered)),
     (TokenKind.Aromatic.name, "|".join(Config.aromatic)),
     (TokenKind.AtomExtend.name, atom_pattern),  # Atom in brackets
     (TokenKind.BranchStart.name, r'\('),
@@ -94,7 +94,8 @@ def tokenize(text: str) -> list[Token]:
         if kind == 'SKIP':
             continue
         elif kind == 'MISMATCH':
-            raise BigSMILESTokenizeError(f'Invalid symbol. ({value!r}; index: {match.span()[0]})')
+            raise BigSMILESTokenizeError(f'Invalid symbol. ({value!r}; index: {match.span()[0]})'
+                                         f'\n{text}' + "\n" + " " * match.span()[0] + "^")
         elif prior != match.span()[0]:
             raise BigSMILESTokenizeError(f'Issue tokenizing range: {prior} to {match.span()[0]} '
                                          f'({text[prior:match.span()[0]]})')

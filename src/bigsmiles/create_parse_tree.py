@@ -116,13 +116,26 @@ map_tokens = {
     TokenKind.StochasticSeperator: map_bond_seperator,
     TokenKind.StochasticStart: map_stochastic_object_start,
     TokenKind.StochasticEnd: map_stochastic_object_end,
-    TokenKind.ImplictEndGroup: NotImplementedFunc,
+    TokenKind.ImplictEndGroup: map_bond_descriptor,
     TokenKind.BondDescriptorLadder: NotImplementedFunc
 }
 
 
-def tokens_to_objects(constructor: BigSMILESConstructor, tokens: list[Token]) -> \
-        TokenKind | None:
+def tokens_to_objects(constructor: BigSMILESConstructor, tokens: list[Token]) -> TokenKind | None:
+    """
+
+    Main loop for converting tokens into BigSMILES objects.
+
+    Parameters
+    ----------
+    constructor: BigSMILESConstructor
+
+    tokens:
+
+    Returns
+    -------
+
+    """
     while tokens:
         token = tokens.pop(0)
 
@@ -135,6 +148,17 @@ def tokens_to_objects(constructor: BigSMILESConstructor, tokens: list[Token]) ->
 
 
 def create_parse_tree(bigsmiles):
+    """
+
+    Main function that turns BigSMILES string into a BigSMILES object.
+    Constructs BigSMILES tree in the provided object.
+
+    Parameters
+    ----------
+    bigsmiles: BigSMILES
+        BigSMILES object with BigSMILES string added as 'input_text'
+
+    """
     tokens = tokenize(bigsmiles.input_text)
     constructor = BigSMILESConstructor(bigsmiles)
     tokens_to_objects(constructor, tokens)

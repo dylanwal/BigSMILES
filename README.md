@@ -180,8 +180,8 @@ CC(C)=C
 
 
 ## Features NOT implemented yet
-* Implicit endgroups
 * Cis/Trans
+* Fragment Notation
 * ladder polymers
 * mixture notation '.'
 * reactions

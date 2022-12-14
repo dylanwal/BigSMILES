@@ -12,7 +12,7 @@ cProfile:
 1) cd tests/performance_analysis
 2) python -m cProfile -o profile.stats profiling.py
 3) python -m pstats profile.stats
-4) cd ..
+4) cd ...
 
 terminal commands:
 1) help

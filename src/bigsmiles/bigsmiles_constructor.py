@@ -25,10 +25,21 @@ class States(enum.Enum):
 
 
 def check_atom_for_making_bond(bond: Bond, atom: Atom):
+    """
+    Check to see if atom can accept bond.
+
+    Parameters
+    ----------
+    bond: Bond
+        Bond to add to Atom
+    atom: Atom
+        Atom to receive Bond
+
+    """
     if atom.bonds_available is None:
         pass
     elif atom.bonds_available == 0:
-        if atom.valance == atom.valance_possible[-1] or atom.valance_possible[-1] + bond.value:
+        if atom.valance == atom.valance_possible[-1] or atom.valance_possible[-1] < atom.valance + bond.type_.value:
             raise BigSMILESError("Too many bonds trying to be made.", repr(atom))
 
         for val in bond.atom1.valance_possible:
@@ -40,6 +51,7 @@ def check_atom_for_making_bond(bond: Bond, atom: Atom):
 
 
 def add_bond_to_connected_objects(bond: Bond):
+    """ Adds bonds to Atoms, and BondDescriptor. """
     for obj in bond:
         if isinstance(obj, Atom):
             check_atom_for_making_bond(bond, obj)
@@ -48,10 +60,11 @@ def add_bond_to_connected_objects(bond: Bond):
 
 
 def in_stochastic_object(func):
+    """ Decorator to ensure function call only occurs within stochastic object."""
     @wraps(func)
     def _in_stochastic_object(*args, **kwargs):
         if not args[0].stack[-1].in_stochastic_object:
-            raise BigSMILESError("Bonding descriptor must be in stochastic object")
+            raise BigSMILESError("Must be in stochastic object.")
         return func(*args, **kwargs)
 
     return _in_stochastic_object
@@ -159,10 +172,10 @@ class BigSMILESConstructor:
         return bond, bd
 
     def open_branch(self):
-        if isinstance(self.stack[-1], Branch):
+        if isinstance(self.stack[-1], Branch) and len(self.stack[-1].nodes) == 0:
             raise BigSMILESError("BigSMILES string or branch can't start with branch")
 
-        branch = Branch(self.stack[-1])
+        branch = Branch(self.stack[-1], self._get_branch_id())
         self.stack[-1].nodes.append(branch)
         self.stack.append(branch)
         self.state = States.branch_start
@@ -178,8 +191,8 @@ class BigSMILESConstructor:
         stoch_obj = StochasticObject(self.stack[-1], self._get_stochastic_object_id())
         bd = BondDescriptor(bd_symbol, self._get_bond_descriptor_id())
         stoch_obj.end_group_left = bd
+        self.stack[-1].nodes.append(stoch_obj)
         self.stack.append(stoch_obj)
-        self.stack[-1].nodes.append(bd)
 
         # open stochastic_fragment
         stoch_frag = StochasticFragment(self.stack[-1], self._get_stochastic_fragment_id())

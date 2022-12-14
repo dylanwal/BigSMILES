@@ -65,7 +65,32 @@ def get_hydrogens(symbol_text: str) -> tuple[str, int | None]:
     return symbol_text[:result.span()[0]] + symbol_text[result.span()[1]:], count
 
 
-def check_atom_symbol(symbol_text: str) -> tuple[str, tuple[int] | None, AtomChirality, int, int | None, int | None]:
+def process_atom_symbol(symbol_text: str) -> tuple[str, tuple[int] | None, AtomChirality, int, int | None, int | None]:
+    """
+    Process atom symbol into symbol, valence, chiral, charge, isotope, hydrogens
+
+    Parameters
+    ----------
+    symbol_text: str
+        atom symbol
+        'C', '[235U]', '	[OH3+]'
+
+    Returns
+    -------
+    symbol_text: str
+        Atom symbol
+    valance: tuple[int]
+        Accepted valance electrons - From 'Config'
+    chiral: AtomChirality
+        chirality
+    charge: int
+        electron charge
+    isotope: int
+        isotope number
+    hydrogens: int
+        explict hydrogens
+
+    """
     if "[" in symbol_text:
         symbol_text = symbol_text.replace('[', "").replace(']', '')
         symbol_text, isotope = get_isotope(symbol_text)
@@ -94,7 +119,7 @@ class Atom:
     def __init__(self, symbol: str, id_: int = None):
         self.id_ = id_
         self.symbol, self.valance_possible, self.chiral, self.charge, self.isotope, self._hydrogens = \
-            check_atom_symbol(symbol)
+            process_atom_symbol(symbol)
         self.valance = self.valance_possible[0] if self.valance_possible is not None else None
         self.organic = True if self.symbol in Config.organics else False
         self.bonds = []
@@ -128,6 +153,20 @@ class Atom:
         return ring_index
 
     def to_string(self, show_hydrogens: bool = False) -> str:
+        """
+        Construct Atom symbol
+
+        Parameters
+        ----------
+        show_hydrogens: bool
+            add implicit hydrogens to string
+
+        Returns
+        -------
+        text: str
+            atom symbol
+
+        """
         text = self.symbol
         bracket_flag = False
 
@@ -229,6 +268,24 @@ class BondDescriptorTypes(enum.Enum):
 
 
 def process_bonding_descriptor_symbol(symbol: str) -> tuple[str, int]:
+    """
+    Process bonding descriptor into symbol and index
+
+    Parameters
+    ----------
+    symbol: str
+        bonding descriptor symbol
+        '[>1]'
+
+    Returns
+    -------
+    symbol: str
+        bonding descriptor symbol
+        '<', '>', '$', ''
+    index: int
+        bonding descriptor index
+
+    """
     symbol = symbol.replace("[", "").replace("]", "")
     if not symbol:
         return symbol, 0

@@ -34,7 +34,7 @@ def total_size(object_, verbose: bool = False) -> int:
     seen = set()                      # track which object id's have already been seen
     default_size = sys.getsizeof(0)       # estimate sizeof object without __sizeof__
 
-    def sizeof(obj):
+    def sizeof(obj, name: str):
         if id(obj) in seen:  # do not double count the same object
             return 0
 
@@ -42,24 +42,25 @@ def total_size(object_, verbose: bool = False) -> int:
         size = sys.getsizeof(obj, default_size)
 
         if verbose:
-            print(size, type(obj), repr(obj))
+            print(size, name)
 
         if isinstance(obj, ZERO_DEPTH_BASES):
             pass  # bypass remaining control flow and return
         elif isinstance(obj, (tuple, list, set, deque)):
-            size += sum(sizeof(i) for i in obj)
+            size += sum(sizeof(item, name + f"_{i}") for i, item in enumerate(obj))
         elif isinstance(obj, dict):
-            size += sum(sizeof(k) + sizeof(v) for k, v in getattr(obj, 'items')())
+            size += sum(sizeof(k, name + f".{k}") + sizeof(v, name + f".key{i}")
+                        for i, (k, v) in enumerate(getattr(obj, 'items')()))
 
             # Check for custom object instances - may subclass above too
         if hasattr(obj, '__dict__'):
-            size += sizeof(vars(obj))
+            size += sizeof(vars(obj), "  " + name + ".")
         if hasattr(obj, '__slots__'):  # can have __slots__ with __dict__
-            size += sum(sizeof(getattr(obj, s)) for s in obj.__slots__ if hasattr(obj, s))
+            size += sum(sizeof(getattr(obj, s), "  " + name + f".{s}") for s in obj.__slots__ if hasattr(obj, s))
 
         return size
 
-    return sizeof(object_)
+    return sizeof(object_, name=type(object_).__name__)
 
 
 def time_bigsmiles_parsing(polymers: list[str], iter_: int) -> float:
@@ -83,6 +84,12 @@ def memory_bigsmiles_parsing(polymers: list[str], iter_: int) -> int:
 
     print(f"Done memory test:{datetime.datetime.now().time()}")
     return int(total_size(data) / iter_)  # bytes
+
+
+def print_memory_breakdown():
+    polymer = "[H]O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}[H]"
+    result = bigsmiles.BigSMILES(polymer)
+    total_size(result, verbose=True)
 
 
 def main():
@@ -112,4 +119,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    print_memory_breakdown()

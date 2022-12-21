@@ -30,8 +30,9 @@ test_polymers = [
     "{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}",
     "{[>][<]C(=O)CCCCC(=O)NCCCCCCN[>][<]}",
     "C{[$][$]CC[$],[$]CC(CC)[$][$]}",
-    "CC{[>][<]CC(C)[>][<]}CC(C)=C",
-    "{[][$]CC[$],[$]CC(CC)[$][]}",
+    "CC{[>][<]CC(C)[>][<]}CC(C)=C",  # explicit end groups
+    "{[][$]CC[$],[$]CC(CC)[$][]}",  # implicit end groups
+    "{[]C([$])C([$])CC[]}",  # test end groups in middle
 ]
 
 
@@ -39,3 +40,33 @@ test_polymers = [
 def test_whole_system(polymer: str):
     result = bigsmiles.BigSMILES(polymer)
     assert str(result) == polymer
+
+
+validation_cases = [
+    ["CCCCC1"],  # Ring not closed
+    ["CCCC("],  # branch not closed
+    ["CCCC)"],  # branch not started
+    ["((CC))"],   # no double branch
+    ["C((C)C)"],   # no branch right away
+    ["C(C)(C)(C)(C)C"],  # break bond limit of carbon
+
+    # bigsmiles
+    ["CCC,C"],  # stochastic seperator
+    ["CC}CC"],  # stochastic object no start
+    ["CC{CC"],   # stochastic object no end
+    ["{CC}"],
+    ["{[]CC[]}"],
+    ["{[][$]CC[]}"],
+    ["{[][>]CC[$][]}"],
+    ["{[][>]CC[>][]}"],
+    ["{[][>]CC[>];[<]C[]}"],  # only one end group provided
+    ["{[][>]CC[>];[$]C[]}"],
+    ["{[$1][$]CC[$][$1]}"],  # index don't match
+    ["{[$][<]CC[>][$]"],  # endgroup bonding descriptor don't match stochastic fragment
+]
+
+
+@pytest.mark.parametrize("polymer", validation_cases)
+def test_validation(polymer: list):
+    with pytest.raises(bigsmiles.BigSMILESError) as e:
+        bigsmiles.BigSMILES(polymer[0])

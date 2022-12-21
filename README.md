@@ -185,3 +185,7 @@ CC(C)=C
 * ladder polymers
 * mixture notation '.'
 * reactions
+* Validation
+  * Some is present; but more needed:
+    * Validate bonding descriptors matching including endgroups
+

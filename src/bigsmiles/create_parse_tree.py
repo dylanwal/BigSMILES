@@ -1,6 +1,7 @@
 
 from bigsmiles.tokenizer import Token, TokenKind, tokenize
-from bigsmiles.bigsmiles_constructor import BigSMILESConstructor, States, BigSMILESError
+from bigsmiles.bigsmiles_constructor import BigSMILESConstructor, States
+from bigsmiles.errors import BigSMILESError
 
 
 def map_atom(constructor: BigSMILESConstructor, tokens: list[Token], token: Token):
@@ -8,8 +9,10 @@ def map_atom(constructor: BigSMILESConstructor, tokens: list[Token], token: Toke
         constructor.add_atom(token.value)
 
     elif constructor.state in (States.atom, States.bond_descriptor, States.stochastic_object_end,
-                               States.stochastic_fragment, States.branch_start):
+                               States.branch_start, States.ring):
         constructor.add_bond_atom_pair("", token.value)  # add single bond
+    elif constructor.state in (States.stochastic_fragment, ):
+        constructor.add_atom(token.value)
 
     else:
         raise BigSMILESError("Something went wrong in 'map_atom'.")  # should not be hit
@@ -76,8 +79,7 @@ def map_stochastic_object_start(constructor: BigSMILESConstructor, tokens: list[
         raise BigSMILESError("Stochastic objects must begin with a bond descriptor (or implicit bonding descriptor).")
 
     if next_token.kind not in (TokenKind.ImplictEndGroup, TokenKind.BondDescriptor):
-        raise BigSMILESError(f"Bonds must be followed by an Atom. Parse completed: "
-                             f"{constructor.bigsmiles}, issue token: {token}")
+        raise BigSMILESError(f"Stochastic object starts must be followed an explict or implicit end group.")
 
     if constructor.state is States.start:
         constructor.open_stochastic_object(next_token.value)
@@ -144,7 +146,7 @@ def tokens_to_objects(constructor: BigSMILESConstructor, tokens: list[Token]) ->
         if isinstance(result, TokenKind):
             return result
 
-    return None
+    constructor.final_validation()
 
 
 def create_parse_tree(bigsmiles):

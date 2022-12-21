@@ -53,7 +53,7 @@ def get_isotope(symbol_text: str) -> tuple[str, int | None]:
 
 
 def get_hydrogens(symbol_text: str) -> tuple[str, int | None]:
-    result = re.search(r'H[\d]?', symbol_text)
+    result = re.search(r'H\d?', symbol_text)
     if result is None:
         return symbol_text, None
 
@@ -114,7 +114,7 @@ def process_atom_symbol(symbol_text: str) -> tuple[str, tuple[int] | None, AtomC
 class Atom:
     __slots__ = ["id_", "valance_possible", "chiral", "charge", "isotope", "_hydrogens", "symbol", "valance",
                  "organic", "bonds"]
-    _tree_print_label = True
+    _tree_print_repr = True
 
     def __init__(self, symbol: str, id_: int = None):
         self.id_ = id_
@@ -147,8 +147,8 @@ class Atom:
     def ring_indexes(self) -> list[int]:
         ring_index = []
         for bond in self.bonds:
-            if bond.ring is not None:
-                ring_index.append(bond.ring)
+            if bond.ring_id is not None:
+                ring_index.append(bond.ring_id)
 
         return ring_index
 
@@ -219,22 +219,22 @@ bond_mapping = {
 
 
 class Bond:
-    __slots__ = ["id_", "type_", "symbol", "atom1", "atom2", "ring"]
-    _tree_print_label = True
+    __slots__ = ["id_", "type_", "symbol", "atom1", "atom2", "ring_id"]
+    _tree_print_repr = True
 
     def __init__(self,
                  symbol: str,
                  atom1: Atom | BondDescriptor | StochasticObject,
                  atom2: Atom | BondDescriptor | StochasticObject | None = None,
                  id_: int = None,
-                 ring: int = None
+                 ring_id: int = None
                  ):
         self.id_ = id_
         self.type_ = bond_mapping[symbol]
         self.symbol = symbol
         self.atom1 = atom1
         self.atom2 = atom2
-        self.ring = ring
+        self.ring_id = ring_id
 
     def __str__(self):
         text = self.symbol
@@ -246,11 +246,13 @@ class Bond:
     def __repr__(self):
         bond_repr_symbols = {
             Atom: "A",
-            BondDescriptor: "BD",
+            BondDescriptorAtom: "BD",
             StochasticObject: "SO",
         }
-        text = self.symbol + "{" + str(self.id_) + f"|{bond_repr_symbols[type(self.atom1)]}{self.atom1.id_}-" \
-                                                   f">{bond_repr_symbols[type(self.atom2)]}{self.atom2.id_}" + "}"
+        text = self.symbol + "{" + str(self.id_) + f"|{bond_repr_symbols[type(self.atom1)]}{self.atom1.id_}-"
+        if self.atom2 is not None:
+            text += f">{bond_repr_symbols[type(self.atom2)]}{self.atom2.id_}"
+        text += "}"
         if Config.color_output:
             return Config.colors(text, "Blue")
 
@@ -297,28 +299,46 @@ def process_bonding_descriptor_symbol(symbol: str) -> tuple[str, int]:
 
 
 class BondDescriptor:
-    __slots__ = ["id_", "symbol", "type_", "index_", "bond"]
-    _tree_print_label = True
+    __slots__ = ["symbol", "type_", "index_", "instances", "stochastic_object", "_text"]
 
-    def __init__(self, symbol: str, id_: int = None):
-        self.id_ = id_
+    def __init__(self, stochastic_object: StochasticObject, symbol: str):
+        self._text = symbol  # here for fast string checks
         self.symbol, self.index_ = process_bonding_descriptor_symbol(symbol)
         self.type_ = BondDescriptorTypes(self.symbol)
-        self.bond = None
+        self.instances = []
+        self.stochastic_object = stochastic_object
 
     def __str__(self):
         if self.index_ == 0 and not Config.show_bond_descriptor_zero_index:
             index = ""
         else:
             index = self.index_
-        text = "[" + self.symbol + str(index) + "]"
+
+        return "[" + self.symbol + str(index) + "]"
+
+    def __repr__(self):
+        return str(self)
+
+
+class BondDescriptorAtom:
+    _tree_print_repr = True
+    __slots__ = ["descriptor", "id_", "bond"]
+
+    def __init__(self, bond_descriptor: BondDescriptor, id_: int = None):
+        self.descriptor = bond_descriptor
+        bond_descriptor.instances.append(self)
+        self.id_ = id_
+        self.bond = None
+
+    def __str__(self):
+        text = str(self.descriptor)
         if Config.color_output:
             return Config.colors(text, "Green")
 
         return text
 
     def __repr__(self):
-        text = "[" + str(self.symbol) + "]" + "{" + str(self.id_) + "}"
+        text = str(self.descriptor) + "{" + str(self.id_) + "}"
 
         if Config.color_output:
             return Config.colors(text, "Green")
@@ -327,11 +347,11 @@ class BondDescriptor:
 
 
 class Branch:
-    _tree_print_label = False
+    _tree_print_repr = False
     __slots__ = ["nodes", "id_", "parent"]
 
     def __init__(self, parent: BigSMILES | StochasticFragment | Branch, id_: int = None):
-        self.nodes: list[Atom | Bond | Branch | StochasticObject | BondDescriptor] = []
+        self.nodes: list[Atom | Bond | Branch | StochasticObject | BondDescriptorAtom] = []
         self.id_ = id_
         self.parent = parent
 
@@ -352,11 +372,12 @@ class Branch:
 
 
 class StochasticFragment:
-    _tree_print_label = False
-    __slots__ = ["nodes", "id_", "parent"]
+    _tree_print_repr = False
+    __slots__ = ["nodes", "id_", "parent", "bonding_descriptors"]
 
     def __init__(self, parent: StochasticObject, id_: int = None):
-        self.nodes: list[Atom | Bond | BondDescriptor | Branch | StochasticObject] = []
+        self.nodes: list[Atom | Bond | BondDescriptorAtom | Branch | StochasticObject] = []
+        self.bonding_descriptors: list[BondDescriptor] = []
         self.id_ = id_
         self.parent = parent
 
@@ -376,23 +397,25 @@ class StochasticFragment:
 
 
 class StochasticObject:
-    _tree_print_label = False
-    __slots__ = ["nodes", "id_", "parent", "end_group_left", "end_group_right", "bond_left", "bond_right"]
+    _tree_print_repr = False
+    __slots__ = ["nodes", "bonding_descriptors", "id_", "parent", "end_group_left", "end_group_right",
+                 "bond_left", "bond_right"]
 
     def __init__(self, parent: BigSMILES | StochasticFragment | Branch, id_: int = None):
         self.nodes: list[StochasticFragment] = []
-        self.end_group_left = None
-        self.end_group_right = None
+        self.bonding_descriptors: list[BondDescriptor] = []
+        self.end_group_left: BondDescriptorAtom | None = None
+        self.end_group_right: BondDescriptorAtom | None = None
         self.id_ = id_
-        self.bond_left = None
-        self.bond_right = None
+        self.bond_left: Bond | None = None
+        self.bond_right: Bond | None = None
         self.parent = parent
 
     def __str__(self):
         if Config.color_output:
             fragments = Config.colors(",", "Red").join((str(node) for node in self.nodes))
             return Config.colors("{", "Red") + str(self.end_group_left) + fragments + str(self.end_group_right) + \
-                   Config.colors("}", "Red")
+                Config.colors("}", "Red")
 
         fragments = ",".join((str(node) for node in self.nodes))
         return "{" + str(self.end_group_left) + fragments + str(self.end_group_right) + "}"
@@ -401,14 +424,16 @@ class StochasticObject:
         if Config.color_output:
             fragments = Config.colors(",", "Red").join((repr(node) for node in self.nodes))
             return Config.colors("{", "Red") + repr(self.end_group_left) + fragments + repr(self.end_group_right) + \
-                   Config.colors("}", "Red")
+                Config.colors("}", "Red")
 
         fragments = ",".join((repr(node) for node in self.nodes))
         return "{" + repr(self.end_group_left) + fragments + repr(self.end_group_right) + "}"
 
     @property
     def implicit_endgroups(self) -> bool:
-        return False  # TODO:
+        """ Returns true if one or more are implicit """
+        return True if self.end_group_left.descriptor.type_ is BondDescriptorTypes.Implicit or \
+                       self.end_group_right.descriptor.type_ is BondDescriptorTypes.Implicit else False
 
     @property
     def in_stochastic_object(self) -> bool:
@@ -420,7 +445,7 @@ class StochasticObject:
 
 
 class BigSMILES:
-    _tree_print_label = False
+    _tree_print_repr = False
     __slots__ = ["nodes", "atoms", "bonds", "rings", "input_text", "_tokens"]
 
     def __init__(self, input_text: str):

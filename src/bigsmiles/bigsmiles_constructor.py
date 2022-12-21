@@ -55,6 +55,17 @@ def add_bond_to_connected_objects(bond: Bond):
             obj.bond = bond
 
 
+def add_bond_descriptor_to_stochastic_fragment(stoch_frag: StochasticFragment, loop_obj: Branch = None):
+    if loop_obj is None:
+        loop_obj = stoch_frag
+
+    for obj in loop_obj.nodes:
+        if isinstance(obj, BondDescriptorAtom) and obj.descriptor not in stoch_frag.bonding_descriptors:
+            stoch_frag.bonding_descriptors.append(obj.descriptor)
+        if isinstance(obj, Branch):
+            add_bond_descriptor_to_stochastic_fragment(stoch_frag, obj)  # recursive
+
+
 def in_stochastic_object(func):
     """ Decorator to ensure function call only occurs within stochastic object."""
     @wraps(func)
@@ -108,7 +119,8 @@ class BigSMILESConstructor:
 
     def add_ring(self, ring_id: int) -> Bond:
         # check if ring_id already exists
-        for ring in self.bigsmiles.rings:
+        ring_parent = self._get_ring_parent()
+        for ring in ring_parent.rings:
             if ring.ring_id == ring_id:
                 if ring.atom2 is not None:
                     raise BigSMILESError(f"Ring already formed for ring id {ring_id}.")
@@ -119,10 +131,15 @@ class BigSMILESConstructor:
         # Make new ring_id
         bond = Bond("", self._get_prior(self.stack[-1], (Atom,)), None, self._get_bond_id(), ring_id)
         self.bigsmiles.bonds.append(bond)
-        self.bigsmiles.rings.append(bond)
+        ring_parent.rings.append(bond)
         # add_bond_to_connected_objects(bond)
 
         return bond
+
+    def _get_ring_parent(self) -> BigSMILES | StochasticFragment:
+        for node in reversed(self.stack):
+            if hasattr(node, "rings"):
+                return node
 
     def add_atom(self, symbol: str) -> Atom:
         atom = Atom(symbol, self._get_atom_id())
@@ -271,10 +288,7 @@ class BigSMILESConstructor:
             raise BigSMILESError("Error StochasticFragment branch. Possible issues: "
                                  "\n\tClosing a branch with another intermediate node started.")
 
-        # add bonding descriptors to stochastic fragment
-        for obj in self.stack[-1].nodes:
-            if isinstance(obj, BondDescriptorAtom) and obj.descriptor not in self.stack[-1].bonding_descriptors:
-                self.stack[-1].bonding_descriptors.append(obj.descriptor)
+        add_bond_descriptor_to_stochastic_fragment(self.stack[-1])
 
         # check for at-least one bonding descriptor
         if not self.stack[-1].bonding_descriptors:
@@ -299,6 +313,6 @@ class BigSMILESConstructor:
     def final_validation(self):
         """ Run various validations. """
         if len(self.stack) != 1:
-            raise BigSMILESError(f"Intermediate node not closed. ({type(self.stack[-1])})")
+            raise BigSMILESError(f"{type(self.stack[-1])} is missing closing symbol.")
 
         run_validation(self.bigsmiles)

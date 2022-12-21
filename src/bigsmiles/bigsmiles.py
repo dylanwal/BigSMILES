@@ -319,6 +319,15 @@ class BondDescriptor:
     def __repr__(self):
         return str(self)
 
+    def is_pair(self, bd: BondDescriptor) -> bool:
+        """ Returns true if symbols are <> and index match. """
+        if self.index_ == bd.index_:
+            if (self.type_ is BondDescriptorTypes.Left and bd.type_ is BondDescriptorTypes.Right) or \
+                    (self.type_ is BondDescriptorTypes.Right and bd.type_ is BondDescriptorTypes.Left):
+                return True
+
+        return False
+
 
 class BondDescriptorAtom:
     _tree_print_repr = True
@@ -373,10 +382,11 @@ class Branch:
 
 class StochasticFragment:
     _tree_print_repr = False
-    __slots__ = ["nodes", "id_", "parent", "bonding_descriptors"]
+    __slots__ = ["nodes", "id_", "parent", "bonding_descriptors", "rings"]
 
     def __init__(self, parent: StochasticObject, id_: int = None):
         self.nodes: list[Atom | Bond | BondDescriptorAtom | Branch | StochasticObject] = []
+        self.rings: list[Bond] = []
         self.bonding_descriptors: list[BondDescriptor] = []
         self.id_ = id_
         self.parent = parent

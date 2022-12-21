@@ -33,6 +33,30 @@ test_polymers = [
     "CC{[>][<]CC(C)[>][<]}CC(C)=C",  # explicit end groups
     "{[][$]CC[$],[$]CC(CC)[$][]}",  # implicit end groups
     "{[]C([$])C([$])CC[]}",  # test end groups in middle
+
+    # From BCPD
+    "CCC(C){[$][$]CC(C1CCCCC1)[$][$]}{[$][$]CCCC[$],[$]CC(CC)[$][$]}[H]",
+    "{[][$]CC(c1cc(C(=O)Oc2ccc(OCCCC)cc2)ccc1(C(=O)Oc3ccc(OCCCC)cc3))[$][$]}{[>][<]Si(C)(C)O[>][]}",
+    # "{[][<]CCO[>][<]}{[$][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][]}",
+    # "{[][$]C\C=C/C[$],[$]C\C=C\C[$],[$]CC(C=C)[$][$]}{[>][<][Si](C)(C)O[>][]}",
+    # "{[][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][$]}{[$][$]CC(c1ccccc1)[$][]}",
+    "{[][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CCCC[$],[$]CC(CC)[$][]}",
+    "COCCOCCO{[>][<]CCO[>][<]}{[>][<]C(CC)CO[>][<]}[H]",
+    "{[][<]CCO[>][<]}{[>][<]C(CC)CO[>][]}",
+    "{[][$]CCCC[$],[$]CC(CC)[$][$]}{[$][$]CCCC[$],[$]CC(CC)[$][]}",
+    # "CCC(C){[$][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][$]}{[>][<]CCO[>][<]}[H]",
+    "{[][<]C(C)C(=O)O[>][<]}{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][]}",
+    # "{[][$]CC(c1ccccc1)[$][$]}{[$][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][]}",
+    # "{[][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][$]}{[$][$]CC(c1ccccc1)[$][]}",
+    # "[H]{[>][>]CCO[<][<]}{[$][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][$]}C(C)CC",
+    "{[][$]CC(c1ccccc1)[$],[$]CC(c1ccc(S(=O)(=O)O)cc1)[$][$]}{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][]}",
+    "{[][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CCCC[$],[$]CC(CC)[$][]}",
+    "{[][$]CC(C1CCCCC1)[$][$]}{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][$]}"
+    "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][$]}"
+    "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][$]}"
+    "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][$]}"
+    "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][]}",
+
 ]
 
 
@@ -59,10 +83,12 @@ validation_cases = [
     ["{[][$]CC[]}"],
     ["{[][>]CC[$][]}"],
     ["{[][>]CC[>][]}"],
+    ["{[][>]CC[>][]}CC"],  # implicit and explict end groups same time
+    ["CC{[<][>]CC[>][]}CC"],  # implicit and explict end groups same time
     ["{[][>]CC[>];[<]C[]}"],  # only one end group provided
     ["{[][>]CC[>];[$]C[]}"],
     ["{[$1][$]CC[$][$1]}"],  # index don't match
-    ["{[$][<]CC[>][$]"],  # endgroup bonding descriptor don't match stochastic fragment
+    ["{[$][<]CC[>][$]"],  # end group bonding descriptor don't match stochastic fragment
 ]
 
 
@@ -70,3 +96,15 @@ validation_cases = [
 def test_validation(polymer: list):
     with pytest.raises(bigsmiles.BigSMILESError) as e:
         bigsmiles.BigSMILES(polymer[0])
+
+
+"""
+
+N1=NN=C[N]1 
+[CH2]C=C 
+[CH]C=C 
+[CH2]CCCC
+
+test for radicals 
+
+"""

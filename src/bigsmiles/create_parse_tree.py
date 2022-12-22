@@ -1,3 +1,12 @@
+import warnings
+
+
+def custom_formatwarning(msg, *args, **kwargs):
+    # ignore everything except the message
+    return str(msg) + '\n'
+
+warnings.formatwarning = custom_formatwarning
+
 
 from bigsmiles.tokenizer import Token, TokenKind, tokenize
 from bigsmiles.bigsmiles_constructor import BigSMILESConstructor, States
@@ -102,6 +111,10 @@ def NotImplementedFunc(*args, **kwargs):
     raise NotImplementedError
 
 
+def SkipSymbol(constructor: BigSMILESConstructor, tokens: list[Token], token: Token):
+    warnings.warn(f"Symbol skipped: {token.value}")
+
+
 map_tokens = {
     TokenKind.Bond: map_bond,
     TokenKind.Atom: map_atom,
@@ -111,7 +124,7 @@ map_tokens = {
     TokenKind.BranchEnd: map_branch_end,
     TokenKind.Ring: map_ring,
     TokenKind.Ring2: map_ring,
-    TokenKind.BondEZ: NotImplementedFunc,
+    TokenKind.BondEZ: SkipSymbol,
     TokenKind.Mix: NotImplementedFunc,
     TokenKind.Rxn: NotImplementedFunc,
     TokenKind.BondDescriptor: map_bond_descriptor,

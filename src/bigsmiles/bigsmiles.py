@@ -217,6 +217,25 @@ bond_mapping = {
     "#": BondType.triple
 }
 
+#  Not implemented yet
+#
+# class BondConfigTypes(enum.Enum):
+#     none = ""
+#     E = "E"
+#     Z = "Z"
+#
+#
+# class BondConfig:
+#     __slots__ = ["type_", "left_up", "left_down", "right_up", "right_down"]
+#
+#     def __init__(self,
+#                  left_up: Atom | BondDescriptorAtom | Branch | StochasticObject,
+#                  left_down: Atom | BondDescriptorAtom | Branch | StochasticObject,
+#                  right_up: Atom | BondDescriptorAtom | Branch | StochasticObject,
+#                  right_down: Atom | BondDescriptorAtom | Branch | StochasticObject,
+#                  ):
+#         self.type_ = type_
+
 
 class Bond:
     __slots__ = ["id_", "type_", "symbol", "atom1", "atom2", "ring_id"]
@@ -224,8 +243,8 @@ class Bond:
 
     def __init__(self,
                  symbol: str,
-                 atom1: Atom | BondDescriptor | StochasticObject,
-                 atom2: Atom | BondDescriptor | StochasticObject | None = None,
+                 atom1: Atom | BondDescriptorAtom | StochasticObject,
+                 atom2: Atom | BondDescriptorAtom | StochasticObject | None = None,
                  id_: int = None,
                  ring_id: int = None
                  ):
@@ -425,7 +444,7 @@ class StochasticObject:
         if Config.color_output:
             fragments = Config.colors(",", "Red").join((str(node) for node in self.nodes))
             return Config.colors("{", "Red") + str(self.end_group_left) + fragments + str(self.end_group_right) + \
-                Config.colors("}", "Red")
+                   Config.colors("}", "Red")
 
         fragments = ",".join((str(node) for node in self.nodes))
         return "{" + str(self.end_group_left) + fragments + str(self.end_group_right) + "}"
@@ -434,7 +453,7 @@ class StochasticObject:
         if Config.color_output:
             fragments = Config.colors(",", "Red").join((repr(node) for node in self.nodes))
             return Config.colors("{", "Red") + repr(self.end_group_left) + fragments + repr(self.end_group_right) + \
-                Config.colors("}", "Red")
+                   Config.colors("}", "Red")
 
         fragments = ",".join((repr(node) for node in self.nodes))
         return "{" + repr(self.end_group_left) + fragments + repr(self.end_group_right) + "}"
@@ -460,9 +479,9 @@ class BigSMILES:
 
     def __init__(self, input_text: str):
         self.nodes: list[Atom | Bond | StochasticObject | Branch] = []
-        self.atoms: list[Atom] = []
-        self.bonds: list[Bond] = []
-        self.rings: list[Bond] = []
+        self.atoms: list[Atom] = []  # does count bonds in sub-objects
+        self.bonds: list[Bond] = []  # does count bonds in sub-objects
+        self.rings: list[Bond] = []  # does not count rings in sub-objects
 
         # process input string
         self.input_text = input_text

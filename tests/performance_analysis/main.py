@@ -119,5 +119,5 @@ def main():
 
 
 if __name__ == "__main__":
-    # main()
-    print_memory_breakdown()
+    main()
+    # print_memory_breakdown()

@@ -1,4 +1,3 @@
-
 """
 
 Remaining validation done on the bigsmile object
@@ -59,7 +58,6 @@ def check_bonding_descriptors(bigsmiles: BigSMILES | StochasticObject):
 
 
 def do_check_bonding_descriptors(stoch_obj: StochasticObject):
-
     for bd in stoch_obj.bonding_descriptors:
         # if [$], [$0], [$1], ... must be 2 or more
         if bd.type_ is BondDescriptorTypes.Dollar:
@@ -83,7 +81,7 @@ def find_complementing_bonding_descriptor(stoch_obj: StochasticObject, bond_desc
 
 
 def check_implicit_endgroups_ends(obj: BigSMILES | StochasticObject | StochasticFragment | Branch,
-                             parent_obj: BigSMILES | StochasticObject | StochasticFragment | Branch = None):
+                                  parent_obj: BigSMILES | StochasticObject | StochasticFragment | Branch = None):
     # if end is implicit; there must be single bonding units
     for i, node in enumerate(obj.nodes):
         if isinstance(node, StochasticObject):
@@ -98,11 +96,10 @@ def check_implicit_endgroups_ends(obj: BigSMILES | StochasticObject | Stochastic
 
             if node.end_group_right.descriptor.type_ is BondDescriptorTypes.Implicit:
 
-                if i != len(obj.nodes)-1:
+                if i != len(obj.nodes) - 1:
                     # nothing allowed to the right
                     raise BigSMILESError("With a implicit right end group, there should not be anything to the "
                                          "right of it.")
 
         if hasattr(node, "nodes"):
             check_implicit_endgroups_ends(node, obj)
-

@@ -5,7 +5,7 @@ bigsmiles.Config.color_output = True
 
 
 def main():
-    polymer_string = "[H]O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}[H]"
+    polymer_string = "CC{[>][<]CC(C)[>][<]}CC(C)=C"
     polymer = bigsmiles.BigSMILES(polymer_string)
 
     print("input: ", polymer_string)

@@ -14,7 +14,23 @@ test_molecules = [
     "CSCCC(=O)C(=COP(=O)(O)O)O",
     "C(C(C(COP(=O)(O)O)O)O)C(=O)C(=O)O",
     "CC(CC1=CC(=C(C=C1)O)O)(C(=O)OC)N",
-    "C1=CC=C(C=C1)S(=O)(=O)NNC2=NC(=NC(=N2)Cl)Cl"
+    "C1=CC=C(C=C1)S(=O)(=O)NNC2=NC(=NC(=N2)Cl)Cl",
+    "C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C))))))))))))))))))))C",
+    "C12C3C4C1C5C4C3C25",
+
+    # cis/trans
+    # "F/C=C/F",  # trans
+    # "F\C=C\F",  # trans
+    # "C(\F)=C/F",  # trans
+    # "F\C=C/F",  # cis
+    # "F/C=C\F",  # cis
+    # "C(/F)=C/F",  # cis
+    # "F/C(CC)=C/F",
+    # "F/C=C=C=C/F",  # trans
+    # "F/C=C=C=C\F", # cis
+    # "F/C=C/C/C=C\C",
+    # "F/C=C/CC=CC",  # partially specified
+
 ]
 
 
@@ -70,9 +86,10 @@ validation_cases = [
     ["CCCCC1"],  # Ring not closed
     ["CCCC("],  # branch not closed
     ["CCCC)"],  # branch not started
-    ["((CC))"],   # no double branch
+    ["((CC))"],   # no double branch/ extra parenthesis
     ["C((C)C)"],   # no branch right away
     ["C(C)(C)(C)(C)C"],  # break bond limit of carbon
+    # ['C/C(\F)=C/C'],  # conflicting cis/trans
 
     # bigsmiles
     ["CCC,C"],  # stochastic seperator

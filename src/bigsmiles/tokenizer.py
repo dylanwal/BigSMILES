@@ -11,6 +11,7 @@ from bigsmiles.config import Config
 
 
 class BigSMILESTokenizeError(Exception):
+    """ Raised when error tokenizing a BigSMILES string. """
     def __init__(self, text: str):
         self.text = text
 
@@ -47,6 +48,7 @@ atom_pattern = r"(?:\[)" + _isotope_pattern + _element_pattern + _stereo_pattern
                _hydrogen_pattern + _charge_pattern + r"(?:\])"
 
 token_specification = [
+    # order in the list is important; regex stops at first match
     (TokenKind.Bond.name, r'[=|#]'),
     (TokenKind.Atom.name, "|".join(Config.elements_ordered)),
     (TokenKind.Aromatic.name, "|".join(Config.aromatic)),
@@ -54,13 +56,13 @@ token_specification = [
     (TokenKind.BranchStart.name, r'\('),
     (TokenKind.BranchEnd.name, r'\)'),
     (TokenKind.Ring.name, r'[\d]{1}'),
-    (TokenKind.Ring2.name, r'%[\d]{2}'),  # ring with two-digit numbers
+    (TokenKind.Ring2.name, r'%[\d]{2}'),  # ring_id with two-digit numbers
     (TokenKind.BondEZ.name, r'/|\\'),  # cis trans
     (TokenKind.Mix.name, r"\."),  # mixture
-    (TokenKind.Rxn.name, r">|>>"),  # reaction -->
+    (TokenKind.Rxn.name, r">>|>"),  # reaction -->
 
     (TokenKind.BondDescriptorLadder.name, r"\[[$<>][\d]\[[$<>][\d]?\][\d]?\]"),  # Ladder
-    (TokenKind.BondDescriptor.name, r"\[[$<>][\d]?\]"),
+    (TokenKind.BondDescriptor.name, r"\[[$<>][\d]?[\d]?\]"),
     (TokenKind.StochasticSeperator.name, r",|;"),
     (TokenKind.StochasticStart.name, r'\{'),
     (TokenKind.StochasticEnd.name, r'\}'),
@@ -85,6 +87,21 @@ class Token:
 
 
 def tokenize(text: str) -> list[Token]:
+    """
+
+    Tokenizes a bigSMILES string.
+
+    Parameters
+    ----------
+    text: str
+        BigSMILES string
+
+    Returns
+    -------
+    result: list[Token]
+        BigSMILES as a token list
+
+    """
     result = []
     prior = 0
     for match in re.finditer(tok_regex, text.strip()):
@@ -94,9 +111,11 @@ def tokenize(text: str) -> list[Token]:
         if kind == 'SKIP':
             continue
         elif kind == 'MISMATCH':
-            raise BigSMILESTokenizeError(f'Invalid symbol. ({value!r}; index: {match.span()[0]})'
-                                         f'\n{text}' + "\n" + " " * match.span()[0] + "^")
+            raise BigSMILESTokenizeError(f'Invalid symbol (or group of symbols). (starting with {value!r}; '
+                                         f'index: {match.span()[0]})'
+                                         f'\n{text}' + "\n" + " " * match.span()[0] + "^(and forward)")
         elif prior != match.span()[0]:
+            # This is a false-safe if the regex do something un-expected
             raise BigSMILESTokenizeError(f'Issue tokenizing range: {prior} to {match.span()[0]} '
                                          f'({text[prior:match.span()[0]]})')
         prior = match.span()[1]

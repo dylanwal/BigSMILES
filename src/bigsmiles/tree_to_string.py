@@ -34,7 +34,7 @@ class TreeConfig:
 
 
 class TreeNode(Protocol):
-    _tree_print_label: bool
+    _tree_print_repr: bool
 
 
 class TreeIntermediateNode(TreeNode):
@@ -177,9 +177,9 @@ def create_row(
         line += type(node).__name__ + ": "
 
     # add node symbol
-    if node._tree_print_label:
-        line += str(node)
-    else:
+    if node._tree_print_repr:
         line += func(node)
+    else:
+        line += str(node)
 
     return line

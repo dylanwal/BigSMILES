@@ -14,7 +14,23 @@ test_molecules = [
     "CSCCC(=O)C(=COP(=O)(O)O)O",
     "C(C(C(COP(=O)(O)O)O)O)C(=O)C(=O)O",
     "CC(CC1=CC(=C(C=C1)O)O)(C(=O)OC)N",
-    "C1=CC=C(C=C1)S(=O)(=O)NNC2=NC(=NC(=N2)Cl)Cl"
+    "C1=CC=C(C=C1)S(=O)(=O)NNC2=NC(=NC(=N2)Cl)Cl",
+    "C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C))))))))))))))))))))C",
+    "C12C3C4C1C5C4C3C25",
+
+    # cis/trans
+    # "F/C=C/F",  # trans
+    # "F\C=C\F",  # trans
+    # "C(\F)=C/F",  # trans
+    # "F\C=C/F",  # cis
+    # "F/C=C\F",  # cis
+    # "C(/F)=C/F",  # cis
+    # "F/C(CC)=C/F",
+    # "F/C=C=C=C/F",  # trans
+    # "F/C=C=C=C\F", # cis
+    # "F/C=C/C/C=C\C",
+    # "F/C=C/CC=CC",  # partially specified
+
 ]
 
 
@@ -30,8 +46,33 @@ test_polymers = [
     "{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}",
     "{[>][<]C(=O)CCCCC(=O)NCCCCCCN[>][<]}",
     "C{[$][$]CC[$],[$]CC(CC)[$][$]}",
-    "CC{[>][<]CC(C)[>][<]}CC(C)=C",
-    "{[][$]CC[$],[$]CC(CC)[$][]}",
+    "CC{[>][<]CC(C)[>][<]}CC(C)=C",  # explicit end groups
+    "{[][$]CC[$],[$]CC(CC)[$][]}",  # implicit end groups
+    "{[]C([$])C([$])CC[]}",  # test end groups in middle
+
+    # From BCPD
+    "CCC(C){[$][$]CC(C1CCCCC1)[$][$]}{[$][$]CCCC[$],[$]CC(CC)[$][$]}[H]",
+    "{[][$]CC(c1cc(C(=O)Oc2ccc(OCCCC)cc2)ccc1(C(=O)Oc3ccc(OCCCC)cc3))[$][$]}{[>][<]Si(C)(C)O[>][]}",
+    # "{[][<]CCO[>][<]}{[$][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][]}",
+    # "{[][$]C\C=C/C[$],[$]C\C=C\C[$],[$]CC(C=C)[$][$]}{[>][<][Si](C)(C)O[>][]}",
+    # "{[][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][$]}{[$][$]CC(c1ccccc1)[$][]}",
+    "{[][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CCCC[$],[$]CC(CC)[$][]}",
+    "COCCOCCO{[>][<]CCO[>][<]}{[>][<]C(CC)CO[>][<]}[H]",
+    "{[][<]CCO[>][<]}{[>][<]C(CC)CO[>][]}",
+    "{[][$]CCCC[$],[$]CC(CC)[$][$]}{[$][$]CCCC[$],[$]CC(CC)[$][]}",
+    # "CCC(C){[$][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][$]}{[>][<]CCO[>][<]}[H]",
+    "{[][<]C(C)C(=O)O[>][<]}{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][]}",
+    # "{[][$]CC(c1ccccc1)[$][$]}{[$][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][]}",
+    # "{[][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][$]}{[$][$]CC(c1ccccc1)[$][]}",
+    # "[H]{[>][>]CCO[<][<]}{[$][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][$]}C(C)CC",
+    "{[][$]CC(c1ccccc1)[$],[$]CC(c1ccc(S(=O)(=O)O)cc1)[$][$]}{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][]}",
+    "{[][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CCCC[$],[$]CC(CC)[$][]}",
+    "{[][$]CC(C1CCCCC1)[$][$]}{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][$]}"
+    "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][$]}"
+    "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][$]}"
+    "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][$]}"
+    "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][]}",
+
 ]
 
 
@@ -39,3 +80,48 @@ test_polymers = [
 def test_whole_system(polymer: str):
     result = bigsmiles.BigSMILES(polymer)
     assert str(result) == polymer
+
+
+validation_cases = [
+    ["CCCCC1"],  # Ring not closed
+    ["CCCC("],  # branch not closed
+    ["CCCC)"],  # branch not started
+    ["((CC))"],   # no double branch/ extra parenthesis
+    ["C((C)C)"],   # no branch right away
+    ["C(C)(C)(C)(C)C"],  # break bond limit of carbon
+    # ['C/C(\F)=C/C'],  # conflicting cis/trans
+
+    # bigsmiles
+    ["CCC,C"],  # stochastic seperator
+    ["CC}CC"],  # stochastic object no start
+    ["CC{CC"],   # stochastic object no end
+    ["{CC}"],
+    ["{[]CC[]}"],
+    ["{[][$]CC[]}"],
+    ["{[][>]CC[$][]}"],
+    ["{[][>]CC[>][]}"],
+    ["{[][>]CC[>][]}CC"],  # implicit and explict end groups same time
+    ["CC{[<][>]CC[>][]}CC"],  # implicit and explict end groups same time
+    ["{[][>]CC[>];[<]C[]}"],  # only one end group provided
+    ["{[][>]CC[>];[$]C[]}"],
+    ["{[$1][$]CC[$][$1]}"],  # index don't match
+    ["{[$][<]CC[>][$]"],  # end group bonding descriptor don't match stochastic fragment
+]
+
+
+@pytest.mark.parametrize("polymer", validation_cases)
+def test_validation(polymer: list):
+    with pytest.raises(bigsmiles.BigSMILESError) as e:
+        bigsmiles.BigSMILES(polymer[0])
+
+
+"""
+
+N1=NN=C[N]1 
+[CH2]C=C 
+[CH]C=C 
+[CH2]CCCC
+
+test for radicals 
+
+"""

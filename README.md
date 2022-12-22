@@ -1,11 +1,20 @@
 # BigSMILES Parser
 
-SMILES (simplified molecular-input line-entry system) representation is a line notation for molecules with 
-given deterministic molecular structures.
+---
+---
 
-BigSMILES is an extension to SMILES which provides support for molecules that contain stochastic molecular structures. 
+
+**(still under development; but usable)**
+
+SMILES (simplified molecular-input line-entry system) representation is a line notation for molecules with 
+given deterministic molecular structures. **BigSMILES** is an extension to SMILES which provides support for molecules 
+that contain stochastic molecular structures. The code here parses the string into and abstract syntax tree.
 
 [Learn more about BigSMILES Notation](https://olsenlabmit.github.io/BigSMILES/docs/line_notation.html#the-bigsmiles-line-notation)
+
+
+
+
 
 ---
 
@@ -47,7 +56,7 @@ BigSMILES: CC{[>][<]CC(C)[>][<]}CC(C)=C
 ├── Bond: 
 ├── StochasticObject: {[>][<]CC(C)[>][<]}
 │    └── StochasticFragment: [<]CC(C)[>]
-│        ├── BondDescriptor: [<]
+│        ├── BondDescriptorAtom: [<]
 │        ├── Bond: 
 │        ├── Atom: C
 │        ├── Bond: 
@@ -56,7 +65,7 @@ BigSMILES: CC{[>][<]CC(C)[>][<]}CC(C)=C
 │        │    ├── Bond: 
 │        │    └── Atom: C
 │        ├── Bond: 
-│        └── BondDescriptor: [>]
+│        └── BondDescriptorAtom: [>]
 ├── Bond: 
 ├── Atom: C
 ├── Bond: 
@@ -77,10 +86,11 @@ root node: `BigSMILES`
 
 intermediate nodes: `StochasticObject`, `StochasticFragment`, `Branch`
 
-leaf nodes: `BondDescriptor`, `Atom`, `Bond`
+leaf nodes: `BondDescriptorAtom`, `Atom`, `Bond`
 
 The tree structure is built through the `nodes` attribute.
 
+**Note:** only main attributes shown in diagram below.
 
 ```mermaid
 classDiagram
@@ -110,13 +120,20 @@ classDiagram
     }
     
     
-    class BondDescriptor {
+    class BondDescriptorAtom {
         int: id_
-        str: symbol
-        Enum: type_
-        int: index_
+        BondDescriptor: descriptor
+        Bond: bond
     }
     
+    
+    class BondDescriptor {
+        str: symbol
+        int: index_
+        Enum: type_
+        list[BondDescriptorAtom]: instances
+    }
+
     
     class Bond {
         int: id_
@@ -124,7 +141,7 @@ classDiagram
         Enum: type_
         Atom: atom1
         Atom: atom2
-        int: ring
+        int: ring_id
     }
     
     class Atom {
@@ -144,12 +161,13 @@ classDiagram
     BigSMILES --|> Branch
     BigSMILES --|> StochasticObject
     StochasticObject --|> StochasticFragment
-    StochasticFragment --|> BondDescriptor
+    StochasticFragment --|> BondDescriptorAtom
+    BondDescriptor --|> BondDescriptorAtom
     StochasticFragment --|> Atom
     StochasticFragment --|> Bond
     StochasticFragment --|> Branch
     StochasticFragment --|> StochasticObject
-    Branch --|> BondDescriptor
+    Branch --|> BondDescriptorAtom
     Branch --|> StochasticObject
     Branch --|> Bond
     Branch --|> Atom
@@ -185,3 +203,7 @@ CC(C)=C
 * ladder polymers
 * mixture notation '.'
 * reactions
+* Validation
+  * Some is present; but more needed:
+    * Validate bonding descriptors matching including endgroups
+

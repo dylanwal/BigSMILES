@@ -9,7 +9,11 @@ def main():
     polymer = bigsmiles.BigSMILES(polymer_string)
 
     print("input: ", polymer_string)
-    polymer.print_tree(print_repr=False)
+    polymer.print_tree(print_repr=True)
+
+    g = polymer.graph()
+    print(g)
+    g.draw()
 
 
 if __name__ == "__main__":

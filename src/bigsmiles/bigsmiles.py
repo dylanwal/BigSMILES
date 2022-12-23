@@ -53,6 +53,9 @@ def get_isotope(symbol_text: str) -> tuple[str, int | None]:
 
 
 def get_hydrogens(symbol_text: str) -> tuple[str, int | None]:
+    if symbol_text[0] == "H":
+        return "H", 0
+
     result = re.search(r'H\d?', symbol_text)
     if result is None:
         return symbol_text, None
@@ -522,5 +525,9 @@ class BigSMILES:
             use repr() instead of str()
 
         """
-        from bigsmiles.tree_to_string import tree_to_string
+        from bigsmiles.tree_to_string import tree_to_string  # here to avoid circular imports
         print(tree_to_string(self, show_object_label, print_repr))
+
+    def graph(self):
+        from bigsmiles.nx_graph.create_nx_graph import create_nx_graph  # here to avoid circular imports and optional package requirements
+        return create_nx_graph(self)

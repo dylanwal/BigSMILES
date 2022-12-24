@@ -54,7 +54,7 @@ def get_isotope(symbol_text: str) -> tuple[str, int | None]:
 
 def get_hydrogens(symbol_text: str) -> tuple[str, int | None]:
     if symbol_text[0] == "H":
-        return "H", 0
+        return "H", None
 
     result = re.search(r'H\d?', symbol_text)
     if result is None:

@@ -53,6 +53,8 @@ def add_bond_to_connected_objects(bond: Bond):
             check_atom_for_making_bond(bond, obj)
         elif isinstance(obj, BondDescriptorAtom):
             obj.bond = bond
+        elif isinstance(obj, StochasticObject):  # left bond add with
+            obj.bond_right = bond
 
 
 def add_bond_descriptor_to_stochastic_fragment(stoch_frag: StochasticFragment, loop_obj: Branch = None):

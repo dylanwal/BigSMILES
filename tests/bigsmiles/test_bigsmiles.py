@@ -50,6 +50,8 @@ test_polymers = [
     "CC{[>][<]CC(C)[>][<]}CC(C)=C",  # explicit end groups
     "{[][$]CC[$],[$]CC(CC)[$][]}",  # implicit end groups
     "{[]C([$])C([$])CC[]}",  # test end groups in middle
+    "OC{[>][<]CC(C{[>][<]CCO[>][<]}CN)[>][<]}CC",
+    "CC(CC){[<1][>1]CC(C)[<2][>2]}CCO",
 
     # From BCPD
     "CCC(C){[$][$]CC(C1CCCCC1)[$][$]}{[$][$]CCCC[$],[$]CC(CC)[$][$]}[H]",

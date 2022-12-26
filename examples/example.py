@@ -1,15 +1,17 @@
 
 import bigsmiles
 
-bigsmiles.Config.color_output = True
+# bigsmiles.Config.color_output = True
 
 
 def main():
-    polymer_string = "CC(CC){[<1][>1]CC(C)[<2][>2]}CCO"  # "CC{[>][<]CC(C)[>][<]}CC(C)=C"
-    polymer_string = "O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}[H]"
+    # polymer_string = "F{[$][$]CC(CC[$])[$][$]}O"
+    # polymer_string = "OC{[>][<]C(=O)OCC(=O)[<],[>]NCCCCCC(C)N[>][<]}CF"
+    # polymer_string = "CC{[<]CC(C[>])C(C[<])CO[>]}O"
+    polymer_string = "CC(CC){[<1][>1]CC(C)[<2][>2]}CCO"
 
     polymer = bigsmiles.BigSMILES(polymer_string)
-    polymer.nodes[4].to_string()
+
     print("input: ", polymer_string)
     polymer.print_tree(print_repr=True)
 

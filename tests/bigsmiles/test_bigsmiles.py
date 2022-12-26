@@ -52,6 +52,7 @@ test_polymers = [
     "{[]C([$])C([$])CC[]}",  # test end groups in middle
     "OC{[>][<]CC(C{[>][<]CCO[>][<]}CN)[>][<]}CC",
     "CC(CC){[<1][>1]CC(C)[<2][>2]}CCO",
+    # "{[][>]C([>])([>]),[<]OO[>][>]}CB", Not sure if it a valid BigSMILES
 
     # From BCPD
     "CCC(C){[$][$]CC(C1CCCCC1)[$][$]}{[$][$]CCCC[$],[$]CC(CC)[$][$]}[H]",

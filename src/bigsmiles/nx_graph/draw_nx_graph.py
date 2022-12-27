@@ -10,6 +10,7 @@ except ImportError:
 
 from bigsmiles.nx_graph.net_layout import kamada_kawai_layout
 
+
 colors = {
     "C": (0,0,0),
     "O": (199/255, 41/255,  24/255),
@@ -41,7 +42,7 @@ def draw(self: nx.Graph):
     plt.axis('off')
     nx.draw_networkx(self,
                      pos=nx.kamada_kawai_layout(self, pos=nx.random_layout(self)),
-                     # pos=nx.kamada_kawai_layout(self),
+                     # pos=kamada_kawai_layout(self),
                      # pos=nx.spring_layout(self, iterations=200),
                      # pos = nx.circular_layout(self),
                      node_size=250,

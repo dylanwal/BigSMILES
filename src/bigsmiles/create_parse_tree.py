@@ -9,18 +9,18 @@ warnings.formatwarning = custom_formatwarning
 
 
 from bigsmiles.tokenizer import Token, TokenKind, tokenize
-from bigsmiles.bigsmiles_constructor import BigSMILESConstructor, States
+from bigsmiles.bigsmiles_constructor import BigSMILESConstructor, ConstructorStates
 from bigsmiles.errors import BigSMILESError
 
 
 def map_atom(constructor: BigSMILESConstructor, tokens: list[Token], token: Token):
-    if constructor.state is States.start:
+    if constructor.state is ConstructorStates.start:
         constructor.add_atom(token.value)
 
-    elif constructor.state in (States.atom, States.bond_descriptor, States.stochastic_object_end,
-                               States.branch_start, States.ring):
+    elif constructor.state in (ConstructorStates.atom, ConstructorStates.bond_descriptor, ConstructorStates.stochastic_object_end,
+                               ConstructorStates.branch_start, ConstructorStates.ring):
         constructor.add_bond_atom_pair("", token.value)  # add single bond
-    elif constructor.state in (States.stochastic_fragment, ):
+    elif constructor.state in (ConstructorStates.stochastic_fragment,):
         constructor.add_atom(token.value)
 
     else:
@@ -51,12 +51,12 @@ def map_bond_descriptor(constructor: BigSMILESConstructor, tokens: list[Token], 
         tokens.pop(0)
         return
 
-    if constructor.state is States.stochastic_fragment:
+    if constructor.state is ConstructorStates.stochastic_fragment:
         # first StochasticFragment symbol
         constructor.add_bonding_descriptor(token.value)
         return
 
-    if constructor.state is States.branch_start:
+    if constructor.state is ConstructorStates.branch_start:
         # first Branch symbol
         # check to make sure the branch closes immediately
         if tokens[0].kind != TokenKind.BranchEnd:
@@ -74,7 +74,7 @@ def map_branch_end(constructor: BigSMILESConstructor, tokens: list[Token], token
 
 
 def map_ring(constructor: BigSMILESConstructor, tokens: list[Token], token: Token):
-    if constructor.state is not States.atom:
+    if constructor.state is not ConstructorStates.atom:
         raise BigSMILESError(f"Ring number must follow atoms.")
 
     constructor.add_ring(int(token.value))
@@ -90,7 +90,7 @@ def map_stochastic_object_start(constructor: BigSMILESConstructor, tokens: list[
     if next_token.kind not in (TokenKind.ImplictEndGroup, TokenKind.BondDescriptor):
         raise BigSMILESError(f"Stochastic object starts must be followed an explict or implicit end group.")
 
-    if constructor.state is States.start:
+    if constructor.state is ConstructorStates.start:
         constructor.open_stochastic_object(next_token.value)
     else:
         if bond_token is None:

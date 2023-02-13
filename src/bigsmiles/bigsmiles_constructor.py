@@ -7,7 +7,7 @@ from bigsmiles.bigsmiles import Atom, Bond, BondDescriptor, Branch, StochasticFr
 from bigsmiles.validation import run_validation
 
 
-class States(enum.Enum):
+class ConstructorStates(enum.Enum):
     start = 0
     atom = 1
     bond_descriptor = 2
@@ -91,8 +91,9 @@ class BigSMILESConstructor:
         self._branch_counter = 0
         self._stochastic_fragment = 0
         self._stochastic_object = 0
+        self._ring_counter = 1  # start ring counter at 1
 
-        self.state = States.start
+        self.state = ConstructorStates.start
         self.stack: list[BigSMILES | StochasticObject | StochasticFragment | Branch] = [self.bigsmiles]
 
     def _get_atom_id(self) -> int:
@@ -102,6 +103,10 @@ class BigSMILESConstructor:
     def _get_bond_id(self) -> int:
         self._bond_counter += 1
         return self._bond_counter - 1
+
+    def _get_ring_id(self) -> int:
+        self._ring_counter += 1
+        return self._ring_counter - 1
 
     def _get_bond_descriptor_atom_id(self) -> int:
         self._bond_descriptor_atom += 1
@@ -138,6 +143,15 @@ class BigSMILESConstructor:
 
         return bond
 
+    def add_ring_from_atoms(self, atom1: Atom, atom2: Atom):
+        ring_parent = self._get_ring_parent()
+
+        # Make new ring_id
+        bond = Bond("", atom1, atom2, self._get_bond_id(), self._get_ring_id())
+        self.bigsmiles.bonds.append(bond)
+        ring_parent.rings.append(bond)
+        add_bond_to_connected_objects(bond)
+
     def _get_ring_parent(self) -> BigSMILES | StochasticFragment:
         for node in reversed(self.stack):
             if hasattr(node, "rings"):
@@ -148,7 +162,7 @@ class BigSMILESConstructor:
         self.stack[-1].nodes.append(atom)
         self.bigsmiles.atoms.append(atom)
 
-        self.state = States.atom
+        self.state = ConstructorStates.atom
         return atom
 
     def add_bond(self, bond_symbol: str, atom1: Atom | BondDescriptorAtom, atom2: Atom | BondDescriptorAtom | None) -> Bond:
@@ -188,7 +202,7 @@ class BigSMILESConstructor:
         bd_atom = self._get_bonding_descriptor_atom(bd_symbol)
         self.stack[-1].nodes.append(bd_atom)
 
-        self.state = States.bond_descriptor
+        self.state = ConstructorStates.bond_descriptor
         return bd_atom
 
     def add_bond_atom_pair(self, bond_symbol: str, atom_symbol: str) -> tuple[Bond, Atom]:
@@ -198,7 +212,7 @@ class BigSMILESConstructor:
         self.stack[-1].nodes.append(atom)
         self.bigsmiles.atoms.append(atom)
 
-        self.state = States.atom
+        self.state = ConstructorStates.atom
         return bond, atom
 
     @in_stochastic_object
@@ -208,7 +222,7 @@ class BigSMILESConstructor:
         bond = self.add_bond(bond_symbol, prior_atom, bd_atom)
         self.stack[-1].nodes.append(bd_atom)
 
-        self.state = States.bond_descriptor
+        self.state = ConstructorStates.bond_descriptor
         return bond, bd_atom
 
     def open_branch(self):
@@ -218,7 +232,7 @@ class BigSMILESConstructor:
         branch = Branch(self.stack[-1], self._get_branch_id())
         self.stack[-1].nodes.append(branch)
         self.stack.append(branch)
-        self.state = States.branch_start
+        self.state = ConstructorStates.branch_start
 
     def close_branch(self):
         if not isinstance(self.stack[-1], Branch):
@@ -240,7 +254,7 @@ class BigSMILESConstructor:
         stoch_frag = StochasticFragment(self.stack[-1], self._get_stochastic_fragment_id())
         self.stack[-1].nodes.append(stoch_frag)
         self.stack.append(stoch_frag)
-        self.state = States.stochastic_fragment
+        self.state = ConstructorStates.stochastic_fragment
         return stoch_frag
 
     def open_stochastic_object_with_bond(self, bond_symbol: str, bd_symbol: str) -> StochasticFragment:
@@ -273,7 +287,7 @@ class BigSMILESConstructor:
         stoch_frag = StochasticFragment(self.stack[-1], self._get_stochastic_fragment_id())
         self.stack[-1].nodes.append(stoch_frag)
         self.stack.append(stoch_frag)
-        self.state = States.stochastic_fragment
+        self.state = ConstructorStates.stochastic_fragment
         return stoch_frag
 
     @in_stochastic_object
@@ -301,7 +315,7 @@ class BigSMILESConstructor:
     def _get_prior(self, obj: BigSMILES | StochasticObject | StochasticFragment | Branch, types_: tuple,
                    flag: bool = False) -> Atom:
         if obj.nodes:
-            for node in reversed(obj.nodes):  # no atom can ever have more than 10 bonds
+            for node in reversed(obj.nodes):
                 if isinstance(node, types_):
                     return node
 

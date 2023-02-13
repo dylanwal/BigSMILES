@@ -283,6 +283,10 @@ class Bond:
     def __iter__(self):
         return iter((self.atom1, self.atom2))
 
+    @property
+    def bond_order(self) -> int:
+        return bond_mapping[self.symbol].value
+
 
 class BondDescriptorTypes(enum.Enum):
     Left = "<"

@@ -480,7 +480,7 @@ class BigSMILES:
     _tree_print_repr = False
     __slots__ = ["nodes", "atoms", "bonds", "rings", "input_text", "_tokens"]
 
-    def __init__(self, input_text: str):
+    def __init__(self, input_text: str = None):
         self.nodes: list[Atom | Bond | StochasticObject | Branch] = []
         self.atoms: list[Atom] = []  # does count bonds in sub-objects
         self.bonds: list[Bond] = []  # does count bonds in sub-objects
@@ -490,8 +490,9 @@ class BigSMILES:
         self.input_text = input_text
         self._tokens = []
 
-        from bigsmiles.create_parse_tree import create_parse_tree
-        create_parse_tree(self)
+        if input_text:
+            from bigsmiles.create_parse_tree import create_parse_tree
+            create_parse_tree(self)
 
     def __str__(self):
         return "".join((str(node) for node in self.nodes))

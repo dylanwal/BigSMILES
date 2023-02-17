@@ -18,9 +18,9 @@ def main():
     print("input: ", polymer_string)
     polymer.print_tree(print_repr=True)
 
-    g = polymer.graph()
-    print(g)
-    g.draw()
+    # g = polymer.graph()
+    # print(g)
+    # g.draw()
 
 
 if __name__ == "__main__":

@@ -72,6 +72,9 @@ class Config:
         "As": {"valence": (3, 5)},
     }
 
-    @staticmethod
-    def colors(text: str, color: str) -> str:
-        return getattr(TerminalColors, color) + text + TerminalColors.Clear
+    @classmethod
+    def add_color(cls, text: str, color: str, skip_color: bool = False) -> str:
+        if cls.color_output and not skip_color:
+            return getattr(TerminalColors, color) + text + TerminalColors.Clear
+
+        return text

@@ -11,7 +11,7 @@ This is mainly to catch additional leftover validation.
 """
 
 from bigsmiles.errors import BigSMILESError
-from bigsmiles.bigsmiles import BigSMILES, BondDescriptorTypes, StochasticObject, StochasticFragment, \
+from bigsmiles.bigsmiles import BigSMILES, StochasticObject, StochasticFragment, \
     BondDescriptor, Branch
 
 
@@ -60,12 +60,12 @@ def check_bonding_descriptors(bigsmiles: BigSMILES | StochasticObject):
 def do_check_bonding_descriptors(stoch_obj: StochasticObject):
     for bd in stoch_obj.bonding_descriptors:
         # if [$], [$0], [$1], ... must be 2 or more
-        if bd.type_ is BondDescriptorTypes.Dollar:
+        if bd.descriptor is "$":
             if len(bd.instances) <= 1:
                 raise BigSMILESError("[$] type bonding descriptors require more than one instances in a string.")
 
         # if [>] there must be [<] and if [<] there must be [>]
-        if bd.type_ in (BondDescriptorTypes.Left, BondDescriptorTypes.Right):
+        if bd.descriptor in ("<", ">"):
             bd_pair = find_complementing_bonding_descriptor(stoch_obj, bd)
             if bd_pair is None:
                 raise BigSMILESError(f'{bd} complementary partner not found.')
@@ -85,7 +85,7 @@ def check_implicit_endgroups_ends(obj: BigSMILES | StochasticObject | Stochastic
     # if end is implicit; there must be single bonding units
     for i, node in enumerate(obj.nodes):
         if isinstance(node, StochasticObject):
-            if node.end_group_left.descriptor.type_ is BondDescriptorTypes.Implicit:
+            if node.end_group_left.descriptor.descriptor is "":
                 if i != 0:
                     # nothing allowed to the left
                     raise BigSMILESError("With a the left end group implicit, "
@@ -94,7 +94,7 @@ def check_implicit_endgroups_ends(obj: BigSMILES | StochasticObject | Stochastic
                     # if it isn't BigSMILES it can't have a left implicit end group
                     raise BigSMILESError("Implicit left end group not allowed within interior.")
 
-            if node.end_group_right.descriptor.type_ is BondDescriptorTypes.Implicit:
+            if node.end_group_right.descriptor.descriptor is "":
 
                 if i != len(obj.nodes) - 1:
                     # nothing allowed to the right

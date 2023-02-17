@@ -103,7 +103,6 @@ class BigSMILESConstructor:
         bond = Bond("", self._get_prior(self.stack[-1], (Atom,)), None, self._get_bond_id(), ring_id)
         self.bigsmiles.bonds.append(bond)
         ring_parent.rings.append(bond)
-        # add_bond_to_connected_objects(bond)
 
         return bond
 
@@ -140,7 +139,7 @@ class BigSMILESConstructor:
     def add_bond(self,
                  bond_symbol: str,
                  atom1: Atom | BondDescriptorAtom,
-                 atom2: Atom | BondDescriptorAtom | None
+                 atom2: Atom | BondDescriptorAtom | StochasticObject | None
                  ) -> Bond:
         bond = Bond(bond_symbol, atom1, atom2, self._get_bond_id())
         self.stack[-1].nodes.append(bond)
@@ -248,9 +247,8 @@ class BigSMILESConstructor:
         stoch_obj.end_group_left = BondDescriptorAtom(new_bd, self._get_bond_descriptor_atom_id())
 
         prior_atom = self._get_prior(self.stack[-1], (Atom, BondDescriptor, StochasticObject))
-        bond = Bond(bond_symbol, prior_atom, stoch_obj, self._get_bond_id())
+        bond = self.add_bond(bond_symbol, prior_atom, stoch_obj)
         stoch_obj.bond_left = bond
-        self.stack[-1].nodes.append(bond)
 
         self.stack[-1].nodes.append(stoch_obj)
         self.stack.append(stoch_obj)

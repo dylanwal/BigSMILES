@@ -8,8 +8,8 @@ except ImportError:
     raise ImportError("To use this feature install networkx. (pip install networkx)")
 
 from bigsmiles.bigsmiles import BigSMILES, StochasticObject, StochasticFragment, Branch, Bond, BondDescriptor, \
-    BondDescriptorAtom, Atom, BondDescriptorTypes
-from bigsmiles.nx_graph.draw_nx_graph import draw
+    BondDescriptorAtom, Atom
+from bigsmiles.nx_graph.draw_nx_graph import draw, draw_plotly
 
 
 class BigSMILESGraphError(Exception):
@@ -28,7 +28,7 @@ class BigSMILESGraph(nx.DiGraph):
 
 remove_attr = {
         Atom: {"id_", "bonds"},
-        Bond: {"atom1", "atom2"},
+        Bond: {"id_", "atom1", "atom2"},
         BondDescriptorAtom: {}
     }
 
@@ -47,10 +47,22 @@ def create_nx_graph(bigsmiles: BigSMILES) -> nx.DiGraph:
     return graph
 
 
+def get_small_molecule_graph(bigsmiles: BigSMILES) -> nx.DiGraph:
+    """ Creates a new Digraph for small molecules. """
+    graph = nx.DiGraph()
+    graph.draw = types.MethodType(draw, graph)
+    graph.draw_plotly = types.MethodType(draw_plotly, graph)
+    for bond in bigsmiles.bonds:
+        add_bond(graph, bond)
+
+    return graph
+
+
 def get_graph(obj: BigSMILES | StochasticFragment) -> nx.DiGraph:
     """ Creates a new Digraph and loops through nodes"""
     graph = nx.DiGraph()
     graph.draw = types.MethodType(draw, graph)
+    graph.draw_plotly = types.MethodType(draw_plotly, graph)
     # graph._added = set()
 
     # add first path
@@ -86,7 +98,7 @@ def add_rings(graph: nx.Graph, rings: list[Bond]):
 
 
 def add_atom(graph: nx.Graph, atom: Atom) -> str:
-    label = f"{atom.symbol}{atom.id_}"
+    label = f"{atom.element}{atom.id_}"
     if graph.has_node(label):
         return label
 
@@ -194,11 +206,11 @@ def is_complement_bond_descr(bond_descr1: BondDescriptor, bond_descr2: BondDescr
     if bond_descr1.index_ != bond_descr2.index_:
         return False
 
-    if bond_descr1.type_ is BondDescriptorTypes.Dollar and bond_descr2.type_ is BondDescriptorTypes.Dollar:
+    if bond_descr1.descriptor == "$" and bond_descr2.descriptor == "$":
         return True
-    if bond_descr1.type_ is BondDescriptorTypes.Left and bond_descr2.type_ is BondDescriptorTypes.Right:
+    if bond_descr1.descriptor == "<" and bond_descr2.descriptor == ">":
         return True
-    if bond_descr1.type_ is BondDescriptorTypes.Right and bond_descr2.type_ is BondDescriptorTypes.Left:
+    if bond_descr1.descriptor == ">" and bond_descr2.descriptor == "<":
         return True
 
     return False
@@ -258,7 +270,7 @@ def add_stochastic_fragment(graph: nx.DiGraph, stoch_frag: StochasticFragment):
         if stoch_frag_graph.nodes[node]['node_type'] is BondDescriptorAtom:
             for bd, bd_node in graph.bond_descr.items():
                 if bd is stoch_frag_graph.nodes[node]['descriptor']:
-                    if bd_node[:2] == "<>" and bd.type_ is BondDescriptorTypes.Left:
+                    if bd_node[:2] == "<>" and bd.descriptor == "<":
                         continue
 
                     stoch_frag_graph2 = copy.copy(stoch_frag_graph)

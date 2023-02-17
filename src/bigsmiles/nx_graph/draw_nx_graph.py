@@ -1,3 +1,4 @@
+import pprint
 
 try:
     import networkx as nx
@@ -7,8 +8,6 @@ try:
     import matplotlib.pyplot as plt
 except ImportError:
     raise ImportError("To use this feature install matplotlib. (pip install matplotlib)")
-
-from bigsmiles.nx_graph.net_layout import kamada_kawai_layout
 
 
 colors = {
@@ -35,7 +34,16 @@ def get_atom_colors(graph) -> list:
     return atom_colors
 
 
+edge_color_map = {
+    "": (0,0,0),
+    "=": (1,0,0),
+    "#": (0,1,0)
+}
+
+
 def draw(self: nx.Graph):
+    # edge_color = [edge_color_map[edge['symbol']] for _, _, edge in self.edges(data=True)]
+
     plt.close()
     plt.ylim([-1.1, 1.1])
     plt.xlim([-1.1, 1.1])
@@ -45,6 +53,7 @@ def draw(self: nx.Graph):
                      # pos=kamada_kawai_layout(self),
                      # pos=nx.spring_layout(self, iterations=200),
                      # pos = nx.circular_layout(self),
+                     # edge_color=edge_color,
                      node_size=250,
                      arrowsize=10,
                      arrows=True,
@@ -56,3 +65,54 @@ def draw(self: nx.Graph):
                      font_family="Arial Rounded MT Bold"
                      )
     plt.show()
+
+
+def draw_plotly(self: nx.Graph):
+    import plotly.graph_objects as go
+
+    pos = nx.kamada_kawai_layout(self, pos=nx.random_layout(self))
+    edge_x = []
+    edge_y = []
+    for edge in self.edges():
+        x0, y0 = pos[edge[0]]
+        x1, y1 = pos[edge[1]]
+        edge_x.append(x0)
+        edge_x.append(x1)
+        edge_x.append(None)
+        edge_y.append(y0)
+        edge_y.append(y1)
+        edge_y.append(None)
+
+    edge_trace = go.Scatter(
+        x=edge_x, y=edge_y,
+        line=dict(width=0.5, color='#888'),
+        hoverinfo='text',
+        hovertext=['<br>'.join([f"{k}: {v}" for k, v in data.items()]) for _, _, data in self.edges(data=True)],
+        mode='lines')
+
+    node_x = []
+    node_y = []
+    for node in self.nodes():
+        x, y = pos[node]
+        node_x.append(x)
+        node_y.append(y)
+
+    node_trace = go.Scatter(
+        x=node_x, y=node_y,
+        mode='markers',
+        hoverinfo='text',
+        # hovertemplate='%{text}',
+        hovertext= ['<br>'.join([f"{k}: {v}" for k, v in data.items()]) for _, data in self.nodes(data=True)],
+        marker=dict(
+            color=[],
+            size=10,
+            line_width=2))
+
+    fig = go.Figure(data=[edge_trace, node_trace],
+                    layout=go.Layout(
+                        showlegend=False,
+                        hovermode='closest',
+                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
+                    )
+    fig.write_html('temp.html', auto_open=True)

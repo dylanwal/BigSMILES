@@ -1,5 +1,4 @@
 from __future__ import annotations
-import enum
 
 from bigsmiles.config import Config
 
@@ -54,7 +53,7 @@ class Atom:
 
     @property
     def number_of_bonds(self) -> int:
-        return sum((bond.type_.value for bond in self.bonds)) + self.hydrogens
+        return sum((bond.bond_order for bond in self.bonds)) + self.hydrogens
 
     @property
     def bonds_available(self) -> int | None:
@@ -104,40 +103,15 @@ class Atom:
         return text + "".join((str(id_) for id_ in self.ring_indexes))
 
 
-class BondType(enum.Enum):
-    single = 1
-    double = 2
-    triple = 3
-
-
 bond_mapping = {
-    "": BondType.single,
-    "=": BondType.double,
-    "#": BondType.triple
+    "": 1,
+    "=": 2,
+    "#": 3
 }
-
-#  Not implemented yet
-#
-# class BondConfigTypes(enum.Enum):
-#     none = ""
-#     E = "E"
-#     Z = "Z"
-#
-#
-# class BondConfig:
-#     __slots__ = ["type_", "left_up", "left_down", "right_up", "right_down"]
-#
-#     def __init__(self,
-#                  left_up: Atom | BondDescriptorAtom | Branch | StochasticObject,
-#                  left_down: Atom | BondDescriptorAtom | Branch | StochasticObject,
-#                  right_up: Atom | BondDescriptorAtom | Branch | StochasticObject,
-#                  right_down: Atom | BondDescriptorAtom | Branch | StochasticObject,
-#                  ):
-#         self.type_ = type_
 
 
 class Bond:
-    __slots__ = ["id_", "type_", "symbol", "atom1", "atom2", "ring_id"]
+    __slots__ = ["id_", "symbol", "atom1", "atom2", "ring_id"]
     _tree_print_repr = True
 
     def __init__(self,
@@ -148,26 +122,10 @@ class Bond:
                  ring_id: int = None
                  ):
         self.id_ = id_
-        self.type_ = bond_mapping[symbol]
         self.symbol = symbol
         self.atom1 = atom1
         self.atom2 = atom2
         self.ring_id = ring_id
-
-    # def __repr__(self):
-    #     bond_repr_symbols = {
-    #         Atom: "A",
-    #         BondDescriptorAtom: "BD",
-    #         StochasticObject: "SO",
-    #     }
-    #     text = self.symbol + "{" + str(self.id_) + f"|{bond_repr_symbols[type(self.atom1)]}{self.atom1.id_}-"
-    #     if self.atom2 is not None:
-    #         text += f">{bond_repr_symbols[type(self.atom2)]}{self.atom2.id_}"
-    #     text += "}"
-    #     if Config.color_output:
-    #         return Config.add_color(text, "Blue")
-    #
-    #     return text
 
     def __str__(self):
         return self.to_string()
@@ -183,23 +141,15 @@ class Bond:
 
     @property
     def bond_order(self) -> int:
-        return bond_mapping[self.symbol].value
-
-
-class BondDescriptorTypes(enum.Enum):
-    Left = "<"
-    Right = ">"
-    Dollar = "$"
-    Implicit = ""
+        return bond_mapping[self.symbol]
 
 
 class BondDescriptor:
-    __slots__ = ["descriptor", "type_", "index_", "instances", "stochastic_object"]
+    __slots__ = ["descriptor", "index_", "instances", "stochastic_object"]
 
     def __init__(self, stochastic_object: StochasticObject, descriptor: str, index_: int):
         self.descriptor = descriptor
         self.index_ = index_
-        self.type_ = BondDescriptorTypes(self.descriptor)
         self.instances = []
         self.stochastic_object = stochastic_object
 
@@ -223,8 +173,8 @@ class BondDescriptor:
     def is_pair(self, bd: BondDescriptor) -> bool:
         """ Returns true if symbols are <> and index match. """
         if self.index_ == bd.index_:
-            if (self.type_ is BondDescriptorTypes.Left and bd.type_ is BondDescriptorTypes.Right) or \
-                    (self.type_ is BondDescriptorTypes.Right and bd.type_ is BondDescriptorTypes.Left):
+            if (self.descriptor == "<" and bd.descriptor == ">") or \
+                    (self.descriptor == ">" and bd.descriptor == "<"):
                 return True
 
         return False
@@ -341,8 +291,8 @@ class StochasticObject:
     @property
     def implicit_endgroups(self) -> bool:
         """ Returns true if one or more are implicit """
-        return True if self.end_group_left.descriptor.type_ is BondDescriptorTypes.Implicit or \
-                       self.end_group_right.descriptor.type_ is BondDescriptorTypes.Implicit else False
+        return True if self.end_group_left.descriptor.descriptor == "" or \
+                       self.end_group_right.descriptor.descriptor == "" else False
 
     @property
     def in_stochastic_object(self) -> bool:
@@ -351,6 +301,18 @@ class StochasticObject:
     @property
     def root(self) -> BigSMILES:
         return self.parent.root
+
+
+def contains_stochastic_object(nodes: Atom | Bond | StochasticObject | Branch):
+    for node in nodes:
+        if isinstance(node, StochasticObject):
+            return True
+        if isinstance(node, Branch):
+            result = contains_stochastic_object(node.nodes)
+            if result:
+                return True
+
+    return False
 
 
 class BigSMILES:
@@ -386,6 +348,10 @@ class BigSMILES:
     @property
     def in_stochastic_object(self) -> bool:
         return False
+
+    @property
+    def contains_stochastic_object(self) -> bool:
+        return contains_stochastic_object(self.nodes)
 
     @property
     def root(self) -> BigSMILES:

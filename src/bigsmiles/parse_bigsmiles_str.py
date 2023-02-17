@@ -9,25 +9,26 @@ warnings.formatwarning = custom_formatwarning
 
 
 from bigsmiles.tokenizer import Token, TokenKind, tokenize
-from bigsmiles.bigsmiles_constructor import BigSMILESConstructor, ConstructorStates
+from bigsmiles.constructor import States
+from bigsmiles.constructor_str import BigSMILESStringConstructor
 from bigsmiles.errors import BigSMILESError
 
 
-def map_atom(constructor: BigSMILESConstructor, tokens: list[Token], token: Token):
-    if constructor.state is ConstructorStates.start:
+def map_atom(constructor: BigSMILESStringConstructor, tokens: list[Token], token: Token):
+    if constructor.state is States.start:
         constructor.add_atom(token.value)
 
-    elif constructor.state in (ConstructorStates.atom, ConstructorStates.bond_descriptor, ConstructorStates.stochastic_object_end,
-                               ConstructorStates.branch_start, ConstructorStates.ring):
+    elif constructor.state in (States.atom, States.bond_descriptor, States.stochastic_object_end,
+                               States.branch_start, States.ring):
         constructor.add_bond_atom_pair("", token.value)  # add single bond
-    elif constructor.state in (ConstructorStates.stochastic_fragment,):
+    elif constructor.state in (States.stochastic_fragment,):
         constructor.add_atom(token.value)
 
     else:
         raise BigSMILESError("Something went wrong in 'map_atom'.")  # should not be hit
 
 
-def map_bond(constructor: BigSMILESConstructor, tokens: list[Token], token: Token):
+def map_bond(constructor: BigSMILESStringConstructor, tokens: list[Token], token: Token):
     try:
         next_token = tokens.pop(0)
     except IndexError:
@@ -36,7 +37,7 @@ def map_bond(constructor: BigSMILESConstructor, tokens: list[Token], token: Toke
     if next_token.kind in (TokenKind.Atom, TokenKind.AtomExtend):
         constructor.add_bond_atom_pair(token.value, next_token.value)
     elif next_token.kind is not TokenKind.BondDescriptor:
-        constructor.add_bond_bonding_descriptor_pair(token.value, next_token.value)
+        constructor.add_bond_bonding_descriptor_pair_str(token.value, next_token.value)
     elif next_token.kind is not TokenKind.StochasticStart:
         map_stochastic_object_start(constructor, tokens, next_token, token)
     else:
@@ -44,43 +45,43 @@ def map_bond(constructor: BigSMILESConstructor, tokens: list[Token], token: Toke
                              f"Parse completed: {constructor.bigsmiles}, issue token: {token}")
 
 
-def map_bond_descriptor(constructor: BigSMILESConstructor, tokens: list[Token], token: Token):
+def map_bond_descriptor(constructor: BigSMILESStringConstructor, tokens: list[Token], token: Token):
     if tokens[0].kind == TokenKind.StochasticEnd:
         constructor.close_stochastic_fragment()
-        constructor.close_stochastic_object(token.value)
+        constructor.close_stochastic_object_str(token.value)
         tokens.pop(0)
         return
 
-    if constructor.state is ConstructorStates.stochastic_fragment:
+    if constructor.state is States.stochastic_fragment:
         # first StochasticFragment symbol
-        constructor.add_bonding_descriptor(token.value)
+        constructor.add_bonding_descriptor_str(token.value)
         return
 
-    if constructor.state is ConstructorStates.branch_start:
+    if constructor.state is States.branch_start:
         # first Branch symbol
         # check to make sure the branch closes immediately
         if tokens[0].kind != TokenKind.BranchEnd:
             raise BigSMILESError("If Bonding Descriptors is the first Branch symbol, it can only be followed by "
                                  "Branch End.")
-    constructor.add_bond_bonding_descriptor_pair("", token.value)
+    constructor.add_bond_bonding_descriptor_pair_str("", token.value)
 
 
-def map_branch_start(constructor: BigSMILESConstructor, tokens: list[Token], token: Token):
+def map_branch_start(constructor: BigSMILESStringConstructor, tokens: list[Token], token: Token):
     constructor.open_branch()
 
 
-def map_branch_end(constructor: BigSMILESConstructor, tokens: list[Token], token: Token):
+def map_branch_end(constructor: BigSMILESStringConstructor, tokens: list[Token], token: Token):
     constructor.close_branch()
 
 
-def map_ring(constructor: BigSMILESConstructor, tokens: list[Token], token: Token):
-    if constructor.state is not ConstructorStates.atom:
+def map_ring(constructor: BigSMILESStringConstructor, tokens: list[Token], token: Token):
+    if constructor.state is not States.atom:
         raise BigSMILESError(f"Ring number must follow atoms.")
 
     constructor.add_ring(int(token.value))
 
 
-def map_stochastic_object_start(constructor: BigSMILESConstructor, tokens: list[Token], token: Token,
+def map_stochastic_object_start(constructor: BigSMILESStringConstructor, tokens: list[Token], token: Token,
                                 bond_token: Token = None):
     try:
         next_token = tokens.pop(0)
@@ -90,20 +91,20 @@ def map_stochastic_object_start(constructor: BigSMILESConstructor, tokens: list[
     if next_token.kind not in (TokenKind.ImplictEndGroup, TokenKind.BondDescriptor):
         raise BigSMILESError(f"Stochastic object starts must be followed an explict or implicit end group.")
 
-    if constructor.state is ConstructorStates.start:
-        constructor.open_stochastic_object(next_token.value)
+    if constructor.state is States.start:
+        constructor.open_stochastic_object_str(next_token.value)
     else:
         if bond_token is None:
-            constructor.open_stochastic_object_with_bond("", next_token.value)
+            constructor.open_stochastic_object_with_bond_str("", next_token.value)
         else:
-            constructor.open_stochastic_object_with_bond(bond_token.value, next_token.value)
+            constructor.open_stochastic_object_with_bond_str(bond_token.value, next_token.value)
 
 
-def map_stochastic_object_end(constructor: BigSMILESConstructor, tokens: list[Token], token: Token) -> TokenKind:
+def map_stochastic_object_end(constructor: BigSMILESStringConstructor, tokens: list[Token], token: Token) -> TokenKind:
     raise BigSMILESError("Stochastic objects should end with bonding descriptor (or implicit bonding description)")
 
 
-def map_bond_seperator(constructor: BigSMILESConstructor, tokens: list[Token], token: Token):
+def map_bond_seperator(constructor: BigSMILESStringConstructor, tokens: list[Token], token: Token):
     constructor.close_open_stochastic_fragment()
 
 
@@ -111,7 +112,7 @@ def NotImplementedFunc(*args, **kwargs):
     raise NotImplementedError
 
 
-def SkipSymbol(constructor: BigSMILESConstructor, tokens: list[Token], token: Token):
+def SkipSymbol(constructor: BigSMILESStringConstructor, tokens: list[Token], token: Token):
     warnings.warn(f"Symbol skipped: {token.value}")
 
 
@@ -136,14 +137,14 @@ map_tokens = {
 }
 
 
-def tokens_to_objects(constructor: BigSMILESConstructor, tokens: list[Token]) -> TokenKind | None:
+def tokens_to_objects(constructor: BigSMILESStringConstructor, tokens: list[Token]) -> TokenKind | None:
     """
 
     Main loop for converting tokens into BigSMILES objects.
 
     Parameters
     ----------
-    constructor: BigSMILESConstructor
+    constructor: BigSMILESStringConstructor
 
     tokens:
 
@@ -162,18 +163,11 @@ def tokens_to_objects(constructor: BigSMILESConstructor, tokens: list[Token]) ->
     constructor.final_validation()
 
 
-def create_parse_tree(bigsmiles):
+def parse_bigsmiles_str(input_text: str, bigsmiles):
     """
-
     Main function that turns BigSMILES string into a BigSMILES object.
     Constructs BigSMILES tree in the provided object.
-
-    Parameters
-    ----------
-    bigsmiles: BigSMILES
-        BigSMILES object with BigSMILES string added as 'input_text'
-
     """
-    tokens = tokenize(bigsmiles.input_text)
-    constructor = BigSMILESConstructor(bigsmiles)
+    tokens = tokenize(input_text)
+    constructor = BigSMILESStringConstructor(bigsmiles)
     tokens_to_objects(constructor, tokens)

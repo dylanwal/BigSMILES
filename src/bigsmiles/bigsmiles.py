@@ -4,17 +4,9 @@ import enum
 from bigsmiles.config import Config
 
 
-def to_repr(obj) -> str:
-    return repr(obj)
-
-
-def to_str(obj) -> str:
-    return str(obj)
-
-
 class Atom:
-    __slots__ = ["id_", "element", "bond_symbol", "isotope", "stereo", "hydrogens", "charge", "valence",
-                 "organic", "bonds"]
+    __slots__ = ["id_", "element", "isotope", "stereo", "hydrogens", "charge", "valence",
+                 "organic", "bonds", "possible_valence", "_default_valance"]
     _tree_print_repr = True
 
     def __init__(self,
@@ -24,7 +16,7 @@ class Atom:
                  stereo: str = '',
                  hydrogens: int = 0,
                  charge: int = 0,
-                 valance: int = None,
+                 valence: int = None,
                  **kwargs
                  ):
         self.id_ = id_
@@ -33,7 +25,13 @@ class Atom:
         self.stereo = stereo
         self.hydrogens = hydrogens
         self.charge = charge
-        self.valence = valance
+        self.possible_valence: tuple[int] = Config.get_atom_possible_valence(element)
+        if valence is None:
+            self._default_valance: bool = True
+            self.valence = self.possible_valence[0]
+        else:
+            self._default_valance: bool = False
+            self.valence = valence
         self.organic = True if element in Config.organics else False
 
         if kwargs:
@@ -73,21 +71,7 @@ class Atom:
 
         return ring_index
 
-    def to_string(self, show_hydrogens: bool = False) -> str:
-        """
-        Construct Atom symbol
-
-        Parameters
-        ----------
-        show_hydrogens: bool
-            add implicit hydrogens to string
-
-        Returns
-        -------
-        text: str
-            atom symbol
-
-        """
+    def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False) -> str:
         text = self.element
         bracket_flag = False
 
@@ -98,14 +82,10 @@ class Atom:
             text += self.stereo
             bracket_flag = True
 
-        if (show_hydrogens and self.bonds_available is not None and self.bonds_available > 0) or \
-                self.hydrogens is not None:
-            if self.hydrogens is not None:
-                text += f"H{self.hydrogens if self.hydrogens > 1 else ''}"
-            else:
-                text += f"H{self.bonds_available if self.bonds_available > 1 else ''}"
-
-            bracket_flag = True
+        if show_hydrogens or self.hydrogens > 0:
+            if self.hydrogens > 0 or self.bonds_available != 0:
+                text += f"H{self.bonds_available + self.hydrogens}"
+                bracket_flag = True
 
         if self.charge > 0:
             text += f"+{self.charge if self.charge > 1 else ''}"
@@ -174,27 +154,29 @@ class Bond:
         self.atom2 = atom2
         self.ring_id = ring_id
 
-    def __str__(self):
-        text = self.symbol
-        if Config.color_output:
-            return Config.add_color(text, "Blue")
+    # def __repr__(self):
+    #     bond_repr_symbols = {
+    #         Atom: "A",
+    #         BondDescriptorAtom: "BD",
+    #         StochasticObject: "SO",
+    #     }
+    #     text = self.symbol + "{" + str(self.id_) + f"|{bond_repr_symbols[type(self.atom1)]}{self.atom1.id_}-"
+    #     if self.atom2 is not None:
+    #         text += f">{bond_repr_symbols[type(self.atom2)]}{self.atom2.id_}"
+    #     text += "}"
+    #     if Config.color_output:
+    #         return Config.add_color(text, "Blue")
+    #
+    #     return text
 
-        return text
+    def __str__(self):
+        return self.to_string()
 
     def __repr__(self):
-        bond_repr_symbols = {
-            Atom: "A",
-            BondDescriptorAtom: "BD",
-            StochasticObject: "SO",
-        }
-        text = self.symbol + "{" + str(self.id_) + f"|{bond_repr_symbols[type(self.atom1)]}{self.atom1.id_}-"
-        if self.atom2 is not None:
-            text += f">{bond_repr_symbols[type(self.atom2)]}{self.atom2.id_}"
-        text += "}"
-        if Config.color_output:
-            return Config.add_color(text, "Blue")
+        return self.to_string(print_repr=True, skip_color=True)
 
-        return text
+    def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
+        return Config.add_color(self.symbol, 'Blue', skip_color)
 
     def __iter__(self):
         return iter((self.atom1, self.atom2))
@@ -222,15 +204,17 @@ class BondDescriptor:
         self.stochastic_object = stochastic_object
 
     def __str__(self):
-        if self.index_ == 0 and not Config.show_bond_descriptor_zero_index:
+        return self.to_string()
+
+    def __repr__(self):
+        return self.to_string(print_repr=True, skip_color=True)
+
+    def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
+        if self.index_ == 1 and not Config.show_bond_descriptor_zero_index:
             index = ""
         else:
             index = self.index_
-
-        return "[" + self.symbol + str(index) + "]"
-
-    def __repr__(self):
-        return str(self)
+        return "[" + self.descriptor + str(index) + "]"
 
     @property
     def symbol(self) -> str:
@@ -257,19 +241,13 @@ class BondDescriptorAtom:
         self.bond = None
 
     def __str__(self):
-        text = str(self.descriptor)
-        if Config.color_output:
-            return Config.add_color(text, "Green")
-
-        return text
+        return self.to_string()
 
     def __repr__(self):
-        text = str(self.descriptor) + "{" + str(self.id_) + "}"
+        return self.to_string(print_repr=True, skip_color=True)
 
-        if Config.color_output:
-            return Config.add_color(text, "Green")
-
-        return text
+    def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
+        return Config.add_color(self.descriptor.to_string(show_hydrogens, print_repr), 'Green', skip_color)
 
 
 class Branch:
@@ -282,24 +260,17 @@ class Branch:
         self.parent = parent
 
     def __str__(self):
-        return "(" + "".join((str(node) for node in self.nodes)) + ")"
+        return self.to_string()
 
     def __repr__(self):
-        return "({" + str(self.id_) + "} " + " ".join((repr(node) for node in self.nodes)) + " {" + str(self.id_) + \
-               "})"
+        return self.to_string(print_repr=True, skip_color=True)
 
-    # def __str__(self):
-    #     return self.to_string()
-    #
-    # def __repr__(self):
-    #     return self.to_string(print_repr=True, skip_color=True)
-    #
-    # def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
-    #     text = "".join(
-    #         Config.add_color(node.to_string(show_hydrogens, print_repr), 'Red', skip_color) for node in self.nodes
-    #     )
-    #
-    #     return text
+    def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
+        text = "".join(
+            node.to_string(show_hydrogens, print_repr) for node in self.nodes
+        )
+
+        return "(" + text + ")"
 
     @property
     def in_stochastic_object(self) -> bool:
@@ -363,11 +334,8 @@ class StochasticObject:
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
         text = Config.add_color("{", "Red", skip_color)
         text += self.end_group_left.to_string(show_hydrogens, print_repr, skip_color)
-        text += "".join(
-            Config.add_color(node.to_string(show_hydrogens, print_repr, skip_color), 'Red', skip_color) for node in self.nodes
-        )
+        text += "".join(node.to_string(show_hydrogens, print_repr, skip_color) for node in self.nodes)
         text += self.end_group_right.to_string(show_hydrogens, print_repr, skip_color)
-
         return text + Config.add_color("}", "Red", skip_color)
 
     @property
@@ -391,17 +359,14 @@ class BigSMILES:
 
     def __init__(self, input_text: str = None):
         self.nodes: list[Atom | Bond | StochasticObject | Branch] = []
-        self.atoms: list[Atom] = []  # does count bonds in sub-objects
+        self.atoms: list[Atom] = []  # does count atoms in sub-objects
         self.bonds: list[Bond] = []  # does count bonds in sub-objects
         self.rings: list[Bond] = []  # does not count rings in sub-objects
 
-        # process input string
-        self.input_text = input_text
-        self._tokens = []
-
+        # parse input string
         if input_text:
-            from bigsmiles.create_parse_tree import create_parse_tree
-            create_parse_tree(self)
+            from bigsmiles.parse_bigsmiles_str import parse_bigsmiles_str
+            parse_bigsmiles_str(input_text, self)
 
     def __str__(self):
         return self.to_string()

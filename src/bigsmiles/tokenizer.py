@@ -74,6 +74,8 @@ token_specification = [
 
 tok_regex = '|'.join('(?P<%s>%s)' % pair for pair in token_specification)
 
+tok_regex = re.compile(tok_regex)
+
 
 class Token:
     __slots__ = ("kind", "value")
@@ -103,7 +105,6 @@ def tokenize(text: str) -> list[Token]:
 
     """
     result = []
-    prior = 0
     for match in re.finditer(tok_regex, text.strip()):
         kind = match.lastgroup
 
@@ -114,11 +115,6 @@ def tokenize(text: str) -> list[Token]:
             raise BigSMILESTokenizeError(f'Invalid symbol (or group of symbols). (starting with {value!r}; '
                                          f'index: {match.span()[0]})'
                                          f'\n{text}' + "\n" + " " * match.span()[0] + "^(and forward)")
-        elif prior != match.span()[0]:
-            # This is a false-safe if the regex do something un-expected
-            raise BigSMILESTokenizeError(f'Issue tokenizing range: {prior} to {match.span()[0]} '
-                                         f'({text[prior:match.span()[0]]})')
-        prior = match.span()[1]
 
         result.append(
             Token(TokenKind[kind], value)

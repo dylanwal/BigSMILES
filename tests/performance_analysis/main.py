@@ -87,26 +87,19 @@ def time_bigsmiles_parsing_graph(polymers: list[str], iter_: int) -> float:
     return run_time/iter_ * 1000  # micro-seconds
 
 
-def memory_bigsmiles_parsing(polymers: list[str], iter_: int) -> int:
+def memory_bigsmiles_parsing(polymers: list[str]) -> int:
     print(f"Starting memory test: {datetime.datetime.now().time()}")
-
-    data = []
-    for i in range(iter_):
-        data.append(bigsmiles.BigSMILES(polymers[i % len(polymers)]))
-
+    data = [bigsmiles.BigSMILES(polymer) for polymer in polymers]
     print(f"Done memory test:{datetime.datetime.now().time()}")
-    return int(total_size(data) / iter_)  # bytes
+    return int(total_size(data)/len(polymers))  # bytes
 
 
-def memory_bigsmiles_graph(polymers: list[str], iter_: int) -> int:
+def memory_bigsmiles_graph(polymers: list[str]) -> int:
     print(f"Starting memory test: {datetime.datetime.now().time()}")
-
-    data = []
-    for i in range(iter_):
-        data.append(bigsmiles.BigSMILES(polymers[i % len(polymers)]).graph())
-
+    data = [bigsmiles.BigSMILES(polymer).graph() for polymer in polymers]
     print(f"Done memory test:{datetime.datetime.now().time()}")
-    return int(total_size(data) / iter_)  # bytes
+    return int(total_size(data)/len(polymers))  # bytes
+
 
 def print_memory_breakdown():
     polymer = "[H]O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}[H]"
@@ -128,10 +121,10 @@ def main():
     memory_iter = 1000
 
     bigsmiles_parse_time = time_bigsmiles_parsing(polymer_string, time_iter)
-    bigsmiles_parse_memory = memory_bigsmiles_parsing(polymer_string, memory_iter)
+    bigsmiles_parse_memory = memory_bigsmiles_parsing(polymer_string)
 
-    bigsmiles_graph_time = time_bigsmiles_parsing_graph(polymer_string, time_iter)
-    bigsmiles_graph_memory = memory_bigsmiles_graph(polymer_string, memory_iter)
+    bigsmiles_graph_time = 0 #time_bigsmiles_parsing_graph(polymer_string, time_iter)
+    bigsmiles_graph_memory = 0# memory_bigsmiles_graph(polymer_string)
 
     titles = "date/time (UTF), package version, time per parse (us), memory usage per bigsmiles (bytes), " \
              "platform.processor, graph time (us), memory usage per graph (bytes)"

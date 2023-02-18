@@ -5,7 +5,7 @@ from bigsmiles.config import Config
 
 class Atom:
     __slots__ = ["id_", "element", "isotope", "stereo", "hydrogens", "charge", "valence",
-                 "organic", "bonds", "possible_valence", "_default_valance"]
+                 "organic", "bonds", "possible_valence", "_default_valance", "__dict__"]
     _tree_print_repr = True
 
     def __init__(self,
@@ -111,7 +111,7 @@ bond_mapping = {
 
 
 class Bond:
-    __slots__ = ["id_", "symbol", "atom1", "atom2", "ring_id"]
+    __slots__ = ["id_", "symbol", "atom1", "atom2", "ring_id", "__dict__"]
     _tree_print_repr = True
 
     def __init__(self,
@@ -145,7 +145,7 @@ class Bond:
 
 
 class BondDescriptor:
-    __slots__ = ["descriptor", "index_", "instances", "stochastic_object"]
+    __slots__ = ["descriptor", "index_", "instances", "stochastic_object", "__dict__"]
 
     def __init__(self, stochastic_object: StochasticObject, descriptor: str, index_: int):
         self.descriptor = descriptor
@@ -182,7 +182,7 @@ class BondDescriptor:
 
 class BondDescriptorAtom:
     _tree_print_repr = True
-    __slots__ = ["descriptor", "id_", "bond"]
+    __slots__ = ["descriptor", "id_", "bond", "__dict__"]
 
     def __init__(self, bond_descriptor: BondDescriptor, id_: int = None):
         self.descriptor = bond_descriptor
@@ -202,7 +202,7 @@ class BondDescriptorAtom:
 
 class Branch:
     _tree_print_repr = False
-    __slots__ = ["nodes", "id_", "parent"]
+    __slots__ = ["nodes", "id_", "parent", "__dict__"]
 
     def __init__(self, parent: BigSMILES | StochasticFragment | Branch, id_: int = None):
         self.nodes: list[Atom | Bond | Branch | StochasticObject | BondDescriptorAtom] = []
@@ -233,7 +233,7 @@ class Branch:
 
 class StochasticFragment:
     _tree_print_repr = False
-    __slots__ = ["nodes", "id_", "parent", "bonding_descriptors", "rings"]
+    __slots__ = ["nodes", "id_", "parent", "bonding_descriptors", "rings", "__dict__"]
 
     def __init__(self, parent: StochasticObject, id_: int = None):
         self.nodes: list[Atom | Bond | BondDescriptorAtom | Branch | StochasticObject] = []
@@ -263,7 +263,7 @@ class StochasticFragment:
 class StochasticObject:
     _tree_print_repr = False
     __slots__ = ["nodes", "bonding_descriptors", "id_", "parent", "end_group_left", "end_group_right",
-                 "bond_left", "bond_right"]
+                 "bond_left", "bond_right", "__dict__"]
 
     def __init__(self, parent: BigSMILES | StochasticFragment | Branch, id_: int = None):
         self.nodes: list[StochasticFragment] = []
@@ -317,7 +317,7 @@ def contains_stochastic_object(nodes: Atom | Bond | StochasticObject | Branch):
 
 class BigSMILES:
     _tree_print_repr = False
-    __slots__ = ["nodes", "atoms", "bonds", "rings", "input_text", "_tokens"]
+    __slots__ = ["nodes", "atoms", "bonds", "rings", "__dict__"]
 
     def __init__(self, input_text: str = None):
         self.nodes: list[Atom | Bond | StochasticObject | Branch] = []

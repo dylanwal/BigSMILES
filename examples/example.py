@@ -17,14 +17,14 @@ def main():
     ]
 
     case = cases[0]
-    # for case in cases:
-    polymer = bigsmiles.BigSMILES(case)
-    print("input: ", case)
-    polymer.print_tree(print_repr=False)
+    for case in cases:
+        polymer = bigsmiles.BigSMILES(case)
+        print("input: ", case)
+        polymer.print_tree(print_repr=False)
 
-    g = polymer.graph()
-    print(g)
-    g.draw_plotly()
+    # g = polymer.graph()
+    # print(g)
+    # g.draw_plotly()
 
 
 if __name__ == "__main__":

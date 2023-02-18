@@ -88,32 +88,33 @@ class BigSMILESConstructor:
         self._stochastic_object += 1
         return self._stochastic_object - 1
 
-    def add_ring(self, ring_id: int) -> Bond:
-        # check if ring_id already exists
-        ring_parent = self._get_ring_parent()
-        for ring in ring_parent.rings:
-            if ring.ring_id == ring_id:
-                if ring.atom2 is not None:
-                    raise BigSMILESError(f"Ring already formed for ring id {ring_id}.")
-                ring.atom2 = self._get_prior(self.stack[-1], (Atom,))
-                add_bond_to_connected_objects(ring)
-                return ring
-
-        # Make new ring_id
-        bond = Bond("", self._get_prior(self.stack[-1], (Atom,)), None, self._get_bond_id(), ring_id)
-        self.bigsmiles.bonds.append(bond)
-        ring_parent.rings.append(bond)
-
-        return bond
-
-    def add_ring_from_atoms(self, atom1: Atom, atom2: Atom):
-        ring_parent = self._get_ring_parent()
-
-        # Make new ring_id
-        bond = Bond("", atom1, atom2, self._get_bond_id(), self._get_ring_id())
-        self.bigsmiles.bonds.append(bond)
-        ring_parent.rings.append(bond)
-        add_bond_to_connected_objects(bond)
+# TODO: Check if ring already between two atoms and just increase bond order; make attributes properties
+    # def add_ring(self, ring_id: int) -> Bond:
+    #     # check if ring_id already exists
+    #     ring_parent = self._get_ring_parent()
+    #     for ring in ring_parent.rings:
+    #         if ring.ring_id == ring_id:
+    #             if ring.atom2 is not None:
+    #                 raise BigSMILESError(f"Ring already formed for ring id {ring_id}.")
+    #             ring.atom2 = self._get_prior(self.stack[-1], (Atom,))
+    #             add_bond_to_connected_objects(ring)
+    #             return ring
+    #
+    #     # Make new ring_id
+    #     bond = Bond("", self._get_prior(self.stack[-1], (Atom,)), None, self._get_bond_id(), ring_id)
+    #     self.bigsmiles.bonds.append(bond)
+    #     ring_parent.rings.append(bond)
+    #
+    #     return bond
+    #
+    # def add_ring_from_atoms(self, atom1: Atom, atom2: Atom):
+    #     ring_parent = self._get_ring_parent()
+    #
+    #     # Make new ring_id
+    #     bond = Bond("", atom1, atom2, self._get_bond_id(), self._get_ring_id())
+    #     self.bigsmiles.bonds.append(bond)
+    #     ring_parent.rings.append(bond)
+    #     add_bond_to_connected_objects(bond)
 
     def _get_ring_parent(self) -> BigSMILES | StochasticFragment:
         for node in reversed(self.stack):
@@ -223,7 +224,12 @@ class BigSMILESConstructor:
                                  "\n\tClosing a branch with another intermediate node started."
                                  "\n\tNo starting branch symbol.")
 
-        self.stack.pop()
+        branch = self.stack.pop()
+
+        # check if branch is empty; if so remove it
+        if len(branch.nodes) == 0:
+            self.stack[-1].nodes.pop()
+            self._branch_counter -= 1
 
     def open_stochastic_object(self, descriptor: str, index_: int) -> StochasticFragment:
         stoch_obj = StochasticObject(self.stack[-1], self._get_stochastic_object_id())

@@ -18,6 +18,21 @@ test_molecules = [
 
     "C12C3C4C1C5C4C3C25",
 
+    "[12C]C1=C(C(=NC=C1C=O)C)O",
+    "[C@]C1=C(C(=NC=C1C=O)C)O",
+    "[35Br]CC1=C(C(=NC=C1C=O)C)O",
+    "[35Br@@]CC1=C(C(=NC=C1C=O)C)O",
+    "[12CH2]C1=C(C(=NC=C1C=O)C)O",
+    "[BrH3]",
+    "[Fe+3]CCC",
+    "CC[12C]C1=C(C(=NC=C1C=O)C)O",
+    "CC[C@]C1=C(C(=NC=C1C=O)C)O",
+    "CC[35Br]CC1=C(C(=NC=C1C=O)C)O",
+    "CC[35Br@@]CC1=C(C(=NC=C1C=O)C)O",
+    "CC[12CH2]C1=C(C(=NC=C1C=O)C)O",
+    "CC[BrH3]",
+    "CC[Fe+3]CCC",
+
     # cis/trans
     # "F/C=C/F",  # trans
     # "F\C=C\F",  # trans

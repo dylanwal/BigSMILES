@@ -15,8 +15,47 @@ from bigsmiles.bigsmiles import BigSMILES, StochasticObject, StochasticFragment,
     BondDescriptor, Branch
 
 
-def run_validation(bigsmiles: BigSMILES):
-    """ Main entry point for validation. """
+## Pre-construction validation#############################################################################
+def pre_validation(text: str):
+    """ Main entry point for pre-construction validation. """
+    branch_symbol_validation(text)
+    stochastic_object_validation(text)
+    brackets_validation(text)
+
+
+def branch_symbol_validation(text: str):
+    count = text.count('(') - text.count(')')
+    if count != 0:
+        if count > 0:
+            raise BigSMILESError(f"Invalid BigSMILES. Missing {count} closing branch symbols ')'. "
+                                 f"\n Invalid string: {text}")
+        raise BigSMILESError(f"Invalid BigSMILES. Missing {count} opening branch symbols '('. "
+                             f"\n Invalid string: {text}")
+
+
+def stochastic_object_validation(text: str):
+    count = text.count('{') - text.count('}')
+    if count != 0:
+        if count > 0:
+            raise BigSMILESError(f"Invalid BigSMILES. Missing {count} closing stochastic object symbols" + " '}'. "
+                                 f"\n Invalid string: {text}")
+        raise BigSMILESError(f"Invalid BigSMILES. Missing {count} opening stochastic object symbols " + "'{'. "
+                             f"\n Invalid string: {text}")
+
+
+def brackets_validation(text: str):
+    count = text.count('[') - text.count(']')
+    if count != 0:
+        if count > 0:
+            raise BigSMILESError(f"Invalid BigSMILES. Missing {count} closing bracket symbols ']'. "
+                                 f"\n Invalid string: {text}")
+        raise BigSMILESError(f"Invalid BigSMILES. Missing {count} opening bracket symbols '['. "
+                             f"\n Invalid string: {text}")
+
+
+## Post-construction validation#############################################################################
+def post_validation(bigsmiles: BigSMILES):
+    """ Main entry point for post-construction validation. """
     check_ring_closure(bigsmiles)
     check_bonding_descriptors(bigsmiles)
     check_implicit_endgroups_ends(bigsmiles)
@@ -29,7 +68,7 @@ def check_ring_closure(bigsmiles: BigSMILES):
             raise BigSMILESError(f"Ring opened, but not closed. (ring id: {ring.ring_id})")
 
 
-def check_bonding_descriptors(bigsmiles: BigSMILES | StochasticObject):
+def check_bonding_descriptors(bigsmiles: BigSMILES | StochasticObject | Branch):
     """
 
     rules:
@@ -54,6 +93,8 @@ def check_bonding_descriptors(bigsmiles: BigSMILES | StochasticObject):
             do_check_bonding_descriptors(node)
 
             # check nested stochastic objects
+            check_bonding_descriptors(node)
+        if isinstance(node, Branch):
             check_bonding_descriptors(node)
 
 

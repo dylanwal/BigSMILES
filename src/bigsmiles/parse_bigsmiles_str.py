@@ -7,7 +7,7 @@ def custom_formatwarning(msg, *args, **kwargs):
 
 warnings.formatwarning = custom_formatwarning
 
-
+from bigsmiles.validation import pre_validation
 from bigsmiles.tokenizer import Token, TokenKind, tokenize
 from bigsmiles.constructor import States
 from bigsmiles.constructor_str import BigSMILESStringConstructor
@@ -46,7 +46,7 @@ def map_bond(constructor: BigSMILESStringConstructor, tokens: list[Token], token
 
 
 def map_bond_descriptor(constructor: BigSMILESStringConstructor, tokens: list[Token], token: Token):
-    if tokens[0].kind == TokenKind.StochasticEnd:
+    if tokens[0].kind is TokenKind.StochasticEnd:
         constructor.close_stochastic_fragment()
         constructor.close_stochastic_object_str(token.value)
         tokens.pop(0)
@@ -78,7 +78,7 @@ def map_ring(constructor: BigSMILESStringConstructor, tokens: list[Token], token
     if constructor.state is not States.atom:
         raise BigSMILESError(f"Ring number must follow atoms.")
 
-    constructor.add_ring(int(token.value))
+    constructor.add_ring(int(token.value.replace('%', '')))
 
 
 def map_stochastic_object_start(constructor: BigSMILESStringConstructor, tokens: list[Token], token: Token,
@@ -160,7 +160,7 @@ def tokens_to_objects(constructor: BigSMILESStringConstructor, tokens: list[Toke
         if isinstance(result, TokenKind):
             return result
 
-    constructor.final_validation()
+    constructor.run_validation()
 
 
 def parse_bigsmiles_str(input_text: str, bigsmiles):
@@ -168,6 +168,9 @@ def parse_bigsmiles_str(input_text: str, bigsmiles):
     Main function that turns BigSMILES string into a BigSMILES object.
     Constructs BigSMILES tree in the provided object.
     """
+    pre_validation(input_text)
     tokens = tokenize(input_text)
-    constructor = BigSMILESStringConstructor(bigsmiles)
-    tokens_to_objects(constructor, tokens)
+
+    with BigSMILESStringConstructor(bigsmiles) as constructor:
+        tokens_to_objects(constructor, tokens)
+        constructor.run_validation()

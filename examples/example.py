@@ -1,11 +1,11 @@
-
 import bigsmiles
+
+import chemdraw
 
 # bigsmiles.Config.color_output = True
 
-
-def main():
-    cases = [
+cases = [
+    r'C%10CCCC%10C',
     "C1=CC=CC=C1C",
     "F{[$][$]CC(CC[$])[$][$]}O",
     "OC{[>][<]C(=O)OCC(=O)[<],[>]NCCCCCC(C)N[>][<]}CF",
@@ -14,18 +14,31 @@ def main():
     "F{[<][>]CC(F)[<],[>]CCO[<][>]}P",
     "CC{[>][<]C(=O)CCCCC(=O)NCCCCCCN[>][<]}O",
     "F{[<][>]OO[>],[>]C(N[<])C[<][>]}S",
-    ]
+]
 
+
+def single():
     case = cases[0]
-    for case in cases:
-        polymer = bigsmiles.BigSMILES(case)
-        print("input: ", case)
-        polymer.print_tree(print_repr=False)
+    print("case: ", case)
+    output = bigsmiles.BigSMILES(case)
+    print("output: ", output)
+    output.print_tree(print_repr=False)
 
-    # g = polymer.graph()
-    # print(g)
-    # g.draw_plotly()
+    drawer = chemdraw.Drawer(str(output))
+    drawer.draw_html(auto_open=True)
+
+
+def multiple():
+    results = []
+    for case in cases:
+        print("case: ", case)
+        output = bigsmiles.BigSMILES(case)
+        print("output: ", output)
+
+    drawer = chemdraw.GridDrawer(results)
+    drawer.draw_html(auto_open=True)
 
 
 if __name__ == "__main__":
-    main()
+    single()
+    # multiple()

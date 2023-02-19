@@ -46,9 +46,7 @@ class Atom:
         return str(self) + "{" + str(self.id_) + "}"
 
     @property
-    def bond_capacity(self) -> int | None:
-        if self.valence is None:
-            return None
+    def bond_capacity(self) -> int:
         return self.valence - self.hydrogens + self.charge
 
     @property
@@ -56,9 +54,7 @@ class Atom:
         return sum((bond.bond_order for bond in self.bonds)) + self.hydrogens
 
     @property
-    def bonds_available(self) -> int | None:
-        if self.valence is None:
-            return None
+    def bonds_available(self) -> int:
         return self.bond_capacity - self.number_of_bonds
 
     @property
@@ -100,7 +96,34 @@ class Atom:
         if bracket_flag:
             text = "[" + text + "]"
 
-        return text + "".join((str(id_) for id_ in self.ring_indexes))
+        if self.ring_indexes:
+            for bond in self.bonds:
+                if bond.ring_id is not None:
+                    if bond.ring_id > 9:
+                        ring_id = "%" + str(bond.ring_id)
+                    else:
+                        ring_id = str(bond.ring_id)
+                    text += bond.symbol + ring_id
+
+        return text
+
+    def _increase_valance(self, requested_valance_increase: int = 0) -> bool:
+        " If default valance, try to increase when an additional bond added that needs it. "
+        if not self._default_valance:
+            return False
+
+        for valence in self.possible_valence:
+            if valence > self.valence:
+                old_valance = self.valence
+                self.valence = valence
+                if self.bonds_available < requested_valance_increase:
+                    # increase was not enough for requested valance increase; set valence back to original value
+                    self.valence = old_valance
+                    continue
+
+                return True
+
+        return False
 
 
 bond_mapping = {
@@ -142,6 +165,15 @@ class Bond:
     @property
     def bond_order(self) -> int:
         return bond_mapping[self.symbol]
+
+    @bond_order.setter
+    def bond_order(self, count: int):
+        for k, v in bond_mapping.items():
+            if v == count:
+                self.symbol = k
+                return
+
+        raise ValueError(f"Invalid bond_order. \nGiven: {count} \n Acceptable: {bond_mapping}")
 
 
 class BondDescriptor:
@@ -284,7 +316,7 @@ class StochasticObject:
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
         text = Config.add_color("{", "Red", skip_color)
         text += self.end_group_left.to_string(show_hydrogens, print_repr, skip_color)
-        text += "".join(node.to_string(show_hydrogens, print_repr, skip_color) for node in self.nodes)
+        text += ",".join(node.to_string(show_hydrogens, print_repr, skip_color) for node in self.nodes)
         text += self.end_group_right.to_string(show_hydrogens, print_repr, skip_color)
         return text + Config.add_color("}", "Red", skip_color)
 
@@ -321,9 +353,9 @@ class BigSMILES:
 
     def __init__(self, input_text: str = None):
         self.nodes: list[Atom | Bond | StochasticObject | Branch] = []
-        self.atoms: list[Atom] = []  # does count atoms in sub-objects
-        self.bonds: list[Bond] = []  # does count bonds in sub-objects
-        self.rings: list[Bond] = []  # does not count rings in sub-objects
+        self.atoms: list[Atom] = []  # includes atoms in sub-objects
+        self.bonds: list[Bond] = []  # includes bonds in sub-objects
+        self.rings: list[Bond] = []  # does not include rings in sub-objects
 
         # parse input string
         if input_text:

@@ -3,7 +3,8 @@ import enum
 from bigsmiles.errors import BigSMILESError
 from bigsmiles.bigsmiles import Atom, Bond, BondDescriptor, Branch, StochasticFragment, StochasticObject, \
     BigSMILES, BondDescriptorAtom
-from bigsmiles.validation import run_validation
+from bigsmiles.validation import post_validation
+from bigsmiles.syntax_fixes import run_syntax_fixes
 
 
 class States(enum.Enum):
@@ -24,6 +25,8 @@ def add_bond_to_connected_objects(bond: Bond):
     for obj in bond:
         if isinstance(obj, Atom):
             if obj.bonds_available < bond.bond_order:
+                if obj._increase_valance(bond.bond_order):
+                    continue
                 raise BigSMILESError("Too many bonds trying to be made.", str(obj))
             obj.bonds.append(bond)
         elif isinstance(obj, BondDescriptorAtom):
@@ -43,10 +46,34 @@ def add_bond_descriptor_to_stochastic_fragment(stoch_frag: StochasticFragment, l
             add_bond_descriptor_to_stochastic_fragment(stoch_frag, obj)  # recursive
 
 
+def get_common_bond(atom1: Atom, atom2: Atom) -> Bond | None:
+    # Check if bond already between two atoms
+    for bond in atom1.bonds:
+        if bond in atom2.bonds:
+            return bond
+
+    return None  # No common bond found
+
+
+def remove_partial_ring(parent: BigSMILES | Branch | StochasticFragment, ring_id: int):
+    for i, ring in enumerate(parent.rings):
+        if ring.ring_id == ring_id:
+            break
+    else:
+        return
+
+    bond = parent.rings.pop(i)
+    parent.bonds.remove(bond)
+    if hasattr(parent, "parent"):
+        parent.parent.bonds.remove(bond)
+
+
 class BigSMILESConstructor:
 
-    def __init__(self, obj: BigSMILES):
-        self.bigsmiles = obj
+    def __init__(self, bigsmiles: BigSMILES = None, syntax_fix: bool = True):
+        self.bigsmiles = bigsmiles if bigsmiles is not None else BigSMILES()
+
+        self.syntax_fix = syntax_fix  # only with context manager
 
         # setup id counters
         self._atom_counter = 0
@@ -59,6 +86,18 @@ class BigSMILESConstructor:
 
         self.state = States.start
         self.stack: list[BigSMILES | StochasticObject | StochasticFragment | Branch] = [self.bigsmiles]
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        if exc_type:
+            raise exc_type(exc_value).with_traceback(exc_tb)
+
+        if len(self.stack) != 1:
+            raise BigSMILESError(f"{type(self.stack[-1])} is missing closing symbol.")
+        if self.syntax_fix:
+            run_syntax_fixes(self.bigsmiles)
 
     def _get_atom_id(self) -> int:
         self._atom_counter += 1
@@ -88,33 +127,43 @@ class BigSMILESConstructor:
         self._stochastic_object += 1
         return self._stochastic_object - 1
 
-# TODO: Check if ring already between two atoms and just increase bond order; make attributes properties
-    # def add_ring(self, ring_id: int) -> Bond:
-    #     # check if ring_id already exists
-    #     ring_parent = self._get_ring_parent()
-    #     for ring in ring_parent.rings:
-    #         if ring.ring_id == ring_id:
-    #             if ring.atom2 is not None:
-    #                 raise BigSMILESError(f"Ring already formed for ring id {ring_id}.")
-    #             ring.atom2 = self._get_prior(self.stack[-1], (Atom,))
-    #             add_bond_to_connected_objects(ring)
-    #             return ring
-    #
-    #     # Make new ring_id
-    #     bond = Bond("", self._get_prior(self.stack[-1], (Atom,)), None, self._get_bond_id(), ring_id)
-    #     self.bigsmiles.bonds.append(bond)
-    #     ring_parent.rings.append(bond)
-    #
-    #     return bond
-    #
-    # def add_ring_from_atoms(self, atom1: Atom, atom2: Atom):
-    #     ring_parent = self._get_ring_parent()
-    #
-    #     # Make new ring_id
-    #     bond = Bond("", atom1, atom2, self._get_bond_id(), self._get_ring_id())
-    #     self.bigsmiles.bonds.append(bond)
-    #     ring_parent.rings.append(bond)
-    #     add_bond_to_connected_objects(bond)
+    def add_ring(self, ring_id: int, bond_symbol: str = "") -> Bond:
+        # check if ring_id already exists
+        ring_parent = self._get_ring_parent()
+        for ring in ring_parent.rings:
+            if ring.ring_id == ring_id:
+                if ring.atom2 is not None:
+                    raise BigSMILESError(f"Ring already formed for ring id {ring_id}.")
+                atom2 = self._get_prior(self.stack[-1], (Atom,))
+
+                bond = get_common_bond(ring.atom1, atom2)
+                if bond:  # Check if ring already between two atoms and just increase bond order
+                    bond.bond_order += 1
+                    remove_partial_ring(ring_parent, ring_id)
+                else:
+                    ring.atom2 = atom2
+                    add_bond_to_connected_objects(ring)
+                return ring
+
+        # Make new ring_id
+        bond = Bond(bond_symbol, self._get_prior(self.stack[-1], (Atom,)), None, self._get_bond_id(), ring_id)
+        self.bigsmiles.bonds.append(bond)
+        ring_parent.rings.append(bond)
+
+        return bond
+
+    def add_ring_from_atoms(self, atom1: Atom, atom2: Atom, bond_symbol: str = ""):
+        ring_parent = self._get_ring_parent()
+
+        bond = get_common_bond(atom1, atom2)
+        if bond:  # Check if ring already between two atoms and just increase bond order
+            bond.bond_order += 1
+        else:
+            # Make new ring_id
+            bond = Bond(bond_symbol, atom1, atom2, self._get_bond_id(), self._get_ring_id())
+            self.bigsmiles.bonds.append(bond)
+            ring_parent.rings.append(bond)
+            add_bond_to_connected_objects(bond)
 
     def _get_ring_parent(self) -> BigSMILES | StochasticFragment:
         for node in reversed(self.stack):
@@ -311,9 +360,6 @@ class BigSMILESConstructor:
 
         raise BigSMILESError("Bond attempted to be made to that has nothing to bond back to.")
 
-    def final_validation(self):
+    def run_validation(self):
         """ Run various validations. """
-        if len(self.stack) != 1:
-            raise BigSMILESError(f"{type(self.stack[-1])} is missing closing symbol.")
-
-        run_validation(self.bigsmiles)
+        post_validation(self.bigsmiles)

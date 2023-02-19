@@ -81,3 +81,4 @@ class BigSMILESStringConstructor(BigSMILESConstructor):
     @in_stochastic_object
     def close_stochastic_fragment(self):
         return super().close_stochastic_fragment()
+

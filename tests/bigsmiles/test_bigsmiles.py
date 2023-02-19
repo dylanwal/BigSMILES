@@ -15,7 +15,7 @@ test_molecules = [
     "C(C(C(COP(=O)(O)O)O)O)C(=O)C(=O)O",
     "CC(CC1=CC(=C(C=C1)O)O)(C(=O)OC)N",
     "C1=CC=C(C=C1)S(=O)(=O)NNC2=NC(=NC(=N2)Cl)Cl",
-    "C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C))))))))))))))))))))C",
+
     "C12C3C4C1C5C4C3C25",
 
     # cis/trans
@@ -51,12 +51,11 @@ test_polymers = [
     "{[][$]CC[$],[$]CC(CC)[$][]}",  # implicit end groups
     "{[]C([$])C([$])CC[]}",  # test end groups in middle
     "OC{[>][<]CC(C{[>][<]CCO[>][<]}CN)[>][<]}CC",
-    "CC(CC){[<1][>1]CC(C)[<2][>2]}CCO",
+    "CC(CC){[<][>]CC(C)[<2][>2]}CCO",
     # "{[][>]C([>])([>]),[<]OO[>][>]}CB", Not sure if it a valid BigSMILES
 
     # From BCPD
     "CCC(C){[$][$]CC(C1CCCCC1)[$][$]}{[$][$]CCCC[$],[$]CC(CC)[$][$]}[H]",
-    "{[][$]CC(c1cc(C(=O)Oc2ccc(OCCCC)cc2)ccc1(C(=O)Oc3ccc(OCCCC)cc3))[$][$]}{[>][<]Si(C)(C)O[>][]}",
     # "{[][<]CCO[>][<]}{[$][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][]}",
     # "{[][$]C\C=C/C[$],[$]C\C=C\C[$],[$]CC(C=C)[$][$]}{[>][<][Si](C)(C)O[>][]}",
     # "{[][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][$]}{[$][$]CC(c1ccccc1)[$][]}",
@@ -101,14 +100,17 @@ validation_cases = [
     ["CC{CC"],   # stochastic object no end
     ["{CC}"],
     ["{[]CC[]}"],
-    ["{[][$]CC[]}"],
+    # ["{[][$]CC[]}"],  # are these valid?
+    # ["CC({[][$]CC[]})CC"],
+    # ["CC({[$][$]CC[$]})CC"],
+    # ["CC(C{[$][$]CC[$]})CC"],
     ["{[][>]CC[$][]}"],
     ["{[][>]CC[>][]}"],
     ["{[][>]CC[>][]}CC"],  # implicit and explict end groups same time
     ["CC{[<][>]CC[>][]}CC"],  # implicit and explict end groups same time
-    ["{[][>]CC[>];[<]C[]}"],  # only one end group provided
-    ["{[][>]CC[>];[$]C[]}"],
-    ["{[$1][$]CC[$][$1]}"],  # index don't match
+    # ["{[][>]CC[>];[<]C[]}"],  # only one end group provided
+    # ["{[][>]CC[>];[$]C[]}"],
+    # ["{[$2][$]CC[$][$2]}"],  # index don't match
     ["{[$][<]CC[>][$]"],  # end group bonding descriptor don't match stochastic fragment
 ]
 

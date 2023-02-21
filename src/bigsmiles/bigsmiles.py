@@ -403,3 +403,7 @@ class BigSMILES:
         """
         from bigsmiles.tree_to_string import tree_to_string  # here to avoid circular imports
         print(tree_to_string(self, show_object_label, print_repr))
+
+    def graph(self):
+        from bigsmiles.graph.create_graph import create_graph  # here to avoid circular imports and optional package requirements
+        return create_graph(self)

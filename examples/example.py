@@ -5,7 +5,7 @@ import chemdraw
 # bigsmiles.Config.color_output = True
 
 cases = [
-    "O1CCCCC1N1CCCCC1",
+    "O1CCCCC1N2CCCCC2",
     "F/C=C/F",
     "C1=CC=CC=C1C",
     "F{[$][$]CC(CC[$])[$][$]}O",

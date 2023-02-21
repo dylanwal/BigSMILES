@@ -3,6 +3,9 @@ from bigsmiles.bigsmiles import BigSMILES, Branch, StochasticObject, StochasticF
 
 
 def run_syntax_fixes(bigsmiles: BigSMILES):
+    if not bigsmiles:
+        return
+
     remove_unnecessary_branch_symbols(bigsmiles)
     check_ring_numbers(bigsmiles)
 

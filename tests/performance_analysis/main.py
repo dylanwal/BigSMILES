@@ -75,15 +75,30 @@ def time_bigsmiles_parsing(polymers: list[str], iter_: int) -> float:
     return run_time/iter_ * 1000  # micro-seconds
 
 
-def memory_bigsmiles_parsing(polymers: list[str], iter_: int) -> int:
-    print(f"Starting memory test: {datetime.datetime.now().time()}")
+def time_bigsmiles_parsing_graph(polymers: list[str], iter_: int) -> float:
+    print(f"Starting graph time test: {datetime.datetime.now().time()}  (May take a minute.)")
+    start_time = time.perf_counter()
 
-    data = []
     for i in range(iter_):
-        data.append(bigsmiles.BigSMILES(polymers[i % len(polymers)]))
+        bigsmiles.BigSMILES(polymers[i % len(polymers)]).graph()
 
+    run_time = time.perf_counter() - start_time
+    print(f"Done graph time test:{datetime.datetime.now().time()}")
+    return run_time/iter_ * 1000  # micro-seconds
+
+
+def memory_bigsmiles_parsing(polymers: list[str]) -> int:
+    print(f"Starting memory test: {datetime.datetime.now().time()}")
+    data = [bigsmiles.BigSMILES(polymer) for polymer in polymers]
     print(f"Done memory test:{datetime.datetime.now().time()}")
-    return int(total_size(data) / iter_)  # bytes
+    return int(total_size(data)/len(polymers))  # bytes
+
+
+def memory_bigsmiles_graph(polymers: list[str]) -> int:
+    print(f"Starting memory test: {datetime.datetime.now().time()}")
+    data = [bigsmiles.BigSMILES(polymer).graph() for polymer in polymers]
+    print(f"Done memory test:{datetime.datetime.now().time()}")
+    return int(total_size(data)/len(polymers))  # bytes
 
 
 def print_memory_breakdown():
@@ -96,21 +111,26 @@ def main():
     polymer_string = [
         "CC{[>][<]CC(C)[>][<]}CC(C)=C",
         "CCCCCCCCCCCCCCCCCCCCCCCCCCCC",
-        "{[>][$]CC[$],[$]CC(CC)[$][<]}",
-        "{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}",
-        "{[>][<]C(=O)CCCCC(=O)NCCCCCCN[>][<]}",
-        "C{[$][$]CC[$],[$]CC(CC)[$][$]}",
-        "[H]O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}[H]"
+        "CC{[>][$]CC[$],[$]CC(CC)[$][<]}O",
+        "CC{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}O",
+        "CC{[>][<]C(=O)CCCCC(=O)NCCCCCCN[>][<]}F",
+        "C{[$][$]CC[$],[$]CC(CC)[$][$]}CC",
+        "O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}CC"
     ]
-    time_iter = 30_000
+    time_iter = 20_000
     memory_iter = 1000
 
     bigsmiles_parse_time = time_bigsmiles_parsing(polymer_string, time_iter)
-    bigsmiles_parse_memory = memory_bigsmiles_parsing(polymer_string, memory_iter)
+    bigsmiles_parse_memory = memory_bigsmiles_parsing(polymer_string)
 
-    titles = "date/time (UTF), package version, time per parse (us), memory usage per bigsmiles (bytes), platform.processor"
+    bigsmiles_graph_time = 0 #time_bigsmiles_parsing_graph(polymer_string, time_iter)
+    bigsmiles_graph_memory = 0# memory_bigsmiles_graph(polymer_string)
+
+    titles = "date/time (UTF), package version, time per parse (us), memory usage per bigsmiles (bytes), " \
+             "platform.processor, graph time (us), memory usage per graph (bytes)"
     row = f"\n{datetime.datetime.utcnow()}, {bigsmiles.__version__}, {bigsmiles_parse_time:2.5f}, " \
-          f"{bigsmiles_parse_memory:2.0f}, {platform.processor().replace(',', '')}"
+          f"{bigsmiles_parse_memory:2.0f}, {platform.processor().replace(',', '')}, {bigsmiles_graph_time:2.5f}, " \
+          f"{bigsmiles_graph_memory:2.0f}"
 
     print(titles, row)
     with open("performance.csv", "a", encoding="UTF-8") as file:

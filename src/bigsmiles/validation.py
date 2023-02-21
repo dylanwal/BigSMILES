@@ -11,12 +11,51 @@ This is mainly to catch additional leftover validation.
 """
 
 from bigsmiles.errors import BigSMILESError
-from bigsmiles.bigsmiles import BigSMILES, BondDescriptorTypes, StochasticObject, StochasticFragment, \
+from bigsmiles.bigsmiles import BigSMILES, StochasticObject, StochasticFragment, \
     BondDescriptor, Branch
 
 
-def run_validation(bigsmiles: BigSMILES):
-    """ Main entry point for validation. """
+## Pre-construction validation#############################################################################
+def pre_validation(text: str):
+    """ Main entry point for pre-construction validation. """
+    branch_symbol_validation(text)
+    stochastic_object_validation(text)
+    brackets_validation(text)
+
+
+def branch_symbol_validation(text: str):
+    count = text.count('(') - text.count(')')
+    if count != 0:
+        if count > 0:
+            raise BigSMILESError(f"Invalid BigSMILES. Missing {count} closing branch symbols ')'. "
+                                 f"\n Invalid string: {text}")
+        raise BigSMILESError(f"Invalid BigSMILES. Missing {count} opening branch symbols '('. "
+                             f"\n Invalid string: {text}")
+
+
+def stochastic_object_validation(text: str):
+    count = text.count('{') - text.count('}')
+    if count != 0:
+        if count > 0:
+            raise BigSMILESError(f"Invalid BigSMILES. Missing {count} closing stochastic object symbols" + " '}'. "
+                                 f"\n Invalid string: {text}")
+        raise BigSMILESError(f"Invalid BigSMILES. Missing {count} opening stochastic object symbols " + "'{'. "
+                             f"\n Invalid string: {text}")
+
+
+def brackets_validation(text: str):
+    count = text.count('[') - text.count(']')
+    if count != 0:
+        if count > 0:
+            raise BigSMILESError(f"Invalid BigSMILES. Missing {count} closing bracket symbols ']'. "
+                                 f"\n Invalid string: {text}")
+        raise BigSMILESError(f"Invalid BigSMILES. Missing {count} opening bracket symbols '['. "
+                             f"\n Invalid string: {text}")
+
+
+## Post-construction validation#############################################################################
+def post_validation(bigsmiles: BigSMILES):
+    """ Main entry point for post-construction validation. """
     check_ring_closure(bigsmiles)
     check_bonding_descriptors(bigsmiles)
     check_implicit_endgroups_ends(bigsmiles)
@@ -29,7 +68,7 @@ def check_ring_closure(bigsmiles: BigSMILES):
             raise BigSMILESError(f"Ring opened, but not closed. (ring id: {ring.ring_id})")
 
 
-def check_bonding_descriptors(bigsmiles: BigSMILES | StochasticObject):
+def check_bonding_descriptors(bigsmiles: BigSMILES | StochasticObject | Branch):
     """
 
     rules:
@@ -55,17 +94,19 @@ def check_bonding_descriptors(bigsmiles: BigSMILES | StochasticObject):
 
             # check nested stochastic objects
             check_bonding_descriptors(node)
+        if isinstance(node, Branch):
+            check_bonding_descriptors(node)
 
 
 def do_check_bonding_descriptors(stoch_obj: StochasticObject):
     for bd in stoch_obj.bonding_descriptors:
         # if [$], [$0], [$1], ... must be 2 or more
-        if bd.type_ is BondDescriptorTypes.Dollar:
+        if bd.descriptor is "$":
             if len(bd.instances) <= 1:
                 raise BigSMILESError("[$] type bonding descriptors require more than one instances in a string.")
 
         # if [>] there must be [<] and if [<] there must be [>]
-        if bd.type_ in (BondDescriptorTypes.Left, BondDescriptorTypes.Right):
+        if bd.descriptor in ("<", ">"):
             bd_pair = find_complementing_bonding_descriptor(stoch_obj, bd)
             if bd_pair is None:
                 raise BigSMILESError(f'{bd} complementary partner not found.')
@@ -85,7 +126,7 @@ def check_implicit_endgroups_ends(obj: BigSMILES | StochasticObject | Stochastic
     # if end is implicit; there must be single bonding units
     for i, node in enumerate(obj.nodes):
         if isinstance(node, StochasticObject):
-            if node.end_group_left.descriptor.type_ is BondDescriptorTypes.Implicit:
+            if node.end_group_left.descriptor.descriptor is "":
                 if i != 0:
                     # nothing allowed to the left
                     raise BigSMILESError("With a the left end group implicit, "
@@ -94,7 +135,7 @@ def check_implicit_endgroups_ends(obj: BigSMILES | StochasticObject | Stochastic
                     # if it isn't BigSMILES it can't have a left implicit end group
                     raise BigSMILESError("Implicit left end group not allowed within interior.")
 
-            if node.end_group_right.descriptor.type_ is BondDescriptorTypes.Implicit:
+            if node.end_group_right.descriptor.descriptor is "":
 
                 if i != len(obj.nodes) - 1:
                     # nothing allowed to the right

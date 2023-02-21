@@ -25,20 +25,20 @@ https://www.stefaanlippens.net/python_profiling_with_pstats_interactive_mode/
 import bigsmiles
 
 polymers = [
-    "CC{[>][<]CC(C)[>][<]}CC(C)=C",
-    "CCCCCCCCCCCCCCCCCCCCCCCCCCCC",
-    "{[>][$]CC[$],[$]CC(CC)[$][<]}",
-    "{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}",
-    "{[>][<]C(=O)CCCCC(=O)NCCCCCCN[>][<]}",
-    "C{[$][$]CC[$],[$]CC(CC)[$][$]}",
-    "[H]O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}[H]"
-]
+        "CC{[>][<]CC(C)[>][<]}CC(C)=C",
+        "CCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+        "CC{[>][$]CC[$],[$]CC(CC)[$][<]}O",
+        "CC{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}O",
+        "CC{[>][<]C(=O)CCCCC(=O)NCCCCCCN[>][<]}F",
+        "C{[$][$]CC[$],[$]CC(CC)[$][$]}CC",
+        "O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}CC"
+    ]
 
 
 def main():
 
-    for i in range(100_000):
-        bigsmiles.BigSMILES(polymers[i % len(polymers)])
+    for i in range(3_000):
+        bigsmiles.BigSMILES(polymers[i % len(polymers)]).graph()
 
 
 if __name__ == "__main__":

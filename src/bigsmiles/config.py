@@ -54,24 +54,61 @@ class Config:
         "I"
     }
 
-    atoms_with_valence = {
+    atom_valences = {
         # put smallest valance first in tuple
-        "H": {"valence": (1,)},
-        "D": {"valence": (1,)},
-        "B": {"valence": (3,)},
-        "C": {"valence": (4,)},
-        "N": {"valence": (3,)},
-        "O": {"valence": (2,)},
-        "F": {"valence": (1,)},
-        "Si": {"valence": (4,)},
-        "P": {"valence": (3, 5)},
-        "S": {"valence": (2, 4, 6)},
-        "Cl": {"valence": (1, 3, 5, 7)},
-        "Br": {"valence": (1,)},
-        "I": {"valence": (1, 3, 5, 7)},
-        "As": {"valence": (3, 5)},
+        "H": (1,),
+        "D": (1,),
+        "Li": (1,),
+        "Be": (2,),
+        "B": (3,),
+        "C": (4,),
+        "N": (3,),
+        "O": (2,),
+        "F": (1,),
+        "Na": (1,),
+        "Mg": (2,),
+        "Si": (4,),
+        "P": (3, 5),
+        "P5": (5,),  #
+        "S": (2, 4, 6),
+        "S4": (4,),  #
+        "S6": (6,),  #
+        "Cl": (1, 3, 5, 7),
+        "K": (1,),
+        "Ca": (2,),
+        "Ga": (3,),
+        "Ge": (4,),
+        "As": (3, 5),
+        "Se": (2, 4, 6),
+        "Br": (1,),
+        "Rb": (1,),
+        "Sr": (2,),
+        "In": (3,),
+        "Sn": (2, 4),
+        "Sb": (3, 5),
+        "Te": (2, 4, 6),
+        "I": (1, 3, 5, 7),
+        "Cs": (1,),
+        "Ba": (2,),
+        "Ti": (3,),
+        "Pb": (2, 4),
+        "Bi": (3, 5),
+        "Po": (2, 4, 6),
+        "At": (1, 3, 5, 7),
+        "Fr": (1,),
+        "Ra": (2,),
     }
 
     @staticmethod
-    def colors(text: str, color: str) -> str:
-        return getattr(TerminalColors, color) + text + TerminalColors.Clear
+    def get_atom_possible_valence(symbol: str) -> tuple:
+        try:
+            return Config.atom_valences[symbol]
+        except KeyError:
+            return (8,)
+
+    @classmethod
+    def add_color(cls, text: str, color: str, skip_color: bool = False) -> str:
+        if cls.color_output and not skip_color:
+            return getattr(TerminalColors, color) + text + TerminalColors.Clear
+
+        return text

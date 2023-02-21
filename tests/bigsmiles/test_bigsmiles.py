@@ -4,6 +4,27 @@ import bigsmiles
 
 
 test_molecules = [
+
+    # daylight tests
+    "CCCCCC",  # hexane
+    "O=C=O",  # carbon dioxide
+    "C#N",  # hydrogen cyanide
+    "CCN(CC)CC",  # triethylamine
+    "CC(=O)O",  # acetic acid
+    "C1CCCCC1",  # cyclohexane
+    "c1ccccc1",  # benzene
+    # "C1=CN=C[NH]C(=O)1",  # ring number
+    # "c1cnc[nH]c(=O)1",  # ring number
+    "N[C@@H](C)C(=O)O",  # L-alanine
+    "N[C@H](C)C(=O)O",  # D-alanine
+    "N[C@](C)(F)C(=O)O",
+    "N[C@@](F)(C)C(=O)O",
+    "C[C@H]1CCCCO1",
+    "O1CCCC[C@@H]1C",
+    # "F/C=C/F",  # E-difluoroethene
+    # "F\C=C\F",  # Z-difluoroethene
+
+
     "CC1=C(C(=NC=C1C=O)C)O",
     "C1=CC(C(C(=C1)C(=O)O)O)O",
     "C(C(=O)COP(=O)(O)O)N",
@@ -15,6 +36,8 @@ test_molecules = [
     "C(C(C(COP(=O)(O)O)O)O)C(=O)C(=O)O",
     "CC(CC1=CC(=C(C=C1)O)O)(C(=O)OC)N",
     "C1=CC=C(C=C1)S(=O)(=O)NNC2=NC(=NC(=N2)Cl)Cl",
+    "C=CC(CCC)C(C(C)C)CCC",  # 3-propyl-4-isopropyl-1-heptene
+    "O1CCCCC1N2CCCCC2",
 
     "C12C3C4C1C5C4C3C25",
 
@@ -34,8 +57,7 @@ test_molecules = [
     "CC[Fe+3]CCC",
 
     # cis/trans
-    # "F/C=C/F",  # trans
-    # "F\C=C\F",  # trans
+
     # "C(\F)=C/F",  # trans
     # "F\C=C/F",  # cis
     # "F/C=C\F",  # cis
@@ -107,6 +129,7 @@ validation_cases = [
     ["((CC))"],   # no double branch/ extra parenthesis
     ["C((C)C)"],   # no branch right away
     ["C(C)(C)(C)(C)C"],  # break bond limit of carbon
+    ["O1CCCCC1N1CCCCC1"],  # re-use of ring index
     # ['C/C(\F)=C/C'],  # conflicting cis/trans
 
     # bigsmiles

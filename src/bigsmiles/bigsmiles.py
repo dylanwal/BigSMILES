@@ -108,7 +108,7 @@ class Atom:
         return text
 
     def _increase_valance(self, requested_valance_increase: int = 0) -> bool:
-        " If default valance, try to increase when an additional bond added that needs it. "
+        " If default valance, try to increase when an additional bond added that needs it. And does the increase!! "
         if not self._default_valance:
             return False
 

@@ -78,11 +78,11 @@ class BigSMILESConstructor:
         # setup id counters
         self._atom_counter = 0
         self._bond_counter = 0
+        self._ring_counter = 1  # start ring counter at 1
         self._bond_descriptor_atom = 0
         self._branch_counter = 0
-        self._stochastic_fragment = 0
-        self._stochastic_object = 0
-        self._ring_counter = 1  # start ring counter at 1
+        self._stochastic_fragment_counter = 0
+        self._stochastic_object_counter = 0
 
         self.state = States.start
         self.stack: list[BigSMILES | StochasticObject | StochasticFragment | Branch] = [self.bigsmiles]
@@ -91,8 +91,8 @@ class BigSMILESConstructor:
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):
-        if exc_type:
-            raise exc_type(exc_value).with_traceback(exc_tb)
+        # if exc_type:
+        #     raise exc_type(exc_value).with_traceback(exc_tb)
 
         if len(self.stack) != 1:
             raise BigSMILESError(f"{type(self.stack[-1])} is missing closing symbol.")
@@ -120,12 +120,12 @@ class BigSMILESConstructor:
         return self._branch_counter - 1
 
     def _get_stochastic_fragment_id(self) -> int:
-        self._stochastic_object += 1
-        return self._stochastic_object - 1
+        self._stochastic_object_counter += 1
+        return self._stochastic_object_counter - 1
 
     def _get_stochastic_object_id(self) -> int:
-        self._stochastic_object += 1
-        return self._stochastic_object - 1
+        self._stochastic_object_counter += 1
+        return self._stochastic_object_counter - 1
 
     def add_ring(self, ring_id: int, bond_symbol: str = "") -> Bond:
         # check if ring_id already exists
@@ -134,7 +134,7 @@ class BigSMILESConstructor:
             if ring.ring_id == ring_id:
                 if ring.atom2 is not None:
                     raise BigSMILESError(f"Ring already formed for ring id {ring_id}.")
-                atom2 = self._get_prior(self.stack[-1], (Atom,))
+                atom2 = self.get_prior(self.stack[-1], (Atom,))
 
                 bond = get_common_bond(ring.atom1, atom2)
                 if bond:  # Check if ring already between two atoms and just increase bond order
@@ -146,7 +146,7 @@ class BigSMILESConstructor:
                 return ring
 
         # Make new ring_id
-        bond = Bond(bond_symbol, self._get_prior(self.stack[-1], (Atom,)), None, self._get_bond_id(), ring_id)
+        bond = Bond(bond_symbol, self.get_prior(self.stack[-1], (Atom,)), None, self._get_bond_id(), ring_id)
         self.bigsmiles.bonds.append(bond)
         ring_parent.rings.append(bond)
 
@@ -240,7 +240,7 @@ class BigSMILESConstructor:
                            **kwargs
                            ) -> tuple[Bond, Atom]:
         atom = Atom(self._get_atom_id(), element, isotope, stereo, hcount, charge, valance, **kwargs)
-        prior_atom = self._get_prior(self.stack[-1], (Atom, BondDescriptorAtom, StochasticObject))
+        prior_atom = self.get_prior(self.stack[-1], (Atom, BondDescriptorAtom, StochasticObject))
         bond = self.add_bond(bond_symbol, prior_atom, atom)
         self.stack[-1].nodes.append(atom)
         self.bigsmiles.atoms.append(atom)
@@ -251,7 +251,7 @@ class BigSMILESConstructor:
     def add_bond_bonding_descriptor_pair(self, bond_symbol: str, descriptor: str, index_: int) \
             -> tuple[Bond, BondDescriptorAtom]:
         bd_atom = self._get_bonding_descriptor_atom(descriptor, index_)
-        prior_atom = self._get_prior(self.stack[-1], (Atom, BondDescriptorAtom, StochasticObject))
+        prior_atom = self.get_prior(self.stack[-1], (Atom, BondDescriptorAtom, StochasticObject))
         bond = self.add_bond(bond_symbol, prior_atom, bd_atom)
         self.stack[-1].nodes.append(bd_atom)
 
@@ -301,7 +301,7 @@ class BigSMILESConstructor:
         stoch_obj.bonding_descriptors.append(new_bd)
         stoch_obj.end_group_left = BondDescriptorAtom(new_bd, self._get_bond_descriptor_atom_id())
 
-        prior_atom = self._get_prior(self.stack[-1], (Atom, BondDescriptor, StochasticObject))
+        prior_atom = self.get_prior(self.stack[-1], (Atom, BondDescriptor, StochasticObject))
         bond = self.add_bond(bond_symbol, prior_atom, stoch_obj)
         stoch_obj.bond_left = bond
 
@@ -346,7 +346,64 @@ class BigSMILESConstructor:
 
         self.stack.pop()
 
-    def _get_prior(self, obj: BigSMILES | StochasticObject | StochasticFragment | Branch, types_: tuple,
+    def add_fragment(self, bond_symbol: str | None, bigsmiles: BigSMILES):
+        if bond_symbol is not None:
+            if not isinstance(bigsmiles.nodes[0], Atom | StochasticObject):
+                raise BigSMILESError("First node must be an 'Atom' to added fragment.")
+
+            atom = bigsmiles.nodes[0]
+            prior_atom = self.get_prior(self.stack[-1], (Atom, BondDescriptorAtom, StochasticObject))
+            self.add_bond(bond_symbol, prior_atom, atom)
+            # self.stack[-1].nodes.append(atom)
+            # self.bigsmiles.atoms.append(atom)
+
+        # append bigsmiles
+        # re-direct 'parent' to new bigsmiles object
+        for node in bigsmiles.nodes:
+            if hasattr(node, 'parent'):
+                node.parent = self.bigsmiles
+        # re-numbering
+        self.re_number_rings(bigsmiles, set())
+        self.re_number_nodes(bigsmiles)
+
+        # append fragment
+        self.bigsmiles.nodes += bigsmiles.nodes
+        self.bigsmiles.atoms += bigsmiles.atoms
+        self.bigsmiles.bonds += bigsmiles.bonds
+        self.bigsmiles.rings += bigsmiles.rings
+
+        # self.stack[-1].nodes.append(atom)
+        self.state = States.atom
+
+    def re_number_rings(self, obj, seen: set[Bond]):
+        """ Recursive renumbering of rings. """
+        for node in obj.nodes:
+            if isinstance(node, Bond) and node.ring_id is not None and node not in seen:
+                node.ring_id = self._get_ring_id()
+                seen.add(node)
+            if hasattr(node, 'nodes'):
+                self.re_number_rings(node, seen)
+
+    def re_number_nodes(self, obj):
+        """ Recursive renumbering 'id_'. """
+        for node in obj.nodes:
+            if isinstance(node, Atom):
+                node.id_ = self._get_atom_id()
+            elif isinstance(node, Bond):
+                node.id_ = self._get_bond_id()
+            elif isinstance(node, BondDescriptorAtom):
+                node.id_ = self._get_bond_descriptor_atom_id()
+            elif isinstance(node, Branch):
+                node.id_ = self._get_branch_id()
+                self.re_number_nodes(node)
+            elif isinstance(node, StochasticFragment):
+                node.id_ = self._get_stochastic_fragment_id()
+                self.re_number_nodes(node)
+            elif isinstance(node, StochasticObject):
+                node.id_ = self._get_stochastic_object_id()
+                self.re_number_nodes(node)
+
+    def get_prior(self, obj: BigSMILES | StochasticObject | StochasticFragment | Branch, types_: tuple,
                    flag: bool = False) -> Atom:
         if obj.nodes:
             for node in reversed(obj.nodes):  # no atom can ever have more than 10 bonds
@@ -356,7 +413,7 @@ class BigSMILESConstructor:
             raise BigSMILESError("Bug in the code")
 
         elif not flag:
-            return self._get_prior(self.stack[-2], types_, flag=True)
+            return self.get_prior(self.stack[-2], types_, flag=True)
 
         raise BigSMILESError("Bond attempted to be made to that has nothing to bond back to.")
 

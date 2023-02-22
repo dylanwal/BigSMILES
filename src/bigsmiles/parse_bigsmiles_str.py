@@ -171,6 +171,7 @@ def parse_bigsmiles_str(input_text: str, bigsmiles):
     pre_validation(input_text)
     tokens = tokenize(input_text)
 
-    with BigSMILESStringConstructor(bigsmiles) as constructor:
-        tokens_to_objects(constructor, tokens)
-        constructor.run_validation()
+    constructor = BigSMILESStringConstructor(bigsmiles)
+    tokens_to_objects(constructor, tokens)
+    constructor.run_validation()
+    constructor.exit()

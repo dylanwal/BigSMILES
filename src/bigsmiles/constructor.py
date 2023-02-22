@@ -87,13 +87,7 @@ class BigSMILESConstructor:
         self.state = States.start
         self.stack: list[BigSMILES | StochasticObject | StochasticFragment | Branch] = [self.bigsmiles]
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, exc_tb):
-        # if exc_type:
-        #     raise exc_type(exc_value).with_traceback(exc_tb)
-
+    def exit(self):
         if len(self.stack) != 1:
             raise BigSMILESError(f"{type(self.stack[-1])} is missing closing symbol.")
         if self.syntax_fix:

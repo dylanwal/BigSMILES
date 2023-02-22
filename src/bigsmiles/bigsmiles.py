@@ -374,6 +374,12 @@ class BigSMILES:
     def __iter__(self) -> list[Atom]:
         return self.atoms
 
+    def __bool__(self):
+        if self.nodes:
+            return True
+        else:
+            return False
+
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False) -> str:
         return "".join(node.to_string(show_hydrogens, print_repr, skip_color) for node in self.nodes)
 

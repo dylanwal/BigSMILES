@@ -399,7 +399,13 @@ class BigSMILESConstructor:
 
         for i, node in enumerate(self.bigsmiles.nodes):
             if node is atom:
-                self.bigsmiles.nodes.insert(i, branch)
+                flag = True
+                while flag:
+                    if isinstance(self.bigsmiles.nodes[i + 1], Branch):
+                        i += 1
+                    flag = False
+
+                self.bigsmiles.nodes.insert(i + 1, branch)
                 break
 
     def re_number_rings(self, obj, seen: set[Bond]):

@@ -340,12 +340,12 @@ class BigSMILESConstructor:
 
         self.stack.pop()
 
-    def add_fragment(self, bond_symbol: str | None, bigsmiles: BigSMILES):
+    def append_bigsmiles_fragment(self, bond_symbol: str | None, bigsmiles_: BigSMILES):
         if bond_symbol is not None:
-            if not isinstance(bigsmiles.nodes[0], Atom | StochasticObject):
+            if not isinstance(bigsmiles_.nodes[0], Atom | StochasticObject):
                 raise BigSMILESError("First node must be an 'Atom' to added fragment.")
 
-            atom = bigsmiles.nodes[0]
+            atom = bigsmiles_.nodes[0]
             prior_atom = self.get_prior(self.stack[-1], (Atom, BondDescriptorAtom, StochasticObject))
             self.add_bond(bond_symbol, prior_atom, atom)
             # self.stack[-1].nodes.append(atom)
@@ -353,21 +353,54 @@ class BigSMILESConstructor:
 
         # append bigsmiles
         # re-direct 'parent' to new bigsmiles object
-        for node in bigsmiles.nodes:
+        ring_parent = self._get_ring_parent()
+        for node in bigsmiles_.nodes:
             if hasattr(node, 'parent'):
-                node.parent = self.bigsmiles
+                node.parent = ring_parent
         # re-numbering
-        self.re_number_rings(bigsmiles, set())
-        self.re_number_nodes(bigsmiles)
+        self.re_number_rings(ring_parent, set())
+        self.re_number_nodes(bigsmiles_)
 
         # append fragment
-        self.bigsmiles.nodes += bigsmiles.nodes
-        self.bigsmiles.atoms += bigsmiles.atoms
-        self.bigsmiles.bonds += bigsmiles.bonds
-        self.bigsmiles.rings += bigsmiles.rings
+        ring_parent.nodes += bigsmiles_.nodes
+        self.bigsmiles.atoms += bigsmiles_.atoms
+        self.bigsmiles.bonds += bigsmiles_.bonds
+        self.bigsmiles.rings += bigsmiles_.rings
 
         # self.stack[-1].nodes.append(atom)
         self.state = States.atom
+
+    def attach_bigsmiles_branch(self, bond_symbol: str | None, bigsmiles_: BigSMILES, index_: int):
+        if index_ > len(self.bigsmiles.atoms)-1:
+            raise BigSMILESError(f"Branch can't be added. 'index' outside atom list."
+                                 f"\n current smiles: {self.bigsmiles} \n desired atom index: {index_}")
+
+        # re-direct 'parent' to new bigsmiles object
+        ring_parent = self._get_ring_parent()
+        for node in bigsmiles_.nodes:
+            if hasattr(node, 'parent'):
+                node.parent = ring_parent
+        # re-numbering
+        self.re_number_rings(ring_parent, set())
+        self.re_number_nodes(bigsmiles_)
+
+        atom = self.bigsmiles.atoms[index_]
+
+        branch = Branch(self.stack[-1], self._get_branch_id())
+        branch.nodes = bigsmiles_.nodes
+        self.bigsmiles.atoms += bigsmiles_.atoms
+        self.bigsmiles.bonds += bigsmiles_.bonds
+        self.bigsmiles.rings += bigsmiles_.rings
+
+        bond = Bond(bond_symbol, atom, branch.nodes[0], self._get_bond_id())
+        branch.nodes.insert(0, bond)
+        self.bigsmiles.bonds.append(bond)
+        add_bond_to_connected_objects(bond)
+
+        for i, node in enumerate(self.bigsmiles.nodes):
+            if node is atom:
+                self.bigsmiles.nodes.insert(i, branch)
+                break
 
     def re_number_rings(self, obj, seen: set[Bond]):
         """ Recursive renumbering of rings. """

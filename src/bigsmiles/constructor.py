@@ -8,6 +8,7 @@ from bigsmiles.syntax_fixes import run_syntax_fixes
 
 
 class States(enum.Enum):
+    unknown = -1
     start = 0
     atom = 1
     bond_descriptor = 2
@@ -68,10 +69,25 @@ def remove_partial_ring(parent: BigSMILES | Branch | StochasticFragment, ring_id
         parent.parent.bonds.remove(bond)
 
 
+def insert_obj_into_list(list_, obj, objet_to_insert):
+    for i, item in enumerate(list_):
+        if item == obj:
+            flag = True
+            while flag:
+                if isinstance(list_[i + 1], Branch):
+                    i += 1
+                    continue
+
+                flag = False
+
+            list_.insert(i + 1, objet_to_insert)
+            break
+
+
 class BigSMILESConstructor:
 
-    def __init__(self, bigsmiles: BigSMILES = None, syntax_fix: bool = True):
-        self.bigsmiles = bigsmiles if bigsmiles is not None else BigSMILES()
+    def __init__(self, bigsmiles_: BigSMILES = None, syntax_fix: bool = True):
+        self.bigsmiles = bigsmiles_ if bigsmiles_ is not None else BigSMILES()
 
         self.syntax_fix = syntax_fix  # only with context manager
 
@@ -84,14 +100,18 @@ class BigSMILESConstructor:
         self._stochastic_fragment_counter = 0
         self._stochastic_object_counter = 0
 
-        self.state = States.start
+        if bigsmiles_:
+            self.state = self._get_state(bigsmiles_)
+        else:
+            self.state = States.start
         self.stack: list[BigSMILES | StochasticObject | StochasticFragment | Branch] = [self.bigsmiles]
 
-    def exit(self):
-        if len(self.stack) != 1:
-            raise BigSMILESError(f"{type(self.stack[-1])} is missing closing symbol.")
-        if self.syntax_fix:
-            run_syntax_fixes(self.bigsmiles)
+    def _get_state(self, bigsmiles_) -> States:
+        last_node = self.bigsmiles.nodes[-1]
+        if isinstance(last_node, Atom):
+            return States.atom
+        else:
+            return States.unknown
 
     def _get_atom_id(self) -> int:
         self._atom_counter += 1
@@ -121,7 +141,7 @@ class BigSMILESConstructor:
         self._stochastic_object_counter += 1
         return self._stochastic_object_counter - 1
 
-    def add_ring(self, ring_id: int, bond_symbol: str = "") -> Bond:
+    def add_ring(self, ring_id: int, bond_symbol: str = "", **kwargs) -> Bond:
         # check if ring_id already exists
         ring_parent = self._get_ring_parent()
         for ring in ring_parent.rings:
@@ -140,13 +160,14 @@ class BigSMILESConstructor:
                 return ring
 
         # Make new ring_id
-        bond = Bond(bond_symbol, self.get_prior(self.stack[-1], (Atom,)), None, self._get_bond_id(), ring_id)
+        bond = Bond(bond_symbol, self.get_prior(self.stack[-1], (Atom,)), None, self._get_bond_id(), ring_id,
+                    parent=self.stack[-1], **kwargs)
         self.bigsmiles.bonds.append(bond)
         ring_parent.rings.append(bond)
 
         return bond
 
-    def add_ring_from_atoms(self, atom1: Atom, atom2: Atom, bond_symbol: str = ""):
+    def add_ring_from_atoms(self, atom1: Atom, atom2: Atom, bond_symbol: str = "", **kwargs):
         ring_parent = self._get_ring_parent()
 
         bond = get_common_bond(atom1, atom2)
@@ -154,7 +175,8 @@ class BigSMILESConstructor:
             bond.bond_order += 1
         else:
             # Make new ring_id
-            bond = Bond(bond_symbol, atom1, atom2, self._get_bond_id(), self._get_ring_id())
+            bond = Bond(bond_symbol, atom1, atom2, self._get_bond_id(), self._get_ring_id(),
+                        parent=self.stack[-1], **kwargs)
             self.bigsmiles.bonds.append(bond)
             ring_parent.rings.append(bond)
             add_bond_to_connected_objects(bond)
@@ -173,7 +195,8 @@ class BigSMILESConstructor:
                  valance: int = None,
                  **kwargs
                  ) -> Atom:
-        atom = Atom(self._get_atom_id(), element, isotope, stereo, hcount, charge, valance, **kwargs)
+        atom = Atom(self._get_atom_id(), element, isotope, stereo, hcount, charge, valance,
+                    parent=self.stack[-1], **kwargs)
         self.stack[-1].nodes.append(atom)
         self.bigsmiles.atoms.append(atom)
 
@@ -183,17 +206,19 @@ class BigSMILESConstructor:
     def add_bond(self,
                  bond_symbol: str,
                  atom1: Atom | BondDescriptorAtom,
-                 atom2: Atom | BondDescriptorAtom | StochasticObject | None
+                 atom2: Atom | BondDescriptorAtom | StochasticObject | None,
+                 **kwargs
                  ) -> Bond:
-        bond = Bond(bond_symbol, atom1, atom2, self._get_bond_id())
+        bond = Bond(bond_symbol, atom1, atom2, self._get_bond_id(), parent=self.stack[-1], **kwargs)
         self.stack[-1].nodes.append(bond)
         self.bigsmiles.bonds.append(bond)
         add_bond_to_connected_objects(bond)
+
         return bond
 
-    def _get_bonding_descriptor_atom(self, descriptor: str, index_: int) -> BondDescriptorAtom:
+    def _get_bonding_descriptor_atom(self, descriptor: str, index_: int, **kwargs) -> BondDescriptorAtom:
         bd = self._get_bonding_descriptor(descriptor, index_)
-        return BondDescriptorAtom(bd, self._get_bond_descriptor_atom_id())
+        return BondDescriptorAtom(bd, self._get_bond_descriptor_atom_id(), parent=self.stack[-1], **kwargs)
 
     def _get_bonding_descriptor(self, descriptor: str, index_: int) -> BondDescriptor:
         stoch_obj = self._get_current_stochastic_object()
@@ -219,6 +244,7 @@ class BigSMILESConstructor:
         """ [<], [>], [$], [$1], [>2], ... """
         bd_atom = self._get_bonding_descriptor_atom(descriptor, index_)
         self.stack[-1].nodes.append(bd_atom)
+        self.bigsmiles.atoms.append(bd_atom)
 
         self.state = States.bond_descriptor
         return bd_atom
@@ -231,32 +257,47 @@ class BigSMILESConstructor:
                            hcount: int = 0,
                            charge: int = 0,
                            valance: int = None,
-                           **kwargs
+                           atom_kwargs: dict = None,
+                           bond_kwargs: dict = None
                            ) -> tuple[Bond, Atom]:
-        atom = Atom(self._get_atom_id(), element, isotope, stereo, hcount, charge, valance, **kwargs)
+        atom_kwargs = atom_kwargs if atom_kwargs else {}
+        bond_kwargs = bond_kwargs if bond_kwargs else {}
+
+        atom = Atom(self._get_atom_id(), element, isotope, stereo, hcount, charge, valance,
+                    parent=self.stack[-1], **atom_kwargs)
         prior_atom = self.get_prior(self.stack[-1], (Atom, BondDescriptorAtom, StochasticObject))
-        bond = self.add_bond(bond_symbol, prior_atom, atom)
+        bond = self.add_bond(bond_symbol, prior_atom, atom, **bond_kwargs)
         self.stack[-1].nodes.append(atom)
         self.bigsmiles.atoms.append(atom)
 
         self.state = States.atom
         return bond, atom
 
-    def add_bond_bonding_descriptor_pair(self, bond_symbol: str, descriptor: str, index_: int) \
+    def add_bond_bonding_descriptor_pair(self,
+                                         bond_symbol: str,
+                                         descriptor: str,
+                                         index_: int,
+                                         bond_descriptor_kwargs: dict = None,
+                                         bond_kwargs: dict = None
+                                         ) \
             -> tuple[Bond, BondDescriptorAtom]:
-        bd_atom = self._get_bonding_descriptor_atom(descriptor, index_)
+        bond_descriptor_kwargs = bond_descriptor_kwargs if bond_descriptor_kwargs else {}
+        bond_kwargs = bond_kwargs if bond_kwargs else {}
+
+        bd_atom = self._get_bonding_descriptor_atom(descriptor, index_, **bond_descriptor_kwargs)
         prior_atom = self.get_prior(self.stack[-1], (Atom, BondDescriptorAtom, StochasticObject))
-        bond = self.add_bond(bond_symbol, prior_atom, bd_atom)
+        bond = self.add_bond(bond_symbol, prior_atom, bd_atom, **bond_kwargs)
         self.stack[-1].nodes.append(bd_atom)
+        self.bigsmiles.atoms.append(bd_atom)
 
         self.state = States.bond_descriptor
         return bond, bd_atom
 
-    def open_branch(self):
+    def open_branch(self, **kwargs):
         if isinstance(self.stack[-1], Branch) and len(self.stack[-1].nodes) == 0:
             raise BigSMILESError("BigSMILES string or branch can't start with branch")
 
-        branch = Branch(self.stack[-1], self._get_branch_id())
+        branch = Branch(self.stack[-1], self._get_branch_id(), **kwargs)
         self.stack[-1].nodes.append(branch)
         self.stack.append(branch)
         self.state = States.branch_start
@@ -274,11 +315,12 @@ class BigSMILESConstructor:
             self.stack[-1].nodes.pop()
             self._branch_counter -= 1
 
-    def open_stochastic_object(self, descriptor: str, index_: int) -> StochasticFragment:
+    def open_stochastic_object(self, descriptor: str, index_: int, **kwargs) -> StochasticFragment:
         stoch_obj = StochasticObject(self.stack[-1], self._get_stochastic_object_id())
         new_bd = BondDescriptor(stoch_obj, descriptor, index_)
         stoch_obj.bonding_descriptors.append(new_bd)
-        stoch_obj.end_group_left = BondDescriptorAtom(new_bd, self._get_bond_descriptor_atom_id())
+        stoch_obj.end_group_left = BondDescriptorAtom(new_bd, self._get_bond_descriptor_atom_id(),
+                                                      parent=self.stack[-1], **kwargs)
         self.stack[-1].nodes.append(stoch_obj)
         self.stack.append(stoch_obj)
 
@@ -289,11 +331,13 @@ class BigSMILESConstructor:
         self.state = States.stochastic_fragment
         return stoch_frag
 
-    def open_stochastic_object_with_bond(self, bond_symbol: str, descriptor: str, index_: int) -> StochasticFragment:
+    def open_stochastic_object_with_bond(self, bond_symbol: str, descriptor: str, index_: int, **kwargs) \
+            -> StochasticFragment:
         stoch_obj = StochasticObject(self.stack[-1], self._get_stochastic_object_id())
         new_bd = BondDescriptor(stoch_obj, descriptor, index_)
         stoch_obj.bonding_descriptors.append(new_bd)
-        stoch_obj.end_group_left = BondDescriptorAtom(new_bd, self._get_bond_descriptor_atom_id())
+        stoch_obj.end_group_left = BondDescriptorAtom(new_bd, self._get_bond_descriptor_atom_id(),
+                                                      parent=self.stack[-1], **kwargs)
 
         prior_atom = self.get_prior(self.stack[-1], (Atom, BondDescriptor, StochasticObject))
         bond = self.add_bond(bond_symbol, prior_atom, stoch_obj)
@@ -312,6 +356,7 @@ class BigSMILESConstructor:
 
         self.stack[-1].end_group_right = self._get_bonding_descriptor_atom(descriptor, index_)
         self.stack.pop()
+        # TODO: add [H] and bond if no atom before or after
 
     def open_stochastic_fragment(self) -> StochasticFragment:
         stoch_frag = StochasticFragment(self.stack[-1], self._get_stochastic_fragment_id())
@@ -340,6 +385,8 @@ class BigSMILESConstructor:
 
         self.stack.pop()
 
+    ## Methods that don't use state and are for editing ##
+    ###################################################################################################################
     def append_bigsmiles_fragment(self, bond_symbol: str | None, bigsmiles_: BigSMILES):
         if bond_symbol is not None:
             if not isinstance(bigsmiles_.nodes[0], Atom | StochasticObject):
@@ -371,7 +418,7 @@ class BigSMILESConstructor:
         self.state = States.atom
 
     def attach_bigsmiles_branch(self, bond_symbol: str | None, bigsmiles_: BigSMILES, index_: int):
-        if index_ > len(self.bigsmiles.atoms)-1:
+        if index_ > len(self.bigsmiles.atoms) - 1:
             raise BigSMILESError(f"Branch can't be added. 'index' outside atom list."
                                  f"\n current smiles: {self.bigsmiles} \n desired atom index: {index_}")
 
@@ -386,27 +433,21 @@ class BigSMILESConstructor:
 
         atom = self.bigsmiles.atoms[index_]
 
+        # make branch
         branch = Branch(self.stack[-1], self._get_branch_id())
         branch.nodes = bigsmiles_.nodes
         self.bigsmiles.atoms += bigsmiles_.atoms
         self.bigsmiles.bonds += bigsmiles_.bonds
         self.bigsmiles.rings += bigsmiles_.rings
 
-        bond = Bond(bond_symbol, atom, branch.nodes[0], self._get_bond_id())
+        # make bond
+        bond = Bond(bond_symbol, atom, branch.nodes[0], self._get_bond_id(), parent=self.stack[-1])
         branch.nodes.insert(0, bond)
         self.bigsmiles.bonds.append(bond)
         add_bond_to_connected_objects(bond)
 
-        for i, node in enumerate(self.bigsmiles.nodes):
-            if node is atom:
-                flag = True
-                while flag:
-                    if isinstance(self.bigsmiles.nodes[i + 1], Branch):
-                        i += 1
-                    flag = False
-
-                self.bigsmiles.nodes.insert(i + 1, branch)
-                break
+        # insert branch by put it after all the other branches
+        insert_obj_into_list(self.bigsmiles.nodes, atom, branch)
 
     def re_number_rings(self, obj, seen: set[Bond]):
         """ Recursive renumbering of rings. """
@@ -436,14 +477,76 @@ class BigSMILESConstructor:
                 node.id_ = self._get_stochastic_object_id()
                 self.re_number_nodes(node)
 
+    def add_bond_bonding_descriptor_via_index(self,
+                                              bond_symbol: str,
+                                              descriptor: str,
+                                              index_: int,
+                                              prior_atom: Atom
+                                              ):
+        bd_atom = self._get_bonding_descriptor_atom(descriptor, index_)
+        bond = self.add_bond(bond_symbol, prior_atom, bd_atom)
+
+        parent = prior_atom.parent
+        if prior_atom == prior_atom.parent.nodes[0]:
+            parent.nodes.insert(0, bond)
+            parent.bonds.insert(0, bond)
+            parent.nodes.insert(0, bd_atom)
+            parent.atoms.insert(0, bd_atom)
+        elif prior_atom == prior_atom.parent.nodes[-1]:
+            parent.nodes.append(bond)
+            parent.bonds.append(bond)
+            parent.nodes.append(bd_atom)
+            parent.atoms.append(bd_atom)
+        else:
+            branch = Branch(parent, self._get_branch_id())
+            branch.nodes = [bond, bd_atom]
+            branch.atoms = [bd_atom]
+            branch.bond = [bond]
+            insert_obj_into_list(parent.nodes, prior_atom, branch)
+
+        insert_obj_into_list(self.bigsmiles.bonds, prior_atom.bonds[0], bond)
+        insert_obj_into_list(self.bigsmiles.atoms, prior_atom, bd_atom)
+
+    def add_stochastic_object(self,
+                              parent: BigSMILES | Branch,
+                              left_descriptor: str,
+                              left_index: int,
+                              right_descriptor: str,
+                              right_index: int
+                              ):
+        stoch_obj = StochasticObject(parent, self._get_stochastic_object_id())
+
+        # create bonding descriptors
+        left_bd = BondDescriptor(stoch_obj, left_descriptor, left_index)
+        right_bd = BondDescriptor(stoch_obj, right_descriptor, right_index)
+        stoch_obj.bonding_descriptors.append(left_bd)
+        stoch_obj.bonding_descriptors.append(right_bd)
+
+        if not stoch_obj.implicit_endgroups:
+            try:
+                prior_atom = self.get_prior(parent, (Atom, BondDescriptor, StochasticObject))
+            except BigSMILESError:
+                # no prior atoms, it must be the first atom
+                if isinstance(parent, BigSMILES) and :
+                    prior_atom = Atom(self._get_atom_id(), "H", None, "", 0, 0, 1, parent)
+                    parent.atoms.append(prior_atom)
+
+            bond = self.add_bond(bond_symbol, prior_atom, stoch_obj)
+            stoch_obj.bond_left = bond
+
+        self.stack[-1].nodes.append(stoch_obj)
+        self.stack.append(stoch_obj)
+
+        return stoch_obj
+
     def get_prior(self, obj: BigSMILES | StochasticObject | StochasticFragment | Branch, types_: tuple,
-                   flag: bool = False) -> Atom:
+                  flag: bool = False) -> Atom:
         if obj.nodes:
             for node in reversed(obj.nodes):  # no atom can ever have more than 10 bonds
                 if isinstance(node, types_):
                     return node
 
-            raise BigSMILESError("Bug in the code")
+            raise ValueError("Bug in the code")
 
         elif not flag:
             return self.get_prior(self.stack[-2], types_, flag=True)
@@ -453,3 +556,9 @@ class BigSMILESConstructor:
     def run_validation(self):
         """ Run various validations. """
         post_validation(self.bigsmiles)
+
+    def exit(self):
+        if len(self.stack) != 1:
+            raise BigSMILESError(f"{type(self.stack[-1])} is missing closing symbol.")
+        if self.syntax_fix:
+            run_syntax_fixes(self.bigsmiles)

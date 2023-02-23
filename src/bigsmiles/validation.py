@@ -101,7 +101,7 @@ def check_bonding_descriptors(bigsmiles: BigSMILES | StochasticObject | Branch):
 def do_check_bonding_descriptors(stoch_obj: StochasticObject):
     for bd in stoch_obj.bonding_descriptors:
         # if [$], [$0], [$1], ... must be 2 or more
-        if bd.descriptor is "$":
+        if bd.descriptor == "$":
             if len(bd.instances) <= 1:
                 raise BigSMILESError("[$] type bonding descriptors require more than one instances in a string.")
 
@@ -126,7 +126,7 @@ def check_implicit_endgroups_ends(obj: BigSMILES | StochasticObject | Stochastic
     # if end is implicit; there must be single bonding units
     for i, node in enumerate(obj.nodes):
         if isinstance(node, StochasticObject):
-            if node.end_group_left.descriptor.descriptor is "":
+            if node.end_group_left.descriptor.descriptor == "":
                 if i != 0:
                     # nothing allowed to the left
                     raise BigSMILESError("With a the left end group implicit, "
@@ -135,7 +135,7 @@ def check_implicit_endgroups_ends(obj: BigSMILES | StochasticObject | Stochastic
                     # if it isn't BigSMILES it can't have a left implicit end group
                     raise BigSMILESError("Implicit left end group not allowed within interior.")
 
-            if node.end_group_right.descriptor.descriptor is "":
+            if node.end_group_right.descriptor.descriptor == "":
 
                 if i != len(obj.nodes) - 1:
                     # nothing allowed to the right

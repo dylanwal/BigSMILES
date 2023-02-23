@@ -5,7 +5,7 @@ from bigsmiles.config import Config
 
 class Atom:
     __slots__ = ["id_", "element", "isotope", "stereo", "hydrogens", "charge", "valence",
-                 "organic", "bonds", "possible_valence", "_default_valance", "__dict__"]
+                 "organic", "bonds", "possible_valence", "_default_valance", "__dict__", "parent"]
     _tree_print_repr = True
 
     def __init__(self,
@@ -16,6 +16,7 @@ class Atom:
                  hydrogens: int = 0,
                  charge: int = 0,
                  valence: int = None,
+                 parent: BigSMILES | Branch | StochasticFragment | None = None,
                  **kwargs
                  ):
         self.id_ = id_
@@ -32,6 +33,8 @@ class Atom:
             self._default_valance: bool = False
             self.valence = valence
         self.organic = True if element in Config.organics else False
+
+        self.parent = parent
 
         if kwargs:
             for k, v in kwargs.items():
@@ -125,6 +128,10 @@ class Atom:
 
         return False
 
+    @property
+    def root(self) -> BigSMILES:
+        return self.parent.root
+
 
 bond_mapping = {
     "": 1,
@@ -134,7 +141,7 @@ bond_mapping = {
 
 
 class Bond:
-    __slots__ = ["id_", "symbol", "atom1", "atom2", "ring_id", "__dict__"]
+    __slots__ = ["id_", "symbol", "atom1", "atom2", "ring_id", "__dict__", "parent"]
     _tree_print_repr = True
 
     def __init__(self,
@@ -142,13 +149,20 @@ class Bond:
                  atom1: Atom | BondDescriptorAtom | StochasticObject,
                  atom2: Atom | BondDescriptorAtom | StochasticObject | None = None,
                  id_: int = None,
-                 ring_id: int = None
+                 ring_id: int = None,
+                 parent: BigSMILES | Branch | StochasticFragment | None = None,
+                 **kwargs
                  ):
         self.id_ = id_
         self.symbol = symbol
         self.atom1 = atom1
         self.atom2 = atom2
         self.ring_id = ring_id
+        self.parent = parent
+
+        if kwargs:
+            for k, v in kwargs.items():
+                setattr(self, k, v)
 
     def __str__(self):
         return self.to_string()
@@ -175,15 +189,23 @@ class Bond:
 
         raise ValueError(f"Invalid bond_order. \nGiven: {count} \n Acceptable: {bond_mapping}")
 
+    @property
+    def root(self) -> BigSMILES:
+        return self.parent.root
+
 
 class BondDescriptor:
-    __slots__ = ["descriptor", "index_", "instances", "stochastic_object", "__dict__"]
+    __slots__ = ["parent", "descriptor", "index_", "instances", "__dict__"]
 
-    def __init__(self, stochastic_object: StochasticObject, descriptor: str, index_: int):
+    def __init__(self, parent: StochasticObject, descriptor: str, index_: int, **kwargs):
+        self.parent = parent
         self.descriptor = descriptor
         self.index_ = index_
         self.instances = []
-        self.stochastic_object = stochastic_object
+
+        if kwargs:
+            for k, v in kwargs.items():
+                setattr(self, k, v)
 
     def __str__(self):
         return self.to_string()
@@ -211,16 +233,29 @@ class BondDescriptor:
 
         return False
 
+    @property
+    def root(self) -> BigSMILES:
+        return self.parent.root
+
 
 class BondDescriptorAtom:
     _tree_print_repr = True
-    __slots__ = ["descriptor", "id_", "bond", "__dict__"]
+    __slots__ = ["descriptor", "id_", "bond", "__dict__", "parent"]
 
-    def __init__(self, bond_descriptor: BondDescriptor, id_: int = None):
+    def __init__(self,
+                 bond_descriptor: BondDescriptor,
+                 id_: int = None,
+                 parent: BigSMILES | Branch | StochasticFragment | None = None,
+                 **kwargs):
         self.descriptor = bond_descriptor
         bond_descriptor.instances.append(self)
         self.id_ = id_
         self.bond = None
+        self.parent = parent
+
+        if kwargs:
+            for k, v in kwargs.items():
+                setattr(self, k, v)
 
     def __str__(self):
         return self.to_string()
@@ -231,15 +266,23 @@ class BondDescriptorAtom:
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
         return Config.add_color(self.descriptor.to_string(show_hydrogens, print_repr), 'Green', skip_color)
 
+    @property
+    def root(self) -> BigSMILES:
+        return self.parent.root
+
 
 class Branch:
     _tree_print_repr = False
     __slots__ = ["nodes", "id_", "parent", "__dict__"]
 
-    def __init__(self, parent: BigSMILES | StochasticFragment | Branch, id_: int = None):
+    def __init__(self, parent: BigSMILES | StochasticFragment | Branch, id_: int = None, **kwargs):
         self.nodes: list[Atom | Bond | Branch | StochasticObject | BondDescriptorAtom] = []
         self.id_ = id_
         self.parent = parent
+
+        if kwargs:
+            for k, v in kwargs.items():
+                setattr(self, k, v)
 
     def __str__(self):
         return self.to_string()
@@ -353,7 +396,7 @@ class BigSMILES:
 
     def __init__(self, input_text: str = None):
         self.nodes: list[Atom | Bond | StochasticObject | Branch] = []
-        self.atoms: list[Atom] = []  # includes atoms in sub-objects
+        self.atoms: list[Atom | BondDescriptorAtom] = []  # includes atoms in sub-objects
         self.bonds: list[Bond] = []  # includes bonds in sub-objects
         self.rings: list[Bond] = []  # does not include rings in sub-objects
 

@@ -18,7 +18,7 @@ def add_bond_to_connected_objects(bond: Bond):
             if obj.bonds_available < bond.bond_order:
                 if obj._increase_valence(bond.bond_order):
                     continue
-                raise BigSMILESError("Too many bonds trying to be made.", str(obj))
+                raise BigSMILESError(f"Too many bonds trying to be made. {str(obj)}")
 
             obj.bonds.append(bond)
         elif isinstance(obj, BondDescriptorAtom):
@@ -103,6 +103,7 @@ def exit_(parent):
     if not isinstance(parent, BigSMILES):
         raise BigSMILESError(f"{type(parent)} is missing closing symbol.")
     run_syntax_fixes(parent)
+    return parent
 
 
 ## Functions for constructing a bigsmiles sequentially or step by step ##

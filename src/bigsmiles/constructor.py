@@ -1,3 +1,4 @@
+import bigsmiles
 from bigsmiles.errors import ConstructorError
 from bigsmiles.bigsmiles import Atom, Bond, BondDescriptor, Branch, StochasticFragment, StochasticObject, \
     BigSMILES, BondDescriptorAtom
@@ -372,9 +373,11 @@ def close_stochastic_fragment(parent):
 
 ## functions for building BigSMILES in chunks ##
 ###################################################################################################################
-def append_bigsmiles_fragment(parent, bigsmiles_: BigSMILES, bond_symbol: str, **kwargs):
+def append_bigsmiles_fragment(parent, bigsmiles_: BigSMILES, bond_symbol: str, **kwargs) -> bigsmiles.BigSMILES:
     if not isinstance(bigsmiles_.nodes[0], Atom | StochasticObject):
         raise ConstructorError("First node must be an 'Atom' to added fragment.")
+    if not parent:
+        return bigsmiles_
 
     atom = bigsmiles_.nodes[0]
     prior_atom = get_prior(parent, (Atom, BondDescriptorAtom, StochasticObject))
@@ -387,6 +390,8 @@ def append_bigsmiles_fragment(parent, bigsmiles_: BigSMILES, bond_symbol: str, *
     parent.root.atoms += bigsmiles_.atoms
     parent.root.bonds += bigsmiles_.bonds
     parent.root.rings += bigsmiles_.rings
+
+    return parent
 
 
 def attach_bigsmiles_branch(parent, bond_symbol: str | None, bigsmiles_: BigSMILES, index_: int,
@@ -418,31 +423,29 @@ def attach_bigsmiles_branch(parent, bond_symbol: str | None, bigsmiles_: BigSMIL
 
 
 def add_bond_bonding_descriptor_via_index(
-        parent: BigSMILES,
+        parent: StochasticFragment,
         bond_symbol: str,
         descriptor: str,
         index_: int,
         prior_atom: Atom,
         kwargs_bond: dict = None,
-        kwargs_bonding_descriptor: dict = None
 ):
     kwargs_bond = kwargs_bond if kwargs_bond is not None else {}
-    kwargs_bonding_descriptor = kwargs_bonding_descriptor if kwargs_bonding_descriptor is not None else {}
 
-    bd_atom = _get_bonding_descriptor_atom(parent, descriptor, index_, **kwargs_bonding_descriptor)
+    bd_atom = _get_bonding_descriptor_atom(parent, descriptor, index_)
     bond = Bond(bond_symbol, prior_atom, bd_atom, parent._get_id(), parent=parent, **kwargs_bond)
     add_bond_to_connected_objects(bond)
 
     if prior_atom == prior_atom.parent.nodes[0]:  # if first atom
         parent.nodes.insert(0, bond)
-        parent.bonds.insert(0, bond)
+        parent.root.bonds.insert(0, bond)
         parent.nodes.insert(0, bd_atom)
-        parent.atoms.insert(0, bd_atom)
+        parent.root.atoms.insert(0, bd_atom)
     elif prior_atom == prior_atom.parent.nodes[-1]:  # if last atom
         parent.nodes.append(bond)
-        parent.bonds.append(bond)
+        parent.root.bonds.append(bond)
         parent.nodes.append(bd_atom)
-        parent.atoms.append(bd_atom)
+        parent.root.atoms.append(bd_atom)
     else:
         branch = Branch(parent, parent._get_id())
         branch.nodes = [bond, bd_atom]

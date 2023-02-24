@@ -13,10 +13,13 @@ def add_bond_to_connected_objects(bond: Bond):
     """ Adds bonds to Atoms, and BondDescriptorAtom. """
     for obj in bond:
         if isinstance(obj, Atom):
+
+            # Validation for available valence
             if obj.bonds_available < bond.bond_order:
-                if obj._increase_valance(bond.bond_order):
+                if obj._increase_valence(bond.bond_order):
                     continue
                 raise BigSMILESError("Too many bonds trying to be made.", str(obj))
+
             obj.bonds.append(bond)
         elif isinstance(obj, BondDescriptorAtom):
             obj.bond = bond
@@ -25,6 +28,7 @@ def add_bond_to_connected_objects(bond: Bond):
 
 
 def add_bond_descriptor_to_stochastic_fragment(stoch_frag: StochasticFragment, loop_obj: Branch = None):
+    """ Add bonding descriptor to stoch_frag.bonding_descriptors. Recursive """
     if loop_obj is None:
         loop_obj = stoch_frag
 
@@ -36,6 +40,7 @@ def add_bond_descriptor_to_stochastic_fragment(stoch_frag: StochasticFragment, l
 
 
 def get_common_bond(atom1: Atom, atom2: Atom) -> Bond | None:
+    """ Checks if the two atoms have a bond in common. """
     # Check if bond already between two atoms
     for bond in atom1.bonds:
         if bond in atom2.bonds:
@@ -45,31 +50,25 @@ def get_common_bond(atom1: Atom, atom2: Atom) -> Bond | None:
 
 
 def remove_partial_ring(parent: BigSMILES | Branch | StochasticFragment, ring_id: int):
+    """ Given Ring id, remove ring. """
     for i, ring in enumerate(parent.rings):
         if ring.ring_id == ring_id:
-            break
-    else:
-        return
-
-    bond = parent.rings.pop(i)
-    parent.bonds.remove(bond)
-    if hasattr(parent, "parent"):
-        parent.parent.bonds.remove(bond)
+            bond = parent.rings.pop(i)
+            parent.bonds.remove(bond)
+            if hasattr(parent, "parent"):
+                parent.parent.bonds.remove(bond)
+            return
 
 
-def insert_obj_into_list(list_, obj, objet_to_insert):
-    for i, item in enumerate(list_):
-        if item == obj:
-            flag = True
-            while flag:
-                if isinstance(list_[i + 1], Branch):
-                    i += 1
-                    continue
+def insert_obj_into_list(list_: list, obj, object_to_insert):
+    """ Insert 'object_to_insert' in a list right behind. """
+    index_ = list_.index(obj)
+    for i, item in enumerate(list_[index_:]):
+        if isinstance(item, Branch):  # put it at the end of branches
+            continue
 
-                flag = False
-
-            list_.insert(i + 1, objet_to_insert)
-            break
+        list_.insert(index_ + 1 + i, object_to_insert)
+        break
 
 
 def get_prior(obj: BigSMILES | StochasticObject | StochasticFragment | Branch, types_: tuple,
@@ -88,7 +87,7 @@ def get_prior(obj: BigSMILES | StochasticObject | StochasticFragment | Branch, t
 
 
 def get_ring_parent(parent) -> BigSMILES | StochasticFragment:
-    """ Recursive """
+    """ Recursively find a parent that has the 'ring' attribute. only BigSMILES and Stochastic Fragments do. """
     if hasattr(parent, "rings"):
         return parent
 
@@ -365,7 +364,7 @@ def close_stochastic_fragment(parent):
     return parent.parent
 
 
-## Methods that don't use state and are for editing ##
+## functions for building BigSMILES in chunks ##
 ###################################################################################################################
 def append_bigsmiles_fragment(parent, bond_symbol: str | None, bigsmiles_: BigSMILES):
     if bond_symbol is not None:

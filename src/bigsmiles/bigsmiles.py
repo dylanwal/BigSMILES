@@ -5,7 +5,7 @@ from bigsmiles.config import Config
 
 class Atom:
     __slots__ = ["id_", "element", "isotope", "stereo", "hydrogens", "charge", "valence",
-                 "organic", "bonds", "possible_valence", "_default_valance", "__dict__", "parent"]
+                 "organic", "bonds", "possible_valence", "_default_valence", "__dict__", "parent"]
     _tree_print_repr = True
 
     def __init__(self,
@@ -27,10 +27,10 @@ class Atom:
         self.charge = charge
         self.possible_valence: tuple[int] = Config.get_atom_possible_valence(element)
         if valence is None:
-            self._default_valance: bool = True
+            self._default_valence: bool = True
             self.valence = self.possible_valence[0]
         else:
-            self._default_valance: bool = False
+            self._default_valence: bool = False
             self.valence = valence
         self.organic = True if element in Config.organics else False
 
@@ -110,18 +110,18 @@ class Atom:
 
         return text
 
-    def _increase_valance(self, requested_valance_increase: int = 0) -> bool:
-        " If default valance, try to increase when an additional bond added that needs it. And does the increase!! "
-        if not self._default_valance:
+    def _increase_valence(self, requested_valence_increase: int = 0) -> bool:
+        """ If default valence, try to increase when an additional bond added that needs it. And does the increase!! """
+        if not self._default_valence:
             return False
 
         for valence in self.possible_valence:
             if valence > self.valence:
-                old_valance = self.valence
+                old_valence = self.valence
                 self.valence = valence
-                if self.bonds_available < requested_valance_increase:
-                    # increase was not enough for requested valance increase; set valence back to original value
-                    self.valence = old_valance
+                if self.bonds_available < requested_valence_increase:
+                    # increase was not enough for requested valence increase; set valence back to original value
+                    self.valence = old_valence
                     continue
 
                 return True
@@ -387,7 +387,8 @@ class StochasticObject:
         return self.root._get_id()
 
 
-def contains_stochastic_object(nodes: Atom | Bond | StochasticObject | Branch):
+def contains_stochastic_object(nodes: list[Atom, Bond, Branch, StochasticObject]):
+    """ recursive search for a stochastic_object. """
     for node in nodes:
         if isinstance(node, StochasticObject):
             return True

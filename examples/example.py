@@ -5,6 +5,7 @@ import chemdraw
 # bigsmiles.Config.color_output = True
 
 cases = [
+    "C((C)C)",
     "{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}",
     "CCC1(CO)C(O)CC(O1)N",
     "F/C=C/F",
@@ -32,12 +33,13 @@ def single():
 
 def multiple():
     results = []
-    for case in cases:
+    for i, case in enumerate(cases):
         output = bigsmiles.BigSMILES(case)
-        print(case, " --> ", output)
+        print(i, "  ", case, " --> ", output)
+        results.append(str(output))
 
-    drawer = chemdraw.GridDrawer(results)
-    drawer.draw_html(auto_open=True)
+    # drawer = chemdraw.GridDrawer(results)
+    # drawer.draw_html(auto_open=True)
 
 
 if __name__ == "__main__":

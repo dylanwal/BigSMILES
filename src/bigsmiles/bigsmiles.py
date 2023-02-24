@@ -305,6 +305,9 @@ class Branch:
     def root(self) -> BigSMILES:
         return self.parent.root
 
+    def _get_id(self) -> int:
+        return self.root._get_id()
+
 
 class StochasticFragment:
     _tree_print_repr = False
@@ -333,6 +336,9 @@ class StochasticFragment:
     @property
     def root(self) -> BigSMILES:
         return self.parent.root
+
+    def _get_id(self) -> int:
+        return self.root._get_id()
 
 
 class StochasticObject:
@@ -377,6 +383,9 @@ class StochasticObject:
     def root(self) -> BigSMILES:
         return self.parent.root
 
+    def _get_id(self) -> int:
+        return self.root._get_id()
+
 
 def contains_stochastic_object(nodes: Atom | Bond | StochasticObject | Branch):
     for node in nodes:
@@ -400,6 +409,7 @@ class BigSMILES:
         self.bonds: list[Bond] = []  # includes bonds in sub-objects
         self.rings: list[Bond] = []  # does not include rings in sub-objects
 
+        self.__id = 0
         # parse input string
         if input_text:
             from bigsmiles.parse_bigsmiles_str import parse_bigsmiles_str
@@ -437,6 +447,11 @@ class BigSMILES:
     @property
     def root(self) -> BigSMILES:
         return self
+
+    def _get_id(self) -> int:
+        id_ = self.__id
+        self.__id += 1
+        return id_
 
     def print_tree(self, show_object_label: bool = True, print_repr: bool = False):
         """

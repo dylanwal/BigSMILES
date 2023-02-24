@@ -2,10 +2,8 @@ import re
 from functools import wraps
 
 from bigsmiles.config import Config
-from bigsmiles.constructor import BigSMILESConstructor
 from bigsmiles.errors import BigSMILESError
-from bigsmiles.bigsmiles import Atom, Bond, StochasticFragment, BondDescriptorAtom
-
+from bigsmiles.constructor import *
 
 ATOM_PATTERN = re.compile(
     r"(?P<isotope>\d{1,3})?" +
@@ -36,49 +34,59 @@ def process_bonding_descriptor_symbol(symbol: str) -> tuple[str, int]:
 
 def in_stochastic_object(func):
     """ Decorator to ensure function call only occurs within stochastic object."""
+
     @wraps(func)
     def _in_stochastic_object(*args, **kwargs):
-        if not args[0].stack[-1].in_stochastic_object:
+        if not args[0].in_stochastic_object:
             raise BigSMILESError("Must in stochastic object.")
         return func(*args, **kwargs)
 
     return _in_stochastic_object
 
 
-class BigSMILESStringConstructor(BigSMILESConstructor):
+def add_atom_str(parent: ParentType, symbol: str) -> ParentType:
+    return add_atom(parent, **atom_symbol_to_attributes(symbol))
 
-    def add_atom_str(self, symbol: str) -> Atom:
-        return super().add_atom(**atom_symbol_to_attributes(symbol))
 
-    @in_stochastic_object
-    def add_bonding_descriptor_str(self, bd_symbol: str) -> BondDescriptorAtom:
-        return super().add_bonding_descriptor(*process_bonding_descriptor_symbol(bd_symbol))
+@in_stochastic_object
+def add_bonding_descriptor_str(parent: ParentType, bd_symbol: str) -> ParentType:
+    return add_bonding_descriptor(parent, *process_bonding_descriptor_symbol(bd_symbol))
 
-    def add_bond_atom_pair_str(self, bond_symbol: str, atom_symbol: str) -> tuple[Bond, Atom]:
-        return super().add_bond_atom_pair(bond_symbol, **atom_symbol_to_attributes(atom_symbol))
 
-    @in_stochastic_object
-    def add_bond_bonding_descriptor_pair_str(self, bond_symbol: str, bd_symbol: str) -> tuple[Bond, BondDescriptorAtom]:
-        return super().add_bond_bonding_descriptor_pair(bond_symbol, *process_bonding_descriptor_symbol(bd_symbol))
+def add_bond_atom_pair_str(parent: ParentType, bond_symbol: str,
+                           atom_symbol: str) -> ParentType:
+    return add_bond_atom_pair(parent, bond_symbol, **atom_symbol_to_attributes(atom_symbol))
 
-    def open_stochastic_object_str(self, bd_symbol: str) -> StochasticFragment:
-        return super().open_stochastic_object(*process_bonding_descriptor_symbol(bd_symbol))
 
-    def open_stochastic_object_with_bond_str(self, bond_symbol: str, bd_symbol: str) -> StochasticFragment:
-        return super().open_stochastic_object_with_bond(bond_symbol, *process_bonding_descriptor_symbol(bd_symbol))
+@in_stochastic_object
+def add_bond_bonding_descriptor_pair_str(parent: ParentType, bond_symbol: str,
+                                         bd_symbol: str) -> ParentType:
+    return add_bond_bonding_descriptor_pair(parent, bond_symbol, *process_bonding_descriptor_symbol(bd_symbol))
 
-    def close_stochastic_object_str(self, bd_symbol: str):
-        return super().close_stochastic_object(*process_bonding_descriptor_symbol(bd_symbol))
 
-    @in_stochastic_object
-    def open_stochastic_fragment(self) -> StochasticFragment:
-        return super().open_stochastic_fragment()
+def open_stochastic_object_str(parent: ParentType, bd_symbol: str) -> ParentType:
+    return open_stochastic_object(parent, *process_bonding_descriptor_symbol(bd_symbol))
 
-    @in_stochastic_object
-    def close_open_stochastic_fragment(self) -> StochasticFragment:
-        return super().close_open_stochastic_fragment()
 
-    @in_stochastic_object
-    def close_stochastic_fragment(self):
-        return super().close_stochastic_fragment()
+def open_stochastic_object_with_bond_str(parent: ParentType, bond_symbol: str,
+                                         bd_symbol: str) -> ParentType:
+    return open_stochastic_object_with_bond(parent, bond_symbol, *process_bonding_descriptor_symbol(bd_symbol))
 
+
+def close_stochastic_object_str(parent: ParentType, bd_symbol: str) -> ParentType:
+    return close_stochastic_object(parent, *process_bonding_descriptor_symbol(bd_symbol))
+
+
+@in_stochastic_object
+def open_stochastic_fragment(parent) -> ParentType:
+    return open_stochastic_fragment(parent)
+
+
+@in_stochastic_object
+def close_open_stochastic_fragment_str(parent) -> ParentType:
+    return close_open_stochastic_fragment(parent)
+
+
+@in_stochastic_object
+def close_stochastic_fragment_str(parent) -> ParentType:
+    return close_stochastic_fragment(parent)

@@ -19,5 +19,5 @@ date/time (UTF), package version, time per parse (us), memory usage per bigsmile
 2023-02-18 03:02:49.404505, 0.0.4, 0.18677, 7201, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0,
 2023-02-19 23:08:02.851348, 0.0.4, 0.19914, 12145, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0,adding __dict__ adds extra memory usage
 2023-02-19 23:12:55.757331, 0.0.4, 0.20133, 12145, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0,
-
 2023-02-23 17:40:36.201323, 0.0.5, 0.21353, 12448, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0,adding **kwargs and .parent to nodes
+2023-02-24 03:13:01.734571, 0.0.6, 0.15346, 10526, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0,constructor class --> functions

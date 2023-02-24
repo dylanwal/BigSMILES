@@ -7,16 +7,8 @@ Code for tokenizing a BigSMILES string.
 import enum
 import re
 
+from bigsmiles.errors import TokenizeError
 from bigsmiles.config import Config
-
-
-class BigSMILESTokenizeError(Exception):
-    """ Raised when error tokenizing a BigSMILES string. """
-    def __init__(self, text: str):
-        self.text = text
-
-    def __str__(self):
-        return self.text
 
 
 class TokenKind(enum.Enum):
@@ -112,9 +104,9 @@ def tokenize(text: str) -> list[Token]:
         if kind == 'SKIP':
             continue
         elif kind == 'MISMATCH':
-            raise BigSMILESTokenizeError(f'Invalid symbol (or group of symbols). (starting with {value!r}; '
-                                         f'index: {match.span()[0]})'
-                                         f'\n{text}' + "\n" + " " * match.span()[0] + "^(and forward)")
+            raise TokenizeError(f'Invalid symbol (or group of symbols). (starting with {value!r}; '
+                                f'index: {match.span()[0]})'
+                                f'\n{text}' + "\n" + " " * match.span()[0] + "^(and forward)")
 
         result.append(
             Token(TokenKind[kind], value)

@@ -49,3 +49,14 @@ def check_ring_numbers(obj: BigSMILES):
     # check if ring_counter had been skipped and restart everything at 1
     for i, ring in enumerate(obj.rings):
         ring.ring_id = i + 1
+
+
+# def add_explict_hydrogen_to_stochastic_objects(stoch_obj):
+#     if not stoch_obj.implicit_endgroups:
+#         try:
+#             prior_atom = get_prior(parent, (Atom, BondDescriptor, StochasticObject))
+#         except ConstructorError:
+#             # no prior atoms, it must be the first atom
+#             if isinstance(parent, BigSMILES) and:
+#                 prior_atom = Atom(parent._get_id(), "H", None, "", 0, 0, 1, parent)
+#                 parent.atoms.append(prior_atom)

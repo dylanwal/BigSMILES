@@ -1,6 +1,7 @@
 import pytest
 
-from bigsmiles.tokenizer import TokenKind, tokenize, BigSMILESTokenizeError
+from bigsmiles.errors import TokenizeError
+from bigsmiles.tokenizer import TokenKind, tokenize
 
 token_tests = [
     # Atoms
@@ -92,5 +93,5 @@ negative_token_tests = [
 
 @pytest.mark.parametrize("test_case", negative_token_tests)
 def test_tokenizer_error(test_case: str):
-    with pytest.raises(BigSMILESTokenizeError) as p:
+    with pytest.raises(TokenizeError) as p:
         tokenize(test_case)

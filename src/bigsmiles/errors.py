@@ -10,3 +10,13 @@ class BigSMILESError(Exception):
     def __str__(self):
         return self.text
 
+
+class TokenizeError(BigSMILESError):
+    """ Raised when an error occurs tokenizing a BigSMILES string. """
+
+
+class ConstructorError(BigSMILESError):
+    """ Raised when an error occurs during the construction of a BigSMILES string. """
+
+
+ERRORS = (BigSMILESError, TokenizeError)

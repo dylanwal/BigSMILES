@@ -3,6 +3,7 @@ from functools import wraps
 
 from bigsmiles.config import Config
 from bigsmiles.errors import BigSMILESError
+from bigsmiles.bigsmiles import StochasticObject, StochasticFragment
 from bigsmiles.constructor import *
 
 ATOM_PATTERN = re.compile(
@@ -64,7 +65,11 @@ def add_bond_bonding_descriptor_pair_str(parent: ParentType, bond_symbol: str,
     return add_bond_bonding_descriptor_pair(parent, bond_symbol, *process_bonding_descriptor_symbol(bd_symbol))
 
 
-def open_stochastic_object_str(parent: ParentType, bd_symbol: str) -> ParentType:
+def open_stochastic_object_fragment_str(parent: ParentType, bd_symbol: str) -> StochasticFragment:
+    return open_stochastic_object_fragment(parent, *process_bonding_descriptor_symbol(bd_symbol))
+
+
+def open_stochastic_object_str(parent: ParentType, bd_symbol: str) -> StochasticObject:
     return open_stochastic_object(parent, *process_bonding_descriptor_symbol(bd_symbol))
 
 

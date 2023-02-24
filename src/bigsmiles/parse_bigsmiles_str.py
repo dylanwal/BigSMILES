@@ -87,7 +87,7 @@ def map_stochastic_object_start(parent: constructor.ParentType, tokens: list[Tok
         raise BigSMILESError(f"Stochastic object starts must be followed an explict or implicit end group.")
 
     if isinstance(parent, BigSMILES) and not parent:
-        return constructor.open_stochastic_object_str(parent, next_token.value)
+        return constructor.open_stochastic_object_fragment_str(parent, next_token.value)
     else:
         if bond_token is None:
             return constructor.open_stochastic_object_with_bond_str(parent, "", next_token.value)
@@ -155,7 +155,7 @@ def tokens_to_bigsmiles(parent: constructor.ParentType, tokens: list[Token]):
         try:
             parent = func(parent, tokens, token)
         except BigSMILESError as e:
-            raise BigSMILESError(f"Issue with token '{token}'. (index: {num_tokens-len(tokens)-1})", e)
+            raise BigSMILESError(f"Issue with token '{token}'. (index: {num_tokens-len(tokens)-1})", e) from e
 
 
 def parse_bigsmiles_str(input_text: str, bigsmiles):
@@ -171,4 +171,4 @@ def parse_bigsmiles_str(input_text: str, bigsmiles):
         constructor.run_validation(bigsmiles)
         constructor.exit_(bigsmiles)
     except BigSMILESError as e:
-        raise BigSMILESError(f"Parsing failed on '{input_text}'.", e)
+        raise BigSMILESError(f"Parsing failed on '{input_text}'.", e) from e

@@ -1,7 +1,7 @@
 import pytest
 
 import bigsmiles
-
+from bigsmiles.errors import BigSMILESError
 
 test_molecules = [
 
@@ -155,7 +155,7 @@ validation_cases = [
 
 @pytest.mark.parametrize("polymer", validation_cases)
 def test_validation(polymer: list):
-    with pytest.raises(bigsmiles.BigSMILESError) as e:
+    with pytest.raises(BigSMILESError) as e:
         bigsmiles.BigSMILES(polymer[0])
 
 

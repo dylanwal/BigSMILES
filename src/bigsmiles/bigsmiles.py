@@ -425,8 +425,8 @@ class BigSMILES:
     def __getitem__(self, obj: int | slice) -> Atom | list[Atom]:
         return self.atoms[obj]
 
-    def __iter__(self) -> list[Atom]:
-        return self.atoms
+    def __iter__(self):
+        return iter(self.atoms)
 
     def __bool__(self):
         if self.nodes:

@@ -56,7 +56,7 @@ BigSMILES: CC{[>][<]CC(C)[>][<]}CC(C)=C
 ├── Bond: 
 ├── StochasticObject: {[>][<]CC(C)[>][<]}
 │    └── StochasticFragment: [<]CC(C)[>]
-│        ├── BondDescriptorAtom: [<]
+│        ├── BondDescriptorBond: [<]
 │        ├── Bond: 
 │        ├── Atom: C
 │        ├── Bond: 
@@ -65,7 +65,7 @@ BigSMILES: CC{[>][<]CC(C)[>][<]}CC(C)=C
 │        │    ├── Bond: 
 │        │    └── Atom: C
 │        ├── Bond: 
-│        └── BondDescriptorAtom: [>]
+│        └── BondDescriptorBond: [>]
 ├── Bond: 
 ├── Atom: C
 ├── Bond: 
@@ -86,7 +86,7 @@ root node: `BigSMILES`
 
 intermediate nodes: `StochasticObject`, `StochasticFragment`, `Branch`
 
-leaf nodes: `BondDescriptorAtom`, `Atom`, `Bond`
+leaf nodes: `BondDescriptorBond`, `Atom`, `Bond`
 
 The tree structure is built through the `nodes` attribute.
 
@@ -120,7 +120,7 @@ classDiagram
     }
     
     
-    class BondDescriptorAtom {
+    class BondDescriptorBond {
         int: id_
         BondDescriptor: descriptor
         Bond: bond
@@ -131,7 +131,7 @@ classDiagram
         str: symbol
         int: index_
         Enum: type_
-        list[BondDescriptorAtom]: instances
+        list[BondDescriptorBond]: instances
     }
 
     
@@ -161,13 +161,13 @@ classDiagram
     BigSMILES --|> Branch
     BigSMILES --|> StochasticObject
     StochasticObject --|> StochasticFragment
-    StochasticFragment --|> BondDescriptorAtom
-    BondDescriptor --|> BondDescriptorAtom
+    StochasticFragment --|> BondDescriptorBond
+    BondDescriptor --|> BondDescriptorBond
     StochasticFragment --|> Atom
     StochasticFragment --|> Bond
     StochasticFragment --|> Branch
     StochasticFragment --|> StochasticObject
-    Branch --|> BondDescriptorAtom
+    Branch --|> BondDescriptorBond
     Branch --|> StochasticObject
     Branch --|> Bond
     Branch --|> Atom

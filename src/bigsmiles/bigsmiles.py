@@ -64,9 +64,9 @@ class Atom:
     def ring_indexes(self) -> list[int]:
         ring_index = []
         for bond in self.bonds:
-            if bond.ring_id is not None:
-                ring_index.append(bond.ring_id)
-
+            if isinstance(bond, Bond):
+                if bond.ring_id is not None:
+                    ring_index.append(bond.ring_id)
         return ring_index
 
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False) -> str:
@@ -134,6 +134,7 @@ class Atom:
 
 
 bond_mapping = {
+    None: 0,
     "": 1,
     "=": 2,
     "#": 3
@@ -146,8 +147,8 @@ class Bond:
 
     def __init__(self,
                  symbol: str,
-                 atom1: Atom | BondDescriptorAtom | StochasticObject,
-                 atom2: Atom | BondDescriptorAtom | StochasticObject | None = None,
+                 atom1: Atom | StochasticObject,
+                 atom2: Atom | StochasticObject | None = None,
                  id_: int = None,
                  ring_id: int = None,
                  parent: BigSMILES | Branch | StochasticFragment | None = None,
@@ -195,12 +196,13 @@ class Bond:
 
 
 class BondDescriptor:
-    __slots__ = ["parent", "descriptor", "index_", "instances", "__dict__"]
+    __slots__ = ["parent", "descriptor", "bond_symbol", "index_", "instances", "__dict__"]
 
-    def __init__(self, parent: StochasticObject, descriptor: str, index_: int, **kwargs):
+    def __init__(self, parent: StochasticObject, descriptor: str, index_: int, bond_symbol: str | None, **kwargs):
         self.parent = parent
         self.descriptor = descriptor
         self.index_ = index_
+        self.bond_symbol = bond_symbol
         self.instances = []
 
         if kwargs:
@@ -213,12 +215,27 @@ class BondDescriptor:
     def __repr__(self):
         return self.to_string(print_repr=True, skip_color=True)
 
+    def __eq__(self, other):
+        if not isinstance(other, BondDescriptor):
+            raise ValueError(f"Equality only valid against other BondDescriptor objects. \nGiven {type(other)}")
+
+        if self.descriptor != other.descriptor:
+            return False
+        if self.index_ != other.index_:
+            return False
+        if self.bond_symbol != other.bond_symbol:
+            return False
+
+        return True
+
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
-        if self.index_ == 1 and not Config.show_bond_descriptor_zero_index:
-            index = ""
-        else:
-            index = self.index_
-        return "[" + self.descriptor + str(index) + "]"
+        text = "["
+        if self.bond_symbol is not None:
+            pass
+        text += self.descriptor
+        if self.index_ != 1 or (self.index_ == 1 and Config.show_bond_descriptor_zero_index):
+            text += self.index_
+        return text + "]"
 
     @property
     def symbol(self) -> str:
@@ -234,13 +251,26 @@ class BondDescriptor:
         return False
 
     @property
+    def bond_order(self) -> int:
+        return bond_mapping[self.bond_symbol]
+
+    @bond_order.setter
+    def bond_order(self, count: int):
+        for k, v in bond_mapping.items():
+            if v == count:
+                self.bond_symbol = k
+                return
+
+        raise ValueError(f"Invalid bond_order. \nGiven: {count} \n Acceptable: {bond_mapping}")
+
+    @property
     def root(self) -> BigSMILES:
         return self.parent.root
 
 
-class BondDescriptorAtom:
+class BondDescriptorBond:
     _tree_print_repr = True
-    __slots__ = ["descriptor", "id_", "bond", "__dict__", "parent"]
+    __slots__ = ["id_", "descriptor", "atom", "bond", "__dict__", "parent"]
 
     def __init__(self,
                  bond_descriptor: BondDescriptor,
@@ -250,7 +280,8 @@ class BondDescriptorAtom:
         self.descriptor = bond_descriptor
         bond_descriptor.instances.append(self)
         self.id_ = id_
-        self.bond = None  # Added after construction
+        self.atom = None  # Added after construction
+        self.bond = None
         self.parent = parent
 
         if kwargs:
@@ -270,13 +301,21 @@ class BondDescriptorAtom:
     def root(self) -> BigSMILES:
         return self.parent.root
 
+    @property
+    def bond_order(self) -> int:
+        return self.descriptor.bond_order
+
+    @bond_order.setter
+    def bond_order(self, count: int):
+        self.descriptor.bond_order = count
+
 
 class Branch:
     _tree_print_repr = False
     __slots__ = ["nodes", "id_", "parent", "__dict__"]
 
     def __init__(self, parent: BigSMILES | StochasticFragment | Branch, id_: int = None, **kwargs):
-        self.nodes: list[Atom | Bond | Branch | StochasticObject | BondDescriptorAtom] = []
+        self.nodes: list[Atom | Bond | Branch | StochasticObject | BondDescriptorBond] = []
         self.id_ = id_
         self.parent = parent
 
@@ -314,7 +353,7 @@ class StochasticFragment:
     __slots__ = ["nodes", "id_", "parent", "bonding_descriptors", "rings", "__dict__"]
 
     def __init__(self, parent: StochasticObject, id_: int = None):
-        self.nodes: list[Atom | Bond | BondDescriptorAtom | Branch | StochasticObject] = []
+        self.nodes: list[Atom | Bond | BondDescriptorBond | Branch | StochasticObject] = []
         self.rings: list[Bond] = []
         self.bonding_descriptors: list[BondDescriptor] = []
         self.id_ = id_
@@ -343,17 +382,15 @@ class StochasticFragment:
 
 class StochasticObject:
     _tree_print_repr = False
-    __slots__ = ["nodes", "bonding_descriptors", "id_", "parent", "end_group_left", "end_group_right",
+    __slots__ = ["nodes", "bonding_descriptors", "id_", "parent", "bd_left", "bd_right",
                  "bond_left", "bond_right", "__dict__"]
 
     def __init__(self, parent: BigSMILES | StochasticFragment | Branch, id_: int = None):
         self.nodes: list[StochasticFragment] = []
         self.bonding_descriptors: list[BondDescriptor] = []
-        self.end_group_left: BondDescriptorAtom | None = None
-        self.end_group_right: BondDescriptorAtom | None = None
+        self.bd_left: BondDescriptorBond | None = None
+        self.bd_right: BondDescriptorBond | None = None
         self.id_ = id_
-        self.bond_left: Bond | None = None
-        self.bond_right: Bond | None = None
         self.parent = parent
 
     def __str__(self):
@@ -364,16 +401,16 @@ class StochasticObject:
 
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
         text = Config.add_color("{", "Red", skip_color)
-        text += self.end_group_left.to_string(show_hydrogens, print_repr, skip_color)
+        text += self.bd_left.to_string(show_hydrogens, print_repr, skip_color)
         text += ",".join(node.to_string(show_hydrogens, print_repr, skip_color) for node in self.nodes)
-        text += self.end_group_right.to_string(show_hydrogens, print_repr, skip_color)
+        text += self.bd_right.to_string(show_hydrogens, print_repr, skip_color)
         return text + Config.add_color("}", "Red", skip_color)
 
     @property
     def implicit_endgroups(self) -> bool:
         """ Returns true if one or more are implicit """
-        return True if self.end_group_left.descriptor.descriptor == "" or \
-                       self.end_group_right.descriptor.descriptor == "" else False
+        return True if self.bd_left.descriptor.descriptor == "" or \
+                       self.bd_right.descriptor.descriptor == "" else False
 
     @property
     def in_stochastic_object(self) -> bool:
@@ -406,7 +443,7 @@ class BigSMILES:
 
     def __init__(self, input_text: str = None):
         self.nodes: list[Atom | Bond | StochasticObject | Branch] = []
-        self.atoms: list[Atom | BondDescriptorAtom] = []  # includes atoms in sub-objects
+        self.atoms: list[Atom] = []  # includes atoms in sub-objects
         self.bonds: list[Bond] = []  # includes bonds in sub-objects
         self.rings: list[Bond] = []  # does not include rings in sub-objects
 
@@ -473,5 +510,5 @@ class BigSMILES:
 # types
 has_node_attr = BigSMILES | Branch | StochasticObject | StochasticFragment
 has_ring_attr = BigSMILES | StochasticFragment
-has_parent_attr = Branch | StochasticObject | StochasticFragment | Bond | BondDescriptorAtom | Atom
+has_parent_attr = Branch | StochasticObject | StochasticFragment | Bond | BondDescriptorBond | Atom
 has_root_attr = BigSMILES | has_parent_attr

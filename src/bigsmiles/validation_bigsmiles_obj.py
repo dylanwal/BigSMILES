@@ -142,7 +142,7 @@ def check_implicit_endgroups_ends(obj: has_node_attr, parent_obj: has_node_attr 
     # if end is implicit; there must be single bonding units
     for i, node in enumerate(obj.nodes):
         if isinstance(node, StochasticObject):
-            if node.end_group_left.descriptor.descriptor == "":
+            if node.bd_left.descriptor.descriptor == "":
                 if i != 0:
                     # nothing allowed to the left
                     raise ValidationError("With a the left end group implicit, "
@@ -151,7 +151,7 @@ def check_implicit_endgroups_ends(obj: has_node_attr, parent_obj: has_node_attr 
                     # if it isn't BigSMILES it can't have a left implicit end group
                     raise ValidationError("Implicit left end group not allowed within interior.")
 
-            if node.end_group_right.descriptor.descriptor == "":
+            if node.bd_right.descriptor.descriptor == "":
 
                 if i != len(obj.nodes) - 1:
                     # nothing allowed to the right

@@ -5,7 +5,7 @@ from bigsmiles.validation_string import run_string_validation
 from bigsmiles.tokenizer import Token, TokenKind, tokenize
 from bigsmiles.validation_tokens import run_token_validation
 import bigsmiles.constructor_str as constructor
-from bigsmiles.bigsmiles import BigSMILES, Branch, StochasticFragment, has_node_attr
+from bigsmiles.bigsmiles import BigSMILES, Branch, StochasticFragment, Atom, Bond, has_node_attr
 
 
 def map_atom(parent: has_node_attr, tokens: list[Token], token: Token):
@@ -24,34 +24,59 @@ def map_bond(parent: has_node_attr, tokens: list[Token], token: Token):
     except IndexError:
         raise BigSMILESError("Bond can't be at the end of a BigSMILES string.")
 
-    if next_token.kind in (TokenKind.Atom, TokenKind.AtomExtend):
+    if next_token.kind is TokenKind.Atom or next_token.kind is TokenKind.AtomExtend:
         return constructor.add_bond_atom_pair(parent, token.value, next_token.value)
 
-    if next_token.kind is not TokenKind.BondDescriptor:
-        return constructor.add_bond_bonding_descriptor_pair_str(parent, token.value, next_token.value)
+    if next_token.kind is TokenKind.BondDescriptor:
+        return constructor.add_bonding_descriptor_to_end_str(parent, token.value, next_token.value)
 
-    return map_stochastic_object_start(parent, tokens, next_token, token)
+    if next_token.kind is TokenKind.StochasticStart:
+        return map_stochastic_object_start(parent, tokens, next_token, token)
+
+    raise BigSMILESError(f"Bond can't be followed by: {next_token.kind}")
 
 
 def map_bond_descriptor(parent: has_node_attr, tokens: list[Token], token: Token):
     if tokens[0].kind is TokenKind.StochasticEnd:
-        parent = constructor.close_stochastic_fragment_str(parent)
-        parent = constructor.close_stochastic_object_str(parent, token.value)
         tokens.pop(0)
-        return parent
+        parent = constructor.close_stochastic_fragment_str(parent)
+        if token.kind is TokenKind.ImplictEndGroup:
+            bond_symbol = None
+        elif len(tokens) == 0 or tokens[0].kind is TokenKind.Atom or tokens[0].kind is TokenKind.AtomExtend:
+            bond_symbol = ""
+        elif tokens[0].kind is TokenKind.Bond:
+            bond_symbol = tokens[0].value
+        else:
+            raise BigSMILESError("Bonding descriptors must be followed by an atom or bond.")
+
+        return constructor.close_stochastic_object_str(parent, token.value, bond_symbol)
 
     if isinstance(parent, StochasticFragment):
-        # first StochasticFragment symbol
-        return constructor.add_bonding_descriptor_str(parent, token.value)
+        if not parent.nodes:
+            # first symbol in stochastic fragment
+            if tokens[0].kind == TokenKind.Atom:
+                bond_symbol = ""
+                atom_symbol = tokens.pop(0).value
+            elif tokens[0].kind == TokenKind.Bond:
+                bond_symbol = tokens[0].value
+                tokens.pop(0)
+                if tokens[0].kind == TokenKind.Atom:
+                    atom_symbol = tokens.pop(0).value
+                else:
+                    raise BigSMILESError("Invalid SMILES. Bond descriptor followed by bond; "
+                                         "must also be followed by atom.")
+            else:
+                raise BigSMILESError("Bonding descriptors must be followed by an atom or bond.")
 
-    if isinstance(parent, BigSMILES) and not parent:
-        # first Branch symbol
+            return constructor.add_bonding_descriptor_atom_pair_str(parent, atom_symbol, token.value, bond_symbol)
+
+    elif isinstance(parent, Branch):
         # check to make sure the branch closes immediately
         if tokens[0].kind != TokenKind.BranchEnd:
             raise BigSMILESError("If Bonding Descriptors is the first Branch symbol, it can only be followed by "
                                  "Branch End.")
 
-    return constructor.add_bond_bonding_descriptor_pair_str(parent, "", token.value)
+    return constructor.add_bonding_descriptor_to_end_str(parent, token.value, "")
 
 
 def map_branch_start(parent: has_node_attr, tokens: list[Token], token: Token):
@@ -77,16 +102,18 @@ def map_stochastic_object_start(parent: has_node_attr, tokens: list[Token], toke
     except IndexError:
         raise BigSMILESError("Stochastic objects must begin with a bond descriptor (or implicit bonding descriptor).")
 
-    if next_token.kind not in (TokenKind.ImplictEndGroup, TokenKind.BondDescriptor):
+    if next_token.kind is TokenKind.ImplictEndGroup:
+        return constructor.open_stochastic_object_str(parent, next_token.value, None)
+
+    if next_token.kind is not TokenKind.BondDescriptor:
         raise BigSMILESError(f"Stochastic object starts must be followed an explict or implicit end group.")
 
     if isinstance(parent, BigSMILES) and not parent:
-        return constructor.open_stochastic_object_fragment_str(parent, next_token.value)
-    else:
-        if bond_token is None:
-            return constructor.open_stochastic_object_with_bond_str(parent, "", next_token.value)
-        else:
-            return constructor.open_stochastic_object_with_bond_str(parent, bond_token.value, next_token.value)
+        return constructor.open_stochastic_object_str(parent, next_token.value, "")
+
+    if bond_token is None:
+        bond_token = ""
+    return constructor.open_stochastic_object_str(parent, next_token.value, bond_token)
 
 
 def map_stochastic_object_end(parent: has_node_attr, tokens: list[Token], token: Token) -> TokenKind:
@@ -149,7 +176,7 @@ def tokens_to_bigsmiles(parent: has_node_attr, tokens: list[Token]):
         try:
             parent = func(parent, tokens, token)
         except BigSMILESError as e:
-            raise BigSMILESError(f"Issue with token '{token}'. (index: {num_tokens-len(tokens)-1})", e) from e
+            raise BigSMILESError(f"Issue with token '{token}'. (token: {num_tokens-len(tokens)-1})", e) from e
 
 
 def parse_bigsmiles_str(input_text: str, bigsmiles: BigSMILES):

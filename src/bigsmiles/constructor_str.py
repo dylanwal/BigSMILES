@@ -45,53 +45,53 @@ def in_stochastic_object(func):
     return _in_stochastic_object
 
 
-def add_atom_str(parent: ParentType, symbol: str) -> ParentType:
+def add_atom_str(parent: has_node_attr, symbol: str) -> has_node_attr:
     return add_atom(parent, **atom_symbol_to_attributes(symbol))
 
 
 @in_stochastic_object
-def add_bonding_descriptor_str(parent: ParentType, bd_symbol: str) -> ParentType:
+def add_bonding_descriptor_str(parent: has_node_attr, bd_symbol: str) -> has_node_attr:
     return add_bonding_descriptor(parent, *process_bonding_descriptor_symbol(bd_symbol))
 
 
-def add_bond_atom_pair_str(parent: ParentType, bond_symbol: str,
-                           atom_symbol: str) -> ParentType:
+def add_bond_atom_pair_str(parent: has_node_attr, bond_symbol: str,
+                           atom_symbol: str) -> has_node_attr:
     return add_bond_atom_pair(parent, bond_symbol, **atom_symbol_to_attributes(atom_symbol))
 
 
 @in_stochastic_object
-def add_bond_bonding_descriptor_pair_str(parent: ParentType, bond_symbol: str,
-                                         bd_symbol: str) -> ParentType:
+def add_bond_bonding_descriptor_pair_str(parent: has_node_attr, bond_symbol: str,
+                                         bd_symbol: str) -> has_node_attr:
     return add_bond_bonding_descriptor_pair(parent, bond_symbol, *process_bonding_descriptor_symbol(bd_symbol))
 
 
-def open_stochastic_object_fragment_str(parent: ParentType, bd_symbol: str) -> StochasticFragment:
+def open_stochastic_object_fragment_str(parent: has_node_attr, bd_symbol: str) -> StochasticFragment:
     return open_stochastic_object_fragment(parent, *process_bonding_descriptor_symbol(bd_symbol))
 
 
-def open_stochastic_object_str(parent: ParentType, bd_symbol: str) -> StochasticObject:
+def open_stochastic_object_str(parent: has_node_attr, bd_symbol: str) -> StochasticObject:
     return open_stochastic_object(parent, *process_bonding_descriptor_symbol(bd_symbol))
 
 
-def open_stochastic_object_with_bond_str(parent: ParentType, bond_symbol: str,
-                                         bd_symbol: str) -> ParentType:
+def open_stochastic_object_with_bond_str(parent: has_node_attr, bond_symbol: str,
+                                         bd_symbol: str) -> has_node_attr:
     return open_stochastic_object_with_bond(parent, bond_symbol, *process_bonding_descriptor_symbol(bd_symbol))
 
 
-def close_stochastic_object_str(parent: ParentType, bd_symbol: str) -> ParentType:
+def close_stochastic_object_str(parent: has_node_attr, bd_symbol: str) -> has_node_attr:
     return close_stochastic_object(parent, *process_bonding_descriptor_symbol(bd_symbol))
 
 
 @in_stochastic_object
-def open_stochastic_fragment(parent) -> ParentType:
+def open_stochastic_fragment(parent) -> has_node_attr:
     return open_stochastic_fragment(parent)
 
 
 @in_stochastic_object
-def close_open_stochastic_fragment_str(parent) -> ParentType:
+def close_open_stochastic_fragment_str(parent) -> has_node_attr:
     return close_open_stochastic_fragment(parent)
 
 
 @in_stochastic_object
-def close_stochastic_fragment_str(parent) -> ParentType:
+def close_stochastic_fragment_str(parent) -> has_node_attr:
     return close_stochastic_fragment(parent)

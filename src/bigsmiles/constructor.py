@@ -1,17 +1,27 @@
-import bigsmiles
+"""
+Constructor:
+
+This file contains functions that can be called to construct a BigSMILES object.
+
+There are two approaches:
+* build it step by step;  where you open branch add atoms then close branch
+* build it in chunks;  where you build the branch in a separate BigSMILES object and attach it.
+
+"""
+
 from bigsmiles.errors import ConstructorError
 from bigsmiles.bigsmiles import Atom, Bond, BondDescriptor, Branch, StochasticFragment, StochasticObject, \
-    BigSMILES, BondDescriptorAtom
-from bigsmiles.validation import post_validation
-from bigsmiles.syntax_fixes import run_syntax_fixes
-
-ParentType = BigSMILES | Branch | StochasticFragment | StochasticObject
+    BigSMILES, BondDescriptorAtom, has_node_attr, has_ring_attr, has_parent_attr
+import bigsmiles.validation_bigsmiles_obj as validation_bigsmiles_obj
 
 
 ## Utility functions for construction ##
 ######################################################################################################################
 def add_bond_to_connected_objects(bond: Bond):
-    """ Adds bonds to Atoms, and BondDescriptorAtom. """
+    """
+    Adds Bond to Atoms.bond attribute
+    also works on BondDescriptorAtom and stochastic objects
+    """
     for obj in bond:
         if isinstance(obj, Atom):
 
@@ -29,7 +39,7 @@ def add_bond_to_connected_objects(bond: Bond):
 
 
 def add_bond_descriptor_to_stochastic_fragment(stoch_frag: StochasticFragment, loop_obj: Branch = None):
-    """ Add bonding descriptor to stoch_frag.bonding_descriptors. Recursive """
+    """ Add bonding descriptor to stoch_frag.bonding_descriptors. Recursive. """
     if loop_obj is None:
         loop_obj = stoch_frag
 
@@ -42,7 +52,6 @@ def add_bond_descriptor_to_stochastic_fragment(stoch_frag: StochasticFragment, l
 
 def get_common_bond(atom1: Atom, atom2: Atom) -> Bond | None:
     """ Checks if the two atoms have a bond in common. """
-    # Check if bond already between two atoms
     for bond in atom1.bonds:
         if bond in atom2.bonds:
             return bond
@@ -50,30 +59,30 @@ def get_common_bond(atom1: Atom, atom2: Atom) -> Bond | None:
     return None  # No common bond found
 
 
-def remove_partial_ring(parent: BigSMILES | Branch | StochasticFragment, ring_id: int):
-    """ Given Ring id, remove ring. """
+def remove_partial_ring(parent: has_ring_attr, ring_id: int):
+    """ Given a ring_id, remove ring from parent. """
     for i, ring in enumerate(parent.rings):
         if ring.ring_id == ring_id:
             bond = parent.rings.pop(i)
             parent.bonds.remove(bond)
             if hasattr(parent, "parent"):
                 parent.parent.bonds.remove(bond)
-            return
+            break
 
 
 def insert_obj_into_list(list_: list, obj, object_to_insert):
-    """ Insert 'object_to_insert' in a list right behind. """
+    """ Insert 'object_to_insert' in a list right behind 'obj'. """
     index_ = list_.index(obj) + 1
     for i, item in enumerate(list_[index_:]):
-        if isinstance(item, Branch):  # put it at the end of branches
+        if isinstance(item, Branch):  # put it at the end of existing branches
             continue
 
         list_.insert(index_ + i, object_to_insert)
         break
 
 
-def get_prior(obj: BigSMILES | StochasticObject | StochasticFragment | Branch, types_: tuple,
-              flag: bool = False) -> Atom:
+def get_prior(obj: has_node_attr, types_: tuple, flag: bool = False) -> Atom:
+    """ Get prior """
     if obj.nodes:
         for node in reversed(obj.nodes):  # no atom can ever have more than 10 bonds
             if type(node) in types_:
@@ -87,7 +96,7 @@ def get_prior(obj: BigSMILES | StochasticObject | StochasticFragment | Branch, t
     raise ConstructorError("Bond attempted to be made to that has nothing to bond back to.")
 
 
-def get_ring_parent(parent) -> BigSMILES | StochasticFragment:
+def get_ring_parent(parent: has_parent_attr) -> BigSMILES | StochasticFragment:
     """ Recursively find a parent that has the 'ring' attribute. only BigSMILES and Stochastic Fragments do. """
     if hasattr(parent, "rings"):
         return parent
@@ -95,22 +104,40 @@ def get_ring_parent(parent) -> BigSMILES | StochasticFragment:
     return get_ring_parent(parent.parent)
 
 
-def run_validation(parent):
-    """ Run various validations. """
-    post_validation(parent)
+def add_explict_hydrogen_to_stochastic_objects(bigsmiles: BigSMILES):
+    """ {[$][$]CC[$][$]} --> [H]{[$][$]CC[$][$]}[H] """
+    if isinstance(bigsmiles.nodes[0], StochasticObject) and not bigsmiles.nodes[0].implicit_endgroups:
+        if bigsmiles.nodes[-1].end_group_left.bond.bond_order > 1:
+            raise ConstructorError(f"Invalid BigSMILES. A double bond coming out of a stochastic object requires an "
+                                  f"explict endgroup defined. \n Current Bigsmiles: {bigsmiles}")
+
+        # add_bond_atom_pair(bigsmiles, "", "H")
+
+    if isinstance(bigsmiles.nodes[-1], StochasticObject) and not bigsmiles.nodes[-1].implicit_endgroups:
+        if bigsmiles.nodes[-1].end_group_right.bond.bond_order > 1:
+            raise ConstructorError(f"Invalid BigSMILES. A double bond coming out of a stochastic object requires an "
+                                  f"explict endgroup defined. \n Current Bigsmiles: {bigsmiles}")
+
+        add_bond_atom_pair(bigsmiles, "", "H")
 
 
-def exit_(parent):
+def exit_construction(parent: BigSMILES, syntax_fix: bool = True, validation: bool = True):
     if not isinstance(parent, BigSMILES):
         raise ConstructorError(f"{type(parent)} is missing closing symbol.")
-    run_syntax_fixes(parent)
-    return parent
+
+    if not parent:
+        return parent
+    if syntax_fix:
+        add_explict_hydrogen_to_stochastic_objects(parent)
+        validation_bigsmiles_obj.run_syntax_fixes(parent)
+    if validation:
+        validation_bigsmiles_obj.run_validation(parent)
 
 
 ## Functions for constructing a bigsmiles sequentially or step by step ##
 #######################################################################################################################
 def add_atom(
-        parent: ParentType,
+        parent: has_node_attr,
         element: str,
         isotope: int | None = None,
         stereo: str = '',
@@ -118,7 +145,7 @@ def add_atom(
         charge: int = 0,
         valance: int = None,
         **kwargs
-) -> ParentType:
+) -> has_node_attr:
     atom = Atom(parent._get_id(), element, isotope, stereo, hcount, charge, valance,
                 parent=parent, **kwargs)
     parent.nodes.append(atom)
@@ -128,12 +155,12 @@ def add_atom(
 
 
 def add_bond(
-        parent: ParentType,
+        parent: has_node_attr,
         bond_symbol: str,
         atom1: Atom | BondDescriptorAtom,
         atom2: Atom | BondDescriptorAtom | StochasticObject | None,
         **kwargs
-) -> ParentType:
+) -> has_node_attr:
     bond = Bond(bond_symbol, atom1, atom2, parent._get_id(), parent=parent, **kwargs)
     parent.nodes.append(bond)
     parent.root.bonds.append(bond)
@@ -142,7 +169,7 @@ def add_bond(
     return parent
 
 
-def add_ring(parent: ParentType, ring_id: int, bond_symbol: str = "", **kwargs) -> ParentType:
+def add_ring(parent: has_node_attr, ring_id: int, bond_symbol: str = "", **kwargs) -> has_node_attr:
     # check if ring_id already exists
     ring_parent = get_ring_parent(parent)
     for ring in ring_parent.rings:
@@ -172,8 +199,8 @@ def add_ring(parent: ParentType, ring_id: int, bond_symbol: str = "", **kwargs) 
     return parent
 
 
-def add_ring_from_atoms(parent: ParentType, atom1: Atom, atom2: Atom, bond_symbol: str = "", **kwargs) \
-        -> ParentType:
+def add_ring_from_atoms(parent: has_node_attr, atom1: Atom, atom2: Atom, bond_symbol: str = "", **kwargs) \
+        -> has_node_attr:
     ring_parent = get_ring_parent(parent)
     bond = get_common_bond(atom1, atom2)  # Check if ring already between two atoms
     if bond is None:
@@ -229,7 +256,7 @@ def add_bonding_descriptor(parent, descriptor: str, index_: int, **kwargs) -> Bo
 
 
 def add_bond_atom_pair(
-        parent,
+        parent: has_node_attr,
         bond_symbol: str,
         element: str,
         isotope: int | None = None,
@@ -237,16 +264,16 @@ def add_bond_atom_pair(
         hcount: int = 0,
         charge: int = 0,
         valance: int = None,
-        atom_kwargs: dict = None,
-        bond_kwargs: dict = None
-) -> tuple[Bond, Atom]:
-    atom_kwargs = atom_kwargs if atom_kwargs is not None else {}
-    bond_kwargs = bond_kwargs if bond_kwargs is not None else {}
+        kwargs_atom: dict = None,
+        kwargs_bond: dict = None
+) -> has_node_attr:
+    kwargs_atom = kwargs_atom if kwargs_atom is not None else {}
+    kwargs_bond = kwargs_bond if kwargs_bond is not None else {}
 
     atom = Atom(parent._get_id(), element, isotope, stereo, hcount, charge, valance,
-                parent=parent, **atom_kwargs)
+                parent=parent, **kwargs_atom)
     prior_atom = get_prior(parent, (Atom, BondDescriptorAtom, StochasticObject))
-    add_bond(parent, bond_symbol, prior_atom, atom, **bond_kwargs)
+    add_bond(parent, bond_symbol, prior_atom, atom, **kwargs_bond)
     parent.nodes.append(atom)
     parent.root.atoms.append(atom)
 
@@ -254,13 +281,13 @@ def add_bond_atom_pair(
 
 
 def add_bond_bonding_descriptor_pair(
-        parent,
+        parent: StochasticFragment | Branch,
         bond_symbol: str,
         descriptor: str,
         index_: int,
         kwargs_bond_descriptor: dict = None,
         kwargs_bond: dict = None
-):
+) -> StochasticFragment | Branch:
     kwargs_bond_descriptor = kwargs_bond_descriptor if kwargs_bond_descriptor is not None else {}
     kwargs_bond = kwargs_bond if kwargs_bond is not None else {}
 
@@ -295,7 +322,7 @@ def close_branch(parent):
     return parent.parent
 
 
-def open_stochastic_object(parent: ParentType, descriptor: str, index_: int, **kwargs) -> StochasticObject:
+def open_stochastic_object(parent: has_node_attr, descriptor: str, index_: int, **kwargs) -> StochasticObject:
     stoch_obj = StochasticObject(parent, parent._get_id())
     new_bd = BondDescriptor(stoch_obj, descriptor, index_)
     stoch_obj.bonding_descriptors.append(new_bd)
@@ -306,7 +333,7 @@ def open_stochastic_object(parent: ParentType, descriptor: str, index_: int, **k
     return stoch_obj
 
 
-def open_stochastic_object_fragment(parent: ParentType, descriptor: str, index_: int, **kwargs) -> StochasticFragment:
+def open_stochastic_object_fragment(parent: has_node_attr, descriptor: str, index_: int, **kwargs) -> StochasticFragment:
     stoch_obj = open_stochastic_object(parent, descriptor, index_, **kwargs)
     fragment = StochasticFragment(stoch_obj, stoch_obj._get_id())
     stoch_obj.nodes.append(fragment)
@@ -373,7 +400,7 @@ def close_stochastic_fragment(parent):
 
 ## functions for building BigSMILES in chunks ##
 ###################################################################################################################
-def append_bigsmiles_fragment(parent, bigsmiles_: BigSMILES, bond_symbol: str, **kwargs) -> bigsmiles.BigSMILES:
+def append_bigsmiles_fragment(parent, bigsmiles_: BigSMILES, bond_symbol: str, **kwargs) -> BigSMILES:
     if not isinstance(bigsmiles_.nodes[0], Atom | StochasticObject):
         raise ConstructorError("First node must be an 'Atom' to added fragment.")
     if not parent:
@@ -421,8 +448,91 @@ def attach_bigsmiles_branch(parent, bond_symbol: str | None, bigsmiles_: BigSMIL
     # insert branch (put it after all the other branches on the atom)
     insert_obj_into_list(parent.root.nodes, atom, branch)
 
+    return parent
 
-def add_bond_bonding_descriptor_via_index(
+
+def insert_atom_bond_into_bond(
+        parent: has_node_attr,
+        prior_atom: Atom | BondDescriptorAtom | Branch | StochasticObject | None,
+        bond_symbol: str,
+        element: str,
+        isotope: int | None = None,
+        stereo: str = '',
+        hcount: int = 0,
+        charge: int = 0,
+        valance: int = None,
+        kwargs_atom: dict = None,
+        kwargs_bond: dict = None
+) -> has_node_attr:
+    kwargs_atom = kwargs_atom if kwargs_atom is not None else {}
+    kwargs_bond = kwargs_bond if kwargs_bond is not None else {}
+
+    atom = Atom(parent._get_id(), element, isotope, stereo, hcount, charge, valance,
+                parent=parent, **kwargs_atom)
+
+    if prior_atom is None and isinstance(parent, BigSMILES):  # add to beginning
+        bond = Bond(bond_symbol, atom, parent.atoms[0], parent._get_id(), parent=parent, **kwargs_bond)
+        add_bond_to_connected_objects(bond)
+        parent.nodes.insert(0, bond)
+        parent.root.bonds.insert(0, bond)
+        parent.nodes.insert(0, atom)
+        parent.root.atoms.insert(0, atom)
+        return
+
+    if prior_atom == prior_atom.parent.nodes[-1]:  # add to end
+        bond = Bond(bond_symbol, parent.atoms[-1], atom, parent._get_id(), parent=parent, **kwargs_bond)
+        add_bond_to_connected_objects(bond)
+        parent.nodes.append(bond)
+        parent.root.bonds.append(bond)
+        parent.nodes.append(atom)
+        parent.root.atoms.append(atom)
+        return
+
+
+def insert_atom_into_bond(
+        parent: has_node_attr,
+        bond_to_insert_into: Bond,
+        element: str,
+        isotope: int | None = None,
+        stereo: str = '',
+        hcount: int = 0,
+        charge: int = 0,
+        valance: int = None,
+        kwargs_atom: dict = None,
+) -> has_node_attr:
+    kwargs_atom = kwargs_atom if kwargs_atom is not None else {}
+
+    # create atom
+    atom = Atom(parent._get_id(), element, isotope, stereo, hcount, charge, valance,
+                parent=parent, **kwargs_atom)
+
+    # create bonds
+    new_bond1 = Bond(bond_to_insert_into.symbol, bond_to_insert_into.atom1, atom, parent._get_id(), parent=parent)
+    new_bond2 = Bond(bond_to_insert_into.symbol, atom, bond_to_insert_into.atom2, parent._get_id(), parent=parent)
+
+    # remove old bond and add new bonds and atoms to parent
+    bond_index = parent.nodes.index(bond_to_insert_into)
+    parent.nodes.insert(bond_index + 1, new_bond1)
+    parent.nodes.insert(bond_index + 2, atom)
+    parent.nodes.insert(bond_index + 3, new_bond2)
+    parent.nodes.pop(bond_index)
+
+    # remove old bond and add new bonds and atoms to root
+    bond_index = parent.root.bonds.index(bond_to_insert_into)
+    parent.root.bonds.insert(bond_index + 1, new_bond1)
+    parent.root.bonds.insert(bond_index + 2, new_bond2)
+    parent.root.bonds.pop(bond_index)
+    atom_index = parent.root.atoms.index(bond_to_insert_into.atom1)
+    parent.root.atoms.insert(atom_index + 1, atom)
+
+    # remove old bond from atoms and add new bonds to atoms
+    bond_to_insert_into.atom1.bonds.remove(bond_to_insert_into)
+    bond_to_insert_into.atom2.bonds.remove(bond_to_insert_into)
+    add_bond_to_connected_objects(new_bond1)
+    add_bond_to_connected_objects(new_bond2)
+        
+        
+def add_bonding_descriptor_bond_via_index(
         parent: StochasticFragment,
         bond_symbol: str,
         descriptor: str,
@@ -484,37 +594,7 @@ def add_bigsmiles_as_stochastic_fragment(stoch_obj: StochasticObject, bigsmiles_
         list({node.descriptor for node in bigsmiles_.nodes if isinstance(node, BondDescriptorAtom)})
 
     return add_stochastic_fragment(stoch_obj, stoch_fragment)
-
-# def re_number_rings(obj, seen: set[Bond]):
-#     """ Recursive renumbering of rings. """
-#     for node in obj.nodes:
-#         if isinstance(node, Bond) and node.ring_id is not None and node not in seen:
-#             obj.root.rings.append(node)
-#             node.ring_id = len(obj.root.rings)
-#             seen.add(node)
-#         if hasattr(node, 'nodes'):
-#             re_number_rings(node, seen)
-#
-#
-# def re_number_nodes(obj):
-#     """ Recursive renumbering 'id_'. """
-#     for node in obj.nodes:
-#         if isinstance(node, Atom):
-#             node.id_ = parent._get_id()
-#         elif isinstance(node, Bond):
-#             node.id_ = parent._get_id()
-#         elif isinstance(node, BondDescriptorAtom):
-#             node.id_ = parent._get_id()
-#         elif isinstance(node, Branch):
-#             node.id_ = parent._get_id()
-#             re_number_nodes(node)
-#         elif isinstance(node, StochasticFragment):
-#             node.id_ = parent._get_id()
-#             re_number_nodes(node)
-#         elif isinstance(node, StochasticObject):
-#             node.id_ = parent._get_id()
-#             re_number_nodes(node)
-
+    
 
 def set_new_parent(new_parent, obj):
     """ re-direct 'parent' to new bigsmiles object """
@@ -523,9 +603,9 @@ def set_new_parent(new_parent, obj):
             node.parent = new_parent
 
 
-__all__ = ["ParentType", "add_atom", "add_bond", "add_ring", "add_ring_from_atoms", "add_bonding_descriptor",
+__all__ = ["has_node_attr", "add_atom", "add_bond", "add_ring", "add_ring_from_atoms", "add_bonding_descriptor",
            "add_bond_atom_pair", "add_bond_bonding_descriptor_pair", "open_branch", "close_branch",
            "open_stochastic_object", "open_stochastic_object_fragment", "open_stochastic_object_with_bond",
            "close_stochastic_object", "open_stochastic_fragment", "close_open_stochastic_fragment",
-           "close_stochastic_fragment", "exit_", "run_validation"
+           "close_stochastic_fragment", "exit_construction"
            ]

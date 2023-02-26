@@ -23,3 +23,4 @@ date/time (UTF), package version, time per parse (us), memory usage per bigsmile
 2023-02-24 03:13:01.734571, 0.0.6, 0.15346, 10526, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0,constructor class --> functions
 2023-02-24 15:43:12.961899, 0.0.6, 0.25632, 10526, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, 0.00000,  0, null
 2023-02-24 20:44:35.205696, 0.0.6, 0.25858, 10526, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, 0.00000,  0, null
+2023-02-26 17:02:02.085862, 0.0.6, 0.16431, 10526, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0,additional validation added

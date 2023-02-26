@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 
 import bigsmiles
@@ -23,7 +25,6 @@ test_molecules = [
     "O1CCCC[C@@H]1C",
     # "F/C=C/F",  # E-difluoroethene
     # "F\C=C\F",  # Z-difluoroethene
-
 
     "CC1=C(C(=NC=C1C=O)C)O",
     "C1=CC(C(C(=C1)C(=O)O)O)O",
@@ -105,13 +106,12 @@ test_polymers = [
     # "{[][$]CC(c1ccccc1)[$][$]}{[$][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][]}",
     # "{[][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][$]}{[$][$]CC(c1ccccc1)[$][]}",
     # "[H]{[>][>]CCO[<][<]}{[$][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][$]}C(C)CC",
-    "{[][$]CC(c1ccccc1)[$],[$]CC(c1ccc(S(=O)(=O)O)cc1)[$][$]}{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][]}",
     "{[][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CCCC[$],[$]CC(CC)[$][]}",
-    "{[][$]CC(C1CCCCC1)[$][$]}{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][$]}"
-    "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][$]}"
-    "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][$]}"
-    "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][$]}"
-    "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][]}",
+    "{[][$]CC(C1CCCCC1)[$][$]}{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C2CCCCC2)[$][$]}"
+    "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C3CCCCC3)[$][$]}"
+    "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C4CCCCC4)[$][$]}"
+    "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C5CCCCC5)[$][$]}"
+    "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C6CCCCC6)[$][]}",
 
 ]
 
@@ -122,20 +122,61 @@ def test_whole_system(polymer: str):
     assert str(result) == polymer
 
 
+ring_fix_cases = [
+    ["O1CCCCC1N1CCCCC1", "O1CCCCC1N2CCCCC2"],  # re-use of ring index],  # re-use of ring index
+    ["{[][$]CC(c1ccccc1)[$],[$]CC(c1ccc(S(=O)(=O)O)cc1)[$][$]}{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][]}",
+     "{[][$]CC(c1ccccc1)[$],[$]CC(c2ccc(S(=O)(=O)O)cc2)[$][$]}{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][]}"],
+    ["{[][$]CC(C1CCCCC1)[$][$]}{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C2CCCCC2)[$][$]}"
+     "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][$]}"
+     "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][$]}"
+     "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][$]}"
+     "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C1CCCCC1)[$][]}",
+     "{[][$]CC(C1CCCCC1)[$][$]}{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C2CCCCC2)[$][$]}"
+     "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C3CCCCC3)[$][$]}"
+     "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C4CCCCC4)[$][$]}"
+     "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C5CCCCC5)[$][$]}"
+     "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C6CCCCC6)[$][]}"
+     ]
+
+]
+
+
+@pytest.mark.parametrize("case", ring_fix_cases)
+def test_ring_fix(caplog, case: list):
+    input_, answer = case
+    with caplog.at_level(logging.WARNING):
+        result = bigsmiles.BigSMILES(input_)
+    assert str(result) == answer
+    assert "Duplicate ring index detected" in caplog.text
+
+
+cases_add_explicit_hydrogens = [
+    ["{[$][$]CC[$][$]}", "[H]{[$][$]CC[$][$]}[H]"],
+    ["O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}", "O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}[H]"],
+]
+
+
+@pytest.mark.parametrize("case", cases_add_explicit_hydrogens)
+def test_add_explicit_hydrogens(case: list):
+    input_, answer = case
+    result = bigsmiles.BigSMILES(input_)
+    assert str(result) == answer
+
+
 validation_cases = [
     ["CCCCC1"],  # Ring not closed
     ["CCCC("],  # branch not closed
     ["CCCC)"],  # branch not started
-    ["((CC))"],   # no double branch/ extra parenthesis
-    ["C((C)C)"],   # no branch right away
+    ["((CC))"],  # no double branch/ extra parenthesis
+    ["C((C)C)"],  # no branch right away
     ["C(C)(C)(C)(C)C"],  # break bond limit of carbon
-    ["O1CCCCC1N1CCCCC1"],  # re-use of ring index
+
     # ['C/C(\F)=C/C'],  # conflicting cis/trans
 
     # bigsmiles
     ["CCC,C"],  # stochastic seperator
     ["CC}CC"],  # stochastic object no start
-    ["CC{CC"],   # stochastic object no end
+    ["CC{CC"],  # stochastic object no end
     ["{CC}"],
     ["{[]CC[]}"],
     # ["{[][$]CC[]}"],  # are these valid?

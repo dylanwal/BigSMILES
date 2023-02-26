@@ -250,7 +250,7 @@ class BondDescriptorAtom:
         self.descriptor = bond_descriptor
         bond_descriptor.instances.append(self)
         self.id_ = id_
-        self.bond = None
+        self.bond = None  # Added after construction
         self.parent = parent
 
         if kwargs:
@@ -468,3 +468,10 @@ class BigSMILES:
         """
         from bigsmiles.tree_to_string import tree_to_string  # here to avoid circular imports
         print(tree_to_string(self, show_object_label, print_repr))
+
+
+# types
+has_node_attr = BigSMILES | Branch | StochasticObject | StochasticFragment
+has_ring_attr = BigSMILES | StochasticFragment
+has_parent_attr = Branch | StochasticObject | StochasticFragment | Bond | BondDescriptorAtom | Atom
+has_root_attr = BigSMILES | has_parent_attr

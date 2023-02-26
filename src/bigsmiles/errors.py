@@ -19,4 +19,8 @@ class ConstructorError(BigSMILESError):
     """ Raised when an error occurs during the construction of a BigSMILES string. """
 
 
+class ValidationError(BigSMILESError):
+    """ Raised when validating a SMILES/BigSMILES string is syntactically correct. """
+
+
 ERRORS = (BigSMILESError, TokenizeError)

@@ -1,20 +1,14 @@
-import warnings
-
-
-def custom_formatwarning(msg, *args, **kwargs):
-    # ignore everything except the message
-    return str(msg) + '\n'
-
-warnings.formatwarning = custom_formatwarning
+import logging
 
 from bigsmiles.errors import BigSMILESError
-from bigsmiles.validation import pre_validation
+from bigsmiles.validation_string import run_string_validation
 from bigsmiles.tokenizer import Token, TokenKind, tokenize
+from bigsmiles.validation_tokens import run_token_validation
 import bigsmiles.constructor_str as constructor
-from bigsmiles.bigsmiles import BigSMILES, Branch, BondDescriptorAtom, Bond, Atom, StochasticObject, StochasticFragment
+from bigsmiles.bigsmiles import BigSMILES, Branch, StochasticFragment, has_node_attr
 
 
-def map_atom(parent: constructor.ParentType, tokens: list[Token], token: Token):
+def map_atom(parent: has_node_attr, tokens: list[Token], token: Token):
     if isinstance(parent, BigSMILES) and not parent:
         return constructor.add_atom(parent, token.value)
 
@@ -24,7 +18,7 @@ def map_atom(parent: constructor.ParentType, tokens: list[Token], token: Token):
     return constructor.add_bond_atom_pair(parent, "", token.value)
 
 
-def map_bond(parent: constructor.ParentType, tokens: list[Token], token: Token):
+def map_bond(parent: has_node_attr, tokens: list[Token], token: Token):
     try:
         next_token = tokens.pop(0)
     except IndexError:
@@ -39,7 +33,7 @@ def map_bond(parent: constructor.ParentType, tokens: list[Token], token: Token):
     return map_stochastic_object_start(parent, tokens, next_token, token)
 
 
-def map_bond_descriptor(parent: constructor.ParentType, tokens: list[Token], token: Token):
+def map_bond_descriptor(parent: has_node_attr, tokens: list[Token], token: Token):
     if tokens[0].kind is TokenKind.StochasticEnd:
         parent = constructor.close_stochastic_fragment_str(parent)
         parent = constructor.close_stochastic_object_str(parent, token.value)
@@ -60,7 +54,7 @@ def map_bond_descriptor(parent: constructor.ParentType, tokens: list[Token], tok
     return constructor.add_bond_bonding_descriptor_pair_str(parent, "", token.value)
 
 
-def map_branch_start(parent: constructor.ParentType, tokens: list[Token], token: Token):
+def map_branch_start(parent: has_node_attr, tokens: list[Token], token: Token):
     if isinstance(parent, BigSMILES) and not parent:
         raise BigSMILESError("BigSMILES can't start with a branch symbol.")
     if isinstance(parent, Branch) and len(parent.nodes) == 0:
@@ -68,15 +62,15 @@ def map_branch_start(parent: constructor.ParentType, tokens: list[Token], token:
     return constructor.open_branch(parent)
 
 
-def map_branch_end(parent: constructor.ParentType, tokens: list[Token], token: Token):
+def map_branch_end(parent: has_node_attr, tokens: list[Token], token: Token):
     return constructor.close_branch(parent)
 
 
-def map_ring(parent: constructor.ParentType, tokens: list[Token], token: Token):
+def map_ring(parent: has_node_attr, tokens: list[Token], token: Token):
     return constructor.add_ring(parent, int(token.value.replace('%', '')))
 
 
-def map_stochastic_object_start(parent: constructor.ParentType, tokens: list[Token], token: Token,
+def map_stochastic_object_start(parent: has_node_attr, tokens: list[Token], token: Token,
                                 bond_token: Token = None):
     try:
         next_token = tokens.pop(0)
@@ -95,11 +89,11 @@ def map_stochastic_object_start(parent: constructor.ParentType, tokens: list[Tok
             return constructor.open_stochastic_object_with_bond_str(parent, bond_token.value, next_token.value)
 
 
-def map_stochastic_object_end(parent: constructor.ParentType, tokens: list[Token], token: Token) -> TokenKind:
+def map_stochastic_object_end(parent: has_node_attr, tokens: list[Token], token: Token) -> TokenKind:
     raise BigSMILESError("Stochastic objects should end with bonding descriptor (or implicit bonding description)")
 
 
-def map_bond_seperator(parent: constructor.ParentType, tokens: list[Token], token: Token):
+def map_bond_seperator(parent: has_node_attr, tokens: list[Token], token: Token) -> has_node_attr:
     return constructor.close_open_stochastic_fragment_str(parent)
 
 
@@ -107,8 +101,8 @@ def NotImplementedFunc(*args, **kwargs):
     raise NotImplementedError()
 
 
-def SkipSymbol(parent: constructor.ParentType, tokens: list[Token], token: Token):
-    warnings.warn(f"Symbol skipped: {token.value}")
+def SkipSymbol(parent: has_node_attr, tokens: list[Token], token: Token) -> has_node_attr:
+    logging.warning(f"Symbol skipped: {token.value}")
     return parent
 
 
@@ -133,14 +127,14 @@ map_tokens = {
 }
 
 
-def tokens_to_bigsmiles(parent: constructor.ParentType, tokens: list[Token]):
+def tokens_to_bigsmiles(parent: has_node_attr, tokens: list[Token]):
     """
 
     Main loop for converting tokens into BigSMILES objects.
 
     Parameters
     ----------
-    parent: constructor.ParentType
+    parent: has_node_attr
 
     tokens:
 
@@ -158,17 +152,17 @@ def tokens_to_bigsmiles(parent: constructor.ParentType, tokens: list[Token]):
             raise BigSMILESError(f"Issue with token '{token}'. (index: {num_tokens-len(tokens)-1})", e) from e
 
 
-def parse_bigsmiles_str(input_text: str, bigsmiles):
+def parse_bigsmiles_str(input_text: str, bigsmiles: BigSMILES):
     """
     Main function that turns BigSMILES string into a BigSMILES object.
     Constructs BigSMILES tree in the provided object.
     """
-    pre_validation(input_text)
+    input_text = run_string_validation(input_text)
     tokens = tokenize(input_text)
+    tokens = run_token_validation(tokens)
 
     try:
         tokens_to_bigsmiles(bigsmiles, tokens)
-        constructor.run_validation(bigsmiles)
-        constructor.exit_(bigsmiles)
+        constructor.exit_construction(bigsmiles)
     except BigSMILESError as e:
         raise BigSMILESError(f"Parsing failed on '{input_text}'.", e) from e

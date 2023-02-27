@@ -104,21 +104,21 @@ def get_ring_parent(parent: has_parent_attr) -> BigSMILES | StochasticFragment:
     return get_ring_parent(parent.parent)
 
 
-def add_explict_hydrogen_to_stochastic_objects(bigsmiles: BigSMILES):
+def add_explict_hydrogen_to_stochastic_objects(bigsmiles_: BigSMILES):
     """ {[$][$]CC[$][$]} --> [H]{[$][$]CC[$][$]}[H] """
-    if isinstance(bigsmiles.nodes[0], StochasticObject) and not bigsmiles.nodes[0].implicit_endgroups:
-        if bigsmiles.nodes[-1].end_group_left.bond.bond_order > 1:
+    if isinstance(bigsmiles_.nodes[0], StochasticObject) and not bigsmiles_.nodes[0].implicit_endgroups:
+        if bigsmiles_.nodes[0].bd_left.descriptor.bond_order > 1:
             raise ConstructorError(f"Invalid BigSMILES. A double bond coming out of a stochastic object requires an "
-                                  f"explict endgroup defined. \n Current Bigsmiles: {bigsmiles}")
+                                  f"explict endgroup defined. \n Current Bigsmiles: {bigsmiles_}")
 
-        # add_bond_atom_pair(bigsmiles, "", "H")
+        insert_atom_bond_into_bond(bigsmiles_, None, "", "H")
 
-    if isinstance(bigsmiles.nodes[-1], StochasticObject) and not bigsmiles.nodes[-1].implicit_endgroups:
-        if bigsmiles.nodes[-1].end_group_right.bond.bond_order > 1:
+    if isinstance(bigsmiles_.nodes[-1], StochasticObject) and not bigsmiles_.nodes[-1].implicit_endgroups:
+        if bigsmiles_.nodes[-1].bd_right.descriptor.bond_order > 1:
             raise ConstructorError(f"Invalid BigSMILES. A double bond coming out of a stochastic object requires an "
-                                  f"explict endgroup defined. \n Current Bigsmiles: {bigsmiles}")
+                                  f"explict endgroup defined. \n Current Bigsmiles: {bigsmiles_}")
 
-        add_bond_atom_pair(bigsmiles, "", "H")
+        add_bond_atom_pair(bigsmiles_, "", "H")
 
 
 def exit_construction(parent: BigSMILES, syntax_fix: bool = True, validation: bool = True):
@@ -218,13 +218,12 @@ def add_ring_from_atoms(parent: has_node_attr, atom1: Atom, atom2: Atom, bond_sy
 
 
 def _get_bonding_descriptor_atom(parent, descriptor: str, index_: int, **kwargs) -> BondDescriptorAtom:
-    bd = _get_bonding_descriptor(parent, descriptor, index_)
+    stoch_obj = _get_current_stochastic_object(parent)
+    bd = _get_bonding_descriptor(stoch_obj, descriptor, index_)
     return BondDescriptorAtom(bd, parent._get_id(), parent=parent, **kwargs)
 
 
-def _get_bonding_descriptor(parent, descriptor: str, index_: int) -> BondDescriptor:
-    stoch_obj = _get_current_stochastic_object(parent)
-
+def _get_bonding_descriptor(stoch_obj: StochasticObject, descriptor: str, index_: int) -> BondDescriptor:
     # check if bd in there already
     for bd in stoch_obj.bonding_descriptors:
         if descriptor == bd.descriptor and index_ == bd.index_:
@@ -324,10 +323,7 @@ def close_branch(parent):
 
 def open_stochastic_object(parent: has_node_attr, descriptor: str, index_: int, **kwargs) -> StochasticObject:
     stoch_obj = StochasticObject(parent, parent._get_id())
-    new_bd = BondDescriptor(stoch_obj, descriptor, index_)
-    stoch_obj.bonding_descriptors.append(new_bd)
-    stoch_obj.end_group_left = BondDescriptorAtom(new_bd, parent._get_id(),
-                                                  parent=parent, **kwargs)
+    stoch_obj.bd_left = _get_bonding_descriptor_atom(stoch_obj, descriptor, index_, **kwargs)
     parent.nodes.append(stoch_obj)
 
     return stoch_obj
@@ -344,10 +340,7 @@ def open_stochastic_object_fragment(parent: has_node_attr, descriptor: str, inde
 def open_stochastic_object_with_bond(parent, bond_symbol: str, descriptor: str, index_: int, **kwargs) \
         -> StochasticFragment:
     stoch_obj = StochasticObject(parent, parent._get_id())
-    new_bd = BondDescriptor(stoch_obj, descriptor, index_)
-    stoch_obj.bonding_descriptors.append(new_bd)
-    stoch_obj.end_group_left = BondDescriptorAtom(new_bd, parent._get_id(),
-                                                  parent=parent, **kwargs)
+    stoch_obj.bd_left = _get_bonding_descriptor_atom(stoch_obj, descriptor, index_, **kwargs)
 
     prior_atom = get_prior(parent, (Atom, BondDescriptor, StochasticObject))
     bond = add_bond(parent, bond_symbol, prior_atom, stoch_obj)
@@ -364,9 +357,7 @@ def close_stochastic_object(parent, descriptor: str, index_: int):
                                "\n\tClosing a StochasticObject with another intermediate node started."
                                "\n\tNo starting StochasticObject symbol.")
 
-    parent.end_group_right = _get_bonding_descriptor_atom(parent, descriptor, index_)
-
-    # TODO: add [H] and bond if no atom before or after
+    parent.bd_right = _get_bonding_descriptor_atom(parent, descriptor, index_)
     return parent.parent
 
 

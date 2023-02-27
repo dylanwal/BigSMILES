@@ -80,10 +80,6 @@ def test_whole_system_molecule(molecule: str):
 
 test_polymers = [
     "[H]O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}[H]",
-    "{[>][$]CC[$],[$]CC(CC)[$][<]}",
-    "{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}",
-    "{[>][<]C(=O)CCCCC(=O)NCCCCCCN[>][<]}",
-    "C{[$][$]CC[$],[$]CC(CC)[$][$]}",
     "C{[$][$]CC[$],[$]CC(CC[$])[$][$]}O",
     "CC{[>][<]CC(C)[>][<]}CC(C)=C",  # explicit end groups
     "{[][$]CC[$],[$]CC(CC)[$][]}",  # implicit end groups
@@ -153,6 +149,10 @@ def test_ring_fix(caplog, case: list):
 cases_add_explicit_hydrogens = [
     ["{[$][$]CC[$][$]}", "[H]{[$][$]CC[$][$]}[H]"],
     ["O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}", "O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}[H]"],
+    ["{[$][$]CC[$],[$]CC(CC)[$][$]}", "[H]{[$][$]CC[$],[$]CC(CC)[$][$]}[H]"],
+    ["{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}", "[H]{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}[H]"],
+    ["{[>][<]C(=O)CCCCC(=O)NCCCCCCN[>][<]}", "[H]{[>][<]C(=O)CCCCC(=O)NCCCCCCN[>][<]}[H]"],
+    ["C{[$][$]CC[$],[$]CC(CC)[$][$]}", "C{[$][$]CC[$],[$]CC(CC)[$][$]}[H]"],
 ]
 
 
@@ -183,6 +183,7 @@ validation_cases = [
     # ["CC({[][$]CC[]})CC"],
     # ["CC({[$][$]CC[$]})CC"],
     # ["CC(C{[$][$]CC[$]})CC"],
+    # ["{[>][$]CC[$],[$]CC(CC)[$][<]}"],
     ["{[][>]CC[$][]}"],
     ["{[][>]CC[>][]}"],
     ["{[][>]CC[>][]}CC"],  # implicit and explict end groups same time

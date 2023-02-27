@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 
 from bigsmiles.config import Config
 
@@ -134,6 +135,7 @@ class Atom:
 
 
 bond_mapping = {
+    None: 0,
     "": 1,
     "=": 2,
     "#": 3
@@ -195,13 +197,16 @@ class Bond:
 
 
 class BondDescriptor:
-    __slots__ = ["parent", "descriptor", "index_", "instances", "__dict__"]
+    __slots__ = ["parent", "descriptor", "index_", "_instances", "_instances_up_to_date", "_bond_symbol", "__dict__"]
 
     def __init__(self, parent: StochasticObject, descriptor: str, index_: int, **kwargs):
         self.parent = parent
         self.descriptor = descriptor
         self.index_ = index_
-        self.instances = []
+
+        self._instances_up_to_date: bool = True
+        self._instances: list[BondDescriptorAtom] = []
+        self._bond_symbol: str | None = None
 
         if kwargs:
             for k, v in kwargs.items():
@@ -237,6 +242,35 @@ class BondDescriptor:
     def root(self) -> BigSMILES:
         return self.parent.root
 
+    @property
+    def instances(self) -> list[BondDescriptorAtom]:
+        return self._instances
+
+    @instances.setter
+    def instances(self, instances: list[BondDescriptor]):
+        self._instances = instances
+        self._instances_up_to_date = False
+
+    @property
+    def bond_symbol(self) -> str:
+        if not self._instances_up_to_date:
+            self._get_bond_symbol()
+            self._instances_up_to_date = True
+
+        return self._bond_symbol
+
+    def _get_bond_symbol(self):
+        for instance_ in self.instances:
+            if instance_.bond_symbol is not None:
+                if self._bond_symbol is not None and self._bond_symbol != instance_.bond_symbol:
+                    logging.warning("Multiple bond orders to same bonding descriptor.")
+                else:
+                    self._bond_symbol = instance_.bond_symbol
+
+    @property
+    def bond_order(self) -> int:
+        return bond_mapping[self.bond_symbol]
+
 
 class BondDescriptorAtom:
     _tree_print_repr = True
@@ -248,7 +282,7 @@ class BondDescriptorAtom:
                  parent: BigSMILES | Branch | StochasticFragment | None = None,
                  **kwargs):
         self.descriptor = bond_descriptor
-        bond_descriptor.instances.append(self)
+        bond_descriptor.instances += [self]
         self.id_ = id_
         self.bond = None  # Added after construction
         self.parent = parent
@@ -269,6 +303,18 @@ class BondDescriptorAtom:
     @property
     def root(self) -> BigSMILES:
         return self.parent.root
+
+    @property
+    def bond_symbol(self) -> str | None:
+        if self.bond is None:
+            return None
+        return self.bond.symbol
+
+    @property
+    def bond_order(self) -> 0:
+        if self.bond is None:
+            return 0
+        return self.bond.bond_order
 
 
 class Branch:
@@ -343,14 +389,14 @@ class StochasticFragment:
 
 class StochasticObject:
     _tree_print_repr = False
-    __slots__ = ["nodes", "bonding_descriptors", "id_", "parent", "end_group_left", "end_group_right",
+    __slots__ = ["nodes", "bonding_descriptors", "id_", "parent", "bd_left", "bd_right",
                  "bond_left", "bond_right", "__dict__"]
 
     def __init__(self, parent: BigSMILES | StochasticFragment | Branch, id_: int = None):
         self.nodes: list[StochasticFragment] = []
         self.bonding_descriptors: list[BondDescriptor] = []
-        self.end_group_left: BondDescriptorAtom | None = None
-        self.end_group_right: BondDescriptorAtom | None = None
+        self.bd_left: BondDescriptorAtom | None = None
+        self.bd_right: BondDescriptorAtom | None = None
         self.id_ = id_
         self.bond_left: Bond | None = None
         self.bond_right: Bond | None = None
@@ -364,16 +410,16 @@ class StochasticObject:
 
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
         text = Config.add_color("{", "Red", skip_color)
-        text += self.end_group_left.to_string(show_hydrogens, print_repr, skip_color)
+        text += self.bd_left.to_string(show_hydrogens, print_repr, skip_color)
         text += ",".join(node.to_string(show_hydrogens, print_repr, skip_color) for node in self.nodes)
-        text += self.end_group_right.to_string(show_hydrogens, print_repr, skip_color)
+        text += self.bd_right.to_string(show_hydrogens, print_repr, skip_color)
         return text + Config.add_color("}", "Red", skip_color)
 
     @property
     def implicit_endgroups(self) -> bool:
         """ Returns true if one or more are implicit """
-        return True if self.end_group_left.descriptor.descriptor == "" or \
-                       self.end_group_right.descriptor.descriptor == "" else False
+        return True if self.bd_left.descriptor.descriptor == "" or \
+                       self.bd_right.descriptor.descriptor == "" else False
 
     @property
     def in_stochastic_object(self) -> bool:

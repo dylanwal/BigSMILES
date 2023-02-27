@@ -12,7 +12,7 @@ def map_atom(parent: has_node_attr, tokens: list[Token], token: Token):
     if isinstance(parent, BigSMILES) and not parent:
         return constructor.add_atom(parent, token.value)
 
-    if isinstance(parent, StochasticFragment):
+    if isinstance(parent, StochasticFragment) and len(parent.nodes) == 0:
         return constructor.add_atom(parent, token.value)
 
     return constructor.add_bond_atom_pair(parent, "", token.value)
@@ -27,7 +27,7 @@ def map_bond(parent: has_node_attr, tokens: list[Token], token: Token):
     if next_token.kind in (TokenKind.Atom, TokenKind.AtomExtend):
         return constructor.add_bond_atom_pair(parent, token.value, next_token.value)
 
-    if next_token.kind is not TokenKind.BondDescriptor:
+    if next_token.kind is TokenKind.BondDescriptor:
         return constructor.add_bond_bonding_descriptor_pair_str(parent, token.value, next_token.value)
 
     return map_stochastic_object_start(parent, tokens, next_token, token)
@@ -40,7 +40,7 @@ def map_bond_descriptor(parent: has_node_attr, tokens: list[Token], token: Token
         tokens.pop(0)
         return parent
 
-    if isinstance(parent, StochasticFragment):
+    if isinstance(parent, StochasticFragment) and len(parent.nodes) == 0:
         # first StochasticFragment symbol
         return constructor.add_bonding_descriptor_str(parent, token.value)
 

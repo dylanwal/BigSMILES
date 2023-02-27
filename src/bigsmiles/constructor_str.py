@@ -16,21 +16,26 @@ ATOM_PATTERN = re.compile(
 
 
 def atom_symbol_to_attributes(symbol: str) -> dict:
-    return ATOM_PATTERN.match(symbol).groupdict()
+    results = ATOM_PATTERN.match(symbol).groupdict()
+    if results["hydrogens"] is None:
+        results["hydrogens"] = 0
+    if results["charge"] is None:
+        results["charge"] = 0
+    return results
 
 
-DEFAULT_BONDING_DESCRIPTROR_INDEX = 1
+DEFAULT_BONDING_DESCRIPTOR_INDEX = 1
 
 
 def process_bonding_descriptor_symbol(symbol: str) -> tuple[str, int]:
     symbol = symbol.replace("[", "").replace("]", "")
     if not symbol:
-        return symbol, DEFAULT_BONDING_DESCRIPTROR_INDEX
+        return symbol, DEFAULT_BONDING_DESCRIPTOR_INDEX
 
     if symbol[-1].isdigit():
         return symbol[0], int(symbol[-1])
 
-    return symbol, DEFAULT_BONDING_DESCRIPTROR_INDEX
+    return symbol, DEFAULT_BONDING_DESCRIPTOR_INDEX
 
 
 def in_stochastic_object(func):
@@ -45,6 +50,8 @@ def in_stochastic_object(func):
     return _in_stochastic_object
 
 
+## Extend existing construction functions for string inputs ##
+#######################################################################################################################
 def add_atom_str(parent: has_node_attr, symbol: str) -> has_node_attr:
     return add_atom(parent, **atom_symbol_to_attributes(symbol))
 

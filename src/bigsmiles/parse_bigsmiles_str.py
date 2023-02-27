@@ -30,7 +30,10 @@ def map_bond(parent: has_node_attr, tokens: list[Token], token: Token):
     if next_token.kind is TokenKind.BondDescriptor:
         return constructor.add_bond_bonding_descriptor_pair_str(parent, token.value, next_token.value)
 
-    return map_stochastic_object_start(parent, tokens, next_token, token)
+    if next_token.kind is TokenKind.StochasticStart:
+        return map_stochastic_object_start(parent, tokens, next_token, token)
+
+    raise BigSMILESError(f"Bond can't be followed by: {next_token.kind}")
 
 
 def map_bond_descriptor(parent: has_node_attr, tokens: list[Token], token: Token):
@@ -149,7 +152,7 @@ def tokens_to_bigsmiles(parent: has_node_attr, tokens: list[Token]):
         try:
             parent = func(parent, tokens, token)
         except BigSMILESError as e:
-            raise BigSMILESError(f"Issue with token '{token}'. (index: {num_tokens-len(tokens)-1})", e) from e
+            raise BigSMILESError(f"Issue with token '{token}'. (token: {num_tokens-len(tokens)-1})", e) from e
 
 
 def parse_bigsmiles_str(input_text: str, bigsmiles: BigSMILES):

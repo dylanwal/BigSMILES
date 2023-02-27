@@ -141,12 +141,12 @@ def add_atom(
         element: str,
         isotope: int | None = None,
         stereo: str = '',
-        hcount: int = 0,
+        hydrogens: int = 0,
         charge: int = 0,
         valance: int = None,
         **kwargs
 ) -> has_node_attr:
-    atom = Atom(parent._get_id(), element, isotope, stereo, hcount, charge, valance,
+    atom = Atom(parent._get_id(), element, isotope, stereo, hydrogens, charge, valance,
                 parent=parent, **kwargs)
     parent.nodes.append(atom)
     parent.root.atoms.append(atom)
@@ -260,7 +260,7 @@ def add_bond_atom_pair(
         element: str,
         isotope: int | None = None,
         stereo: str = '',
-        hcount: int = 0,
+        hydrogens: int = 0,
         charge: int = 0,
         valance: int = None,
         kwargs_atom: dict = None,
@@ -269,7 +269,7 @@ def add_bond_atom_pair(
     kwargs_atom = kwargs_atom if kwargs_atom is not None else {}
     kwargs_bond = kwargs_bond if kwargs_bond is not None else {}
 
-    atom = Atom(parent._get_id(), element, isotope, stereo, hcount, charge, valance,
+    atom = Atom(parent._get_id(), element, isotope, stereo, hydrogens, charge, valance,
                 parent=parent, **kwargs_atom)
     prior_atom = get_prior(parent, (Atom, BondDescriptorAtom, StochasticObject))
     add_bond(parent, bond_symbol, prior_atom, atom, **kwargs_bond)
@@ -449,7 +449,7 @@ def insert_atom_bond_into_bond(
         element: str,
         isotope: int | None = None,
         stereo: str = '',
-        hcount: int = 0,
+        hydrogens: int = 0,
         charge: int = 0,
         valance: int = None,
         kwargs_atom: dict = None,
@@ -458,7 +458,7 @@ def insert_atom_bond_into_bond(
     kwargs_atom = kwargs_atom if kwargs_atom is not None else {}
     kwargs_bond = kwargs_bond if kwargs_bond is not None else {}
 
-    atom = Atom(parent._get_id(), element, isotope, stereo, hcount, charge, valance,
+    atom = Atom(parent._get_id(), element, isotope, stereo, hydrogens, charge, valance,
                 parent=parent, **kwargs_atom)
 
     if prior_atom is None and isinstance(parent, BigSMILES):  # add to beginning
@@ -486,7 +486,7 @@ def insert_atom_into_bond(
         element: str,
         isotope: int | None = None,
         stereo: str = '',
-        hcount: int = 0,
+        hydrogens: int = 0,
         charge: int = 0,
         valance: int = None,
         kwargs_atom: dict = None,
@@ -494,7 +494,7 @@ def insert_atom_into_bond(
     kwargs_atom = kwargs_atom if kwargs_atom is not None else {}
 
     # create atom
-    atom = Atom(parent._get_id(), element, isotope, stereo, hcount, charge, valance,
+    atom = Atom(parent._get_id(), element, isotope, stereo, hydrogens, charge, valance,
                 parent=parent, **kwargs_atom)
 
     # create bonds

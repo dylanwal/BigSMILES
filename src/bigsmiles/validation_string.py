@@ -110,7 +110,7 @@ def validate_ring_numbering(text: str, renumber: bool = True):
                 raise ValidationError(f"Invalid BigSMILES. More than 2 ring index found for: '{num}'. "
                                       f"\n Invalid string: {text}")
 
-    # do replacemnt
+    # do replacement
     for k, v in extract.items():
         text = text.replace(k, v)
     return text
@@ -118,9 +118,9 @@ def validate_ring_numbering(text: str, renumber: bool = True):
 
 def _renumber_rings(text: str, num: int, new_num: int) -> str:
     if num > 9:
-        pattern = f"(?<![H+><$-]|\[)(%{num})"
+        pattern = r"(?<![H+><$-]|\[)" + f"(%{num})"
     else:
-        pattern = f"(?<![H+><$-%]|\[)({num})"
+        pattern = r"(?<![H+><$-%]|\[)" + f"({num})"
 
     hit_index = [(m.start(0), m.end(0)) for m in re.finditer(pattern, text)]
 
@@ -139,4 +139,3 @@ def _renumber_rings(text: str, num: int, new_num: int) -> str:
             new_num -= 1
 
     return text
-

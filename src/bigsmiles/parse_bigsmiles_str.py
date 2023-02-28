@@ -19,6 +19,9 @@ def map_atom(parent: has_node_attr, tokens: list[Token], token: Token):
 
 
 def map_bond(parent: has_node_attr, tokens: list[Token], token: Token):
+    if isinstance(parent, BigSMILES) and not parent:
+        raise BigSMILESError(f"Bond can't be the first symbol.")
+
     try:
         next_token = tokens.pop(0)
     except IndexError:
@@ -70,6 +73,9 @@ def map_branch_end(parent: has_node_attr, tokens: list[Token], token: Token):
 
 
 def map_ring(parent: has_node_attr, tokens: list[Token], token: Token):
+    if isinstance(parent, BigSMILES) and not parent:
+        raise BigSMILESError(f"Ring can't be the first symbol.")
+
     return constructor.add_ring(parent, int(token.value.replace('%', '')))
 
 

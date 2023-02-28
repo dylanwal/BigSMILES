@@ -409,11 +409,15 @@ class StochasticObject:
         return self.to_string(print_repr=True, skip_color=True)
 
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
-        text = Config.add_color("{", "Red", skip_color)
+        text = ""
+        text += Config.add_color("{", "Red", skip_color)
         text += self.bd_left.to_string(show_hydrogens, print_repr, skip_color)
         text += ",".join(node.to_string(show_hydrogens, print_repr, skip_color) for node in self.nodes)
         text += self.bd_right.to_string(show_hydrogens, print_repr, skip_color)
-        return text + Config.add_color("}", "Red", skip_color)
+        text += Config.add_color("}", "Red", skip_color)
+        if self.bond_right is not None and self.bond_right.ring_id is not None:
+            text += self.bond_right.symbol + str(self.bond_right.ring_id)
+        return text
 
     @property
     def implicit_endgroups(self) -> bool:
@@ -428,6 +432,15 @@ class StochasticObject:
     @property
     def root(self) -> BigSMILES:
         return self.parent.root
+
+    @property
+    def bonds(self) -> list[Bond]:
+        bonds = []
+        if self.bond_left is not None:
+            bonds.append(self.bond_left)
+        if self.bond_right is not None:
+            bonds.append(self.bond_right)
+        return bonds
 
     def _get_id(self) -> int:
         return self.root._get_id()

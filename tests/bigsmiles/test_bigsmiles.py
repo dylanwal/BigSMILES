@@ -15,17 +15,12 @@ test_molecules = [
     "CC(=O)O",  # acetic acid
     "C1CCCCC1",  # cyclohexane
     "c1ccccc1",  # benzene
-    # "C1=CN=C[NH]C(=O)1",  # ring number
-    # "c1cnc[nH]c(=O)1",  # ring number
     "N[C@@H](C)C(=O)O",  # L-alanine
     "N[C@H](C)C(=O)O",  # D-alanine
     "N[C@](C)(F)C(=O)O",
     "N[C@@](F)(C)C(=O)O",
     "C[C@H]1CCCCO1",
     "O1CCCC[C@@H]1C",
-    # "F/C=C/F",  # E-difluoroethene
-    # "F\C=C\F",  # Z-difluoroethene
-
     "CC1=C(C(=NC=C1C=O)C)O",
     "C1=CC(C(C(=C1)C(=O)O)O)O",
     "C(C(=O)COP(=O)(O)O)N",
@@ -58,7 +53,8 @@ test_molecules = [
     "CC[Fe+3]CCC",
 
     # cis/trans
-
+    # "F/C=C/F",  # E-difluoroethene
+    # "F\C=C\F",  # Z-difluoroethene
     # "C(\F)=C/F",  # trans
     # "F\C=C/F",  # cis
     # "F/C=C\F",  # cis
@@ -79,17 +75,68 @@ def test_whole_system_molecule(molecule: str):
 
 
 test_polymers = [
-    "[H]O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}[H]",
-    "C{[$][$]CC[$],[$]CC(CC[$])[$][$]}O",
-    "CC{[>][<]CC(C)[>][<]}CC(C)=C",  # explicit end groups
-    "{[][$]CC[$],[$]CC(CC)[$][]}",  # implicit end groups
-    "{[]C([$])C([$])CC[]}",  # test end groups in middle
-    "OC{[>][<]CC(C{[>][<]CCO[>][<]}CN)[>][<]}CC",
-    "CC(CC){[<][>]CC(C)[<2][>2]}CCO",
-    # "{[][>]C([>])([>]),[<]OO[>][>]}CB", Not sure if it a valid BigSMILES
+    # homopolymer
+    "[H]{[$][$]CC[$][$]}[H]",  # poly(ethylene)
+    "[H]{[>][<]CC[>][<]}[H]",
+    "[H]{[$][$]CC(C)[$][$]}[H]",  # poly(propylene) random orientation
+    "[H]{[>][<]CC(C)[>][<]}[H]",
+    "[H]{[>][<]CC(C1=CC=CC=C1)[>][<]}[H]",  # PS head-to-tail
+    "[H]{[>][<]CC(C1)=CC=CC=C1[>][<]}[H]",
+    "[H]{[>][<]NCCCCCC(=O)[>][<]}O",  # nylon 6
+    "[H]{[>][<]OC(C)C(=O)[>][<]}O",  # PLA
+    "O{[>][<]C(=O)C(C)O[>][<]}[H]",
+    "[H]{[>][<]CCO[>][<]}[H]",  # polyethylene oxide
+    "[H]{[>][<]CC(C)O[>][<]}[H]",  # polypropylene oxide
+    "[H]{[>][<]CC(C#N)[>][<]}[H]",  # polyacrylonitrile
+    "[H]{[>][<]CC=CC[>][<]}[H]",  # polybutadiene
+    # r"[H]{[<][>]CC\=\CC[<][>]}[H]",  # polybutadiene (trans)
+    # r"[H]{[<][>]CC\=/CC[<][>]}[H]",  # polybutadiene (cis)
+    # with branches
+    "[H]{[<][$]CC(C)(CC)[$][>]}[H]",
+    "[H]{[<][$]CC(CCC)[$][>]}[H]",
+    "[H]{[<][$]CC(C(CC)C)[$][>]}[H]",
+    "CC{[>][<]CC(C)[>][<]}CC(C)=C",
+    # with rings
+    "[H]{[<][$]C1CC(C1)[$][>]}[H]",  # 4 membered rings
+    "[H]{[<][$]C1CCC(C1)[$][>]}[H]",  # 5 membered rings (3, 2)
+    "[H]{[<][$]C1CC(CC1)[$][>]}[H]",  # 5 membered rings
+    "[H]{[<][$]C1(CCCCC1)[$][>]}[H]",  # 6 membered rings
+    # multiple bonds
+    "C={[$][$]=CC=[$][$]}=C",  # polyacetylene (traditional)
+    "C={[$][$]=C[$][$]}[H]",  # polyacetylene (minimal)
+    "C#{[$][$]#CC1=CC=C(C=C1)C#[$][$]}#C",
 
-    # From BCPD
+    # copolymers
+    "C{[$][$]CC[$],[$]CC(CC[$])[$][$]}O",
+
+    # implicit end groups
+    "{[][$]CC[$],[$]CC(CC)[$][]}",
+    "{[][$]=CC=[$][]}",
+
+    # mixed end groups
+    "{[][>]C([>])[>],[<]C[>][>]}C",
+    "[H]{[<][>]OCCO[>],[<]C(=O)C1=CC=C(C=C1)C(=O)[<],[>]O[]}",  # PET
+    "{[][>]NCCCCCCN[>],[<]C(=O)CCCCC(=O)[<],[>]Cl,[<][H][]}",  # nylon 6,6
+
+    # test end groups in middle
+    "{[]C([$])C([$])CC[]}",
+
+    # nested
+    "OC{[>][<]CC(C{[>][<]CCO[>][<]}CN)[>][<]}CC",
+
+    # bonding descriptor index
+    "CC(CC){[<][>]CC(C)[<2][>2]}CCO",
+
+    # alternating
+    "[H]O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}[H]",
+    "[H]{[>][<]CC(C1=CC=CC=C1)[<],[>]C2C(C(=O)OC2=O)[>][<]}[H]",  # PS-alt-poly(maleic anhydride)
+
+    # block copolymer
+    "[H]{[$][$]CC[$][$]}{[$][$]CC[$][$]}[H]",
+    '[H]{[$][$]CC[$][$]}{[$][$]CC(C)[$][$]}[H]',  # poly(ethylene)-block-poly(propylene)
     "CCC(C){[$][$]CC(C1CCCCC1)[$][$]}{[$][$]CCCC[$],[$]CC(CC)[$][$]}[H]",
+    '[H]{[>][<]OCC[>][<]}O{[>][<]C(=O)C(C)O[>][<]}[H]',  # PEG-Oxygen-PLA
+    'O{[>][<]CCO[>][<]}{[>][<]C(=O)C(C)O[>][<]}[H]',  # Oxygen - PEG-block-PLA
     # "{[][<]CCO[>][<]}{[$][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][]}",
     # "{[][$]C\C=C/C[$],[$]C\C=C\C[$],[$]CC(C=C)[$][$]}{[>][<][Si](C)(C)O[>][]}",
     # "{[][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][$]}{[$][$]CC(c1ccccc1)[$][]}",
@@ -108,7 +155,40 @@ test_polymers = [
     "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C4CCCCC4)[$][$]}"
     "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C5CCCCC5)[$][$]}"
     "{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C6CCCCC6)[$][]}",
+    # multi bonds
+    "C={[$][$]=CC=[$][$]}={[$][$]=CC=[$][$]}=C",
+    "C={[$][$]=CCCCCCCC=[$],[$]=CC1CCC(C1)C=[$][$]}=C",  # poly(cyclooctene)-rand-poly(noroborene)
 
+    # star
+    'CC({[$][$]CC[$][$]}[H])CCC',
+    'CC({[$][$]CC[$][$]}[H])({[$][$]CC[$][$]}[H])CCC',
+    'CC({[$][$]CC[$][$]}[H])({[$][$]CC[$][$]}O)CCC',
+    'CC({[$][$]CC[$][$]}N)({[$][$]CC[$][$]}O)CCC',
+
+    # # graft/bottlebrush
+    "[H]{[>][<]CC([>2])[>],[<2]CC[>2],[<2][H][<]}[H]",  # bottlebrush
+    "[H]{[>][<]CC([>2])[>],[<]CC(C)[>],[<2]CC[>2],[<2][H][<]}[H]",  # graft copolymerization
+    "[H]{[>][<]CC([>2])[>],[<2]CC[>2],[<2][>3],[<3]CC(C)[>3],[<3][H][<]}[H]",  # graft diblock brushes
+    "[H]{[>][<]CC([>2])[>],[<2]CC(C)[>2],[<2]CC[>2],[<2][H][<]}[H]",  # graft random copolymer brushes
+    # nesting
+    "[H]{[>][<]CC({[>][<]CC[>][<]}[H])[>][<]}[H]",  # bottlebrush
+
+    # hyperbranched
+    "[H]{[$][$]CC([$])[$][$]}[H]",  # hyperbranch Poly(ethylene)
+    "[H]{[$][$]CC([$])[$],[$]CC[$][$]}[H]",  # hyperbranch Poly(ethylene)
+
+    # rings/polycyclic (stochastic)
+    "C({[>][<]CCO[>][<]}1)CCCCCC1",
+    "C1{[>][<]CCO[>][<]}CO1",  # PEG rings
+    "C({[>][<]CCO[>][<]}1)CCO1",  # PEG rings wierd written
+    "C({[>][<]CCO[>][<]}1)({[>][<]CCO[>][<]}2)OCC12",  # dual PEG rings
+    "C({[>][<]CCO[>][<]}1)({[>][<]CCO[>][<]}2)({[>][<]CCO[>][<]}3)OCC123",  # triple PEG rings
+
+    # networks
+    "{[][$]CC=CC[$],[$]CC([<])C([>])C[$],[>]S[<],[$]C[]}",  # poly(1,4-butadiene) rubber vulcanized
+    "[H]{[>][<]CCN([>])[<][<]}[H]",  # branched polyethylenimine
+
+    # ladder
 ]
 
 
@@ -118,8 +198,27 @@ def test_whole_system(polymer: str):
     assert str(result) == polymer
 
 
+cases_with_changes = [
+    ["C1=CN=C[NH]C(=O)1", "C1=CN=C[NH]C1=O"],  # ring number position change
+    ["c1cnc[nH]c(=O)1", "c1cnc[nH]c1=O"],  # ring number position change
+    ["{[][>]C([>])([>]),[<]C[>][>]}C", "{[][>]C([>])[>],[<]C[>][>]}C"],  # drop () around bond descriptor
+    ["[H]{[>][<]CC(C1=CC=CC=C1)[<],[>]C2C(C(=O)OC2(=O))[>][<]}[H]",
+     "[H]{[>][<]CC(C1=CC=CC=C1)[<],[>]C2C(C(=O)OC2=O)[>][<]}[H]"],  # drop () around =O
+    ["[H]{[>1][<]CC([>2])[>],[<2]CC[>2],[<2][H][<1]}[H]", "[H]{[>][<]CC([>2])[>],[<2]CC[>2],[<2][H][<]}[H]"],  # drop 1
+]
+
+
+@pytest.mark.parametrize("case", cases_with_changes)
+def test_whole_system_with_changes(case: list):
+    input_, answer = case
+    result = bigsmiles.BigSMILES(input_)
+    assert str(result) == answer
+
+
 ring_fix_cases = [
     ["O1CCCCC1N1CCCCC1", "O1CCCCC1N2CCCCC2"],  # re-use of ring index],  # re-use of ring index
+    ["[H]{[>][<]CC(C1=CC=CC=C1)[<],[>]C1C(C(=O)OC1=O)[>][<]}[H]",
+     "[H]{[>][<]CC(C1=CC=CC=C1)[<],[>]C2C(C(=O)OC2=O)[>][<]}[H]"],
     ["{[][$]CC(c1ccccc1)[$],[$]CC(c1ccc(S(=O)(=O)O)cc1)[$][$]}{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][]}",
      "{[][$]CC(c1ccccc1)[$],[$]CC(c2ccc(S(=O)(=O)O)cc2)[$][$]}{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][]}"],
     ["{[][$]CC(C1CCCCC1)[$][$]}{[$][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CC(C2CCCCC2)[$][$]}"
@@ -180,7 +279,7 @@ validation_cases = [
     ["{CC}"],
     ["{[]CC[]}"],
     # ["{[][$]CC[]}"],  # are these valid?
-    # ["CC({[][$]CC[]})CC"],
+    ["CC({[][$]CC[]})CC"],
     # ["CC({[$][$]CC[$]})CC"],
     # ["CC(C{[$][$]CC[$]})CC"],
     # ["{[>][$]CC[$],[$]CC(CC)[$][<]}"],
@@ -192,6 +291,14 @@ validation_cases = [
     # ["{[][>]CC[>];[$]C[]}"],
     # ["{[$2][$]CC[$][$2]}"],  # index don't match
     ["{[$][<]CC[>][$]"],  # end group bonding descriptor don't match stochastic fragment
+    ["{[$][$]=CC=[$][$]}"],  # end group must have double bond
+    ["C={[$][$]=CC=[$][$]}"],  # end group must have double bond
+    ["{[$][$]=CC=[$][$]}=C"],  # end group must have double bond
+    ["1{[$][$]CC[$][$]}1"],  # ring id can't start
+    ["={[$][$]CC[$][$]}1"],  # ring id can't start
+    ["[$]{[$][$]CC[$][$]}1"],  # ring id can't start
+    ["C1{[$][$]CC[$][$]}1C"],  # last carbon has nothing to bond to
+
 ]
 
 

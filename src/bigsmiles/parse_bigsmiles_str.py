@@ -36,6 +36,9 @@ def map_bond(parent: has_node_attr, tokens: list[Token], token: Token):
     if next_token.kind is TokenKind.StochasticStart:
         return map_stochastic_object_start(parent, tokens, next_token, token)
 
+    if next_token.kind is TokenKind.Ring or next_token.kind is TokenKind.Ring2:
+        return constructor.add_ring(parent, int(next_token.value.replace('%', '')), token.value)
+
     raise BigSMILESError(f"Bond can't be followed by: {next_token.kind}")
 
 

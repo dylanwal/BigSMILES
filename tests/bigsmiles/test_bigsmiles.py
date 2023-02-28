@@ -119,8 +119,9 @@ test_polymers = [
 
     # test end groups in middle
     "{[]C([$])C([$])CC[]}",
+    "{[$]C([$])C([$])CC[$]}",
 
-    # nested
+    # nested linear
     "OC{[>][<]CC(C{[>][<]CCO[>][<]}CN)[>][<]}CC",
 
     # bonding descriptor index
@@ -182,6 +183,9 @@ test_polymers = [
     "C({[>][<]CCO[>][<]}1)CCO1",  # PEG rings wierd written
     "C({[>][<]CCO[>][<]}1)({[>][<]CCO[>][<]}2)OCC12",  # dual PEG rings
     "C({[>][<]CCO[>][<]}1)({[>][<]CCO[>][<]}2)({[>][<]CCO[>][<]}3)OCC123",  # triple PEG rings
+    # multiple bonds
+    "C(={[>][<]=CC=[>][<]}=1)CCCCCC=1",
+    "C=1CCC(={[>][<]=CC=[>][<]}=1)CCC",
 
     # networks
     "{[][$]CC=CC[$],[$]CC([<])C([>])C[$],[>]S[<],[$]C[]}",  # poly(1,4-butadiene) rubber vulcanized
@@ -204,6 +208,10 @@ cases_with_changes = [
     ["[H]{[>][<]CC(C1=CC=CC=C1)[<],[>]C2C(C(=O)OC2(=O))[>][<]}[H]",
      "[H]{[>][<]CC(C1=CC=CC=C1)[<],[>]C2C(C(=O)OC2=O)[>][<]}[H]"],  # drop () around =O
     ["[H]{[>1][<]CC([>2])[>],[<2]CC[>2],[<2][H][<1]}[H]", "[H]{[>][<]CC([>2])[>],[<2]CC[>2],[<2][H][<]}[H]"],  # drop 1
+    ["C(={[>][<]=CC=[>][<]}=1)CCCCCC1", "C(={[>][<]=CC=[>][<]}=1)CCCCCC=1"],  # add double bond to second ring
+    ["C(={[>][<]=CC=[>][<]}1)CCCCCC=1", "C(={[>][<]=CC=[>][<]}=1)CCCCCC=1"],  # add double bond to second ring
+    ["C1CCC(={[>][<]=CC=[>][<]}=1)CCC", "C=1CCC(={[>][<]=CC=[>][<]}=1)CCC"],  # add double bond to second ring
+    ["C=1CCC(={[>][<]=CC=[>][<]}1)CCC", "C=1CCC(={[>][<]=CC=[>][<]}=1)CCC"],  # add double bond to second ring
 ]
 
 
@@ -262,10 +270,13 @@ def test_add_explicit_hydrogens(case: list):
 
 
 cases_incomplete_valance = [
-   ["[CH2]CCCC", "[CH2]CCCC"],  # under-saturated carbon
-    ["CC[35Br]CC1=C(C(=NC=C1C=O)C)O", "CC[35Br]CC1=C(C(=NC=C1C=O)C)O"], # break bond limit of Br
-    ["CC[35Br@@]CC1=C(C(=NC=C1C=O)C)O", "CC[35Br@@]CC1=C(C(=NC=C1C=O)C)O"],  # break bond limit of Br
-    ["C(C)(C)(C)(C)C", "C(C)(C)(C)(C)C"],  # break bond limit of carbon
+    ["N1=NN=C[N]1", "N1=NN=C[N]1"],  # under-saturated nitrogen
+    ["[CH2]CCCC", "[CH2]CCCC"],  # under-saturated carbon
+    ["[CH]C=C", "[CH]C=C"],  # under-saturated carbon
+    ["[CH2]C=C", "[CH2]C=C"],  # under-saturated carbon
+    ["CC[35Br]CC1=C(C(=NC=C1C=O)C)O", "CC[35Br]CC1=C(C(=NC=C1C=O)C)O"],  # over-saturated Br
+    ["CC[35Br@@]CC1=C(C(=NC=C1C=O)C)O", "CC[35Br@@]CC1=C(C(=NC=C1C=O)C)O"],  # over-saturated Br
+    ["C(C)(C)(C)(C)C", "C(C)(C)(C)(C)C"],  # over-saturated C
 ]
 
 
@@ -284,7 +295,6 @@ validation_cases = [
     ["CCCC)"],  # branch not started
     ["((CC))"],  # no double branch/ extra parenthesis
     ["C((C)C)"],  # no branch right away
-
 
     # ['C/C(\F)=C/C'],  # conflicting cis/trans
 
@@ -323,14 +333,3 @@ def test_validation(polymer: list):
     with pytest.raises(BigSMILESError) as e:
         bigsmiles.BigSMILES(polymer[0])
 
-
-"""
-
-N1=NN=C[N]1 
-[CH2]C=C 
-[CH]C=C 
-[CH2]CCCC
-
-test for radicals 
-
-"""

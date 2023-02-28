@@ -199,6 +199,11 @@ def add_ring(parent: has_node_attr, ring_id: int, bond_symbol: str = "", **kwarg
 
             # Add atom2
             ring.atom2 = atom2
+            if bond_mapping[bond_symbol] > ring.bond_order:
+                # TODO: add check fo stochastic Object
+                # if ring.atom1.bonds_available < bond_mapping[bond_symbol] - ring.bond_order:
+                #     logging.error(f"Too many bonds trying to be made. {str(ring.atom1)}")
+                ring.symbol = bond_symbol
             add_bond_to_connected_objects(ring)
             return parent
 

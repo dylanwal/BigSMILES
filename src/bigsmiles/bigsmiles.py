@@ -5,7 +5,7 @@ from bigsmiles.config import Config
 
 
 class Atom:
-    __slots__ = ["id_", "element", "isotope", "stereo", "hydrogens", "charge", "valence",
+    __slots__ = ["id_", "element", "isotope", "stereo", "hydrogens", "charge", "valence", "_valene_warning_raised"
                  "organic", "bonds", "possible_valence", "_default_valence", "__dict__", "parent"]
     _tree_print_repr = True
 
@@ -42,6 +42,7 @@ class Atom:
                 setattr(self, k, v)
 
         self.bonds = []
+        self._valene_warning_raised = False
 
     def __str__(self):
         return self.to_string()
@@ -50,16 +51,35 @@ class Atom:
         return str(self) + "{" + str(self.id_) + "}"
 
     @property
+    def implicit_hydrogens(self) -> int:
+        """ Number of implicit hydrogens. zero if explict hydrogens specified. """
+        return self.bonds_available if self.hydrogens == 0 else 0
+
+    @property
     def bond_capacity(self) -> int:
-        return self.valence - self.hydrogens + self.charge
+        """ Total capacity of the atom. """
+        return self.valence + self.charge
 
     @property
     def number_of_bonds(self) -> int:
+        """ Number of bonds already formed. Not including implicit hydrogens. """
         return sum((bond.bond_order for bond in self.bonds)) + self.hydrogens
 
     @property
     def bonds_available(self) -> int:
-        return self.bond_capacity - self.number_of_bonds
+        """ Number bonds that remain open for bonding. Will reduce implicit hydrogen count. """
+        bonds_available = self.bond_capacity - self.number_of_bonds
+        if bonds_available < 0:
+            return 0
+        return bonds_available
+
+    @property
+    def full_valence(self) -> bool:
+        """ Returns true if the atoms valence is full"""
+        if self.valence - self.number_of_bonds - self.implicit_hydrogens == 0:
+            return True
+
+        return False
 
     @property
     def ring_indexes(self) -> list[int]:
@@ -71,6 +91,14 @@ class Atom:
         return ring_index
 
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False) -> str:
+        text = self._to_string(show_hydrogens)
+        if not self.full_valence and not self._valene_warning_raised:
+            self._valene_warning_raised = True
+            logging.warning(f"Incomplete valence detected on atom: {text}")
+
+        return text
+
+    def _to_string(self, show_hydrogens: bool = False) -> str:
         text = self.element
         bracket_flag = False
 
@@ -82,8 +110,14 @@ class Atom:
             bracket_flag = True
 
         if show_hydrogens or self.hydrogens > 0:
-            if self.hydrogens > 0 or self.bonds_available != 0:
-                text += f"H{self.bonds_available + self.hydrogens}"
+            if self.hydrogens > 1:
+                text += f"H{self.hydrogens}"
+                bracket_flag = True
+            elif self.implicit_hydrogens > 1:
+                text += f"H{self.implicit_hydrogens}"
+                bracket_flag = True
+            elif self.hydrogens == 1 or self.implicit_hydrogens == 1:
+                text += f"H"
                 bracket_flag = True
 
         if self.charge > 0:

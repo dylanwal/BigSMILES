@@ -3,25 +3,37 @@ from functools import wraps
 
 from bigsmiles.config import Config
 from bigsmiles.errors import BigSMILESError
+from bigsmiles.tokenizer import atom_pattern
 from bigsmiles.bigsmiles import StochasticObject, StochasticFragment
 from bigsmiles.constructor import *
 
-ATOM_PATTERN = re.compile(
-    r"(?P<isotope>\d{1,3})?" +
-    r'(?P<element>' + "|".join(Config.elements_ordered) + "|".join(Config.aromatic) + ')' +
-    r"(?P<stereo>@{0,2})?" +
-    r'(?P<hydrogens>H\d?)?' +
-    r'(?P<charge>[-|+]{1,3}\d?)?'
-)
+
+ATOM_PATTERN = re.compile(atom_pattern)
 
 
 def atom_symbol_to_attributes(symbol: str) -> dict:
-    results = ATOM_PATTERN.match(symbol).groupdict()
-    if results["hydrogens"] is None:
-        results["hydrogens"] = 0
-    if results["charge"] is None:
-        results["charge"] = 0
-    return results
+    if symbol in Config.elements_aromatic:
+        return {"element": symbol}
+
+    try:
+        results = ATOM_PATTERN.match(symbol).groupdict()
+
+        if results["hydrogens"] is None:
+            results["hydrogens"] = 0
+        else:
+            if results["hydrogens"][-1].isdigit():
+                results["hydrogens"] = int(results["hydrogens"][-1])
+            else:
+                results["hydrogens"] = 1
+
+        if results["charge"] is None:
+            results["charge"] = 0
+        else:
+            results["charge"] = int(results["charge"])
+
+        return results
+    except AttributeError:
+        raise BigSMILESError(f"Issue parsing atom: {symbol}")
 
 
 DEFAULT_BONDING_DESCRIPTOR_INDEX = 1

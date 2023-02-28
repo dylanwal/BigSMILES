@@ -21,6 +21,7 @@ test_molecules = [
     "N[C@@](F)(C)C(=O)O",
     "C[C@H]1CCCCO1",
     "O1CCCC[C@@H]1C",
+    "N[P@](C(O)=O)C",
     "CC1=C(C(=NC=C1C=O)C)O",
     "C1=CC(C(C(=C1)C(=O)O)O)O",
     "C(C(=O)COP(=O)(O)O)N",
@@ -46,8 +47,6 @@ test_molecules = [
     "[Fe+3]CCC",
     "CC[12C]C1=C(C(=NC=C1C=O)C)O",
     "CC[C@]C1=C(C(=NC=C1C=O)C)O",
-    "CC[35Br]CC1=C(C(=NC=C1C=O)C)O",
-    "CC[35Br@@]CC1=C(C(=NC=C1C=O)C)O",
     "CC[12CH2]C1=C(C(=NC=C1C=O)C)O",
     "CC[BrH3]",
     "CC[Fe+3]CCC",
@@ -262,13 +261,30 @@ def test_add_explicit_hydrogens(case: list):
     assert str(result) == answer
 
 
+cases_incomplete_valance = [
+   ["[CH2]CCCC", "[CH2]CCCC"],  # under-saturated carbon
+    ["CC[35Br]CC1=C(C(=NC=C1C=O)C)O", "CC[35Br]CC1=C(C(=NC=C1C=O)C)O"], # break bond limit of Br
+    ["CC[35Br@@]CC1=C(C(=NC=C1C=O)C)O", "CC[35Br@@]CC1=C(C(=NC=C1C=O)C)O"],  # break bond limit of Br
+    ["C(C)(C)(C)(C)C", "C(C)(C)(C)(C)C"],  # break bond limit of carbon
+]
+
+
+@pytest.mark.parametrize("case", cases_incomplete_valance)
+def test_incomplete_valance(caplog, case: list):
+    input_, answer = case
+    with caplog.at_level(logging.WARNING):
+        result = bigsmiles.BigSMILES(input_)
+    assert str(result) == answer
+    assert "Incomplete valence detected" in caplog.text
+
+
 validation_cases = [
     ["CCCCC1"],  # Ring not closed
     ["CCCC("],  # branch not closed
     ["CCCC)"],  # branch not started
     ["((CC))"],  # no double branch/ extra parenthesis
     ["C((C)C)"],  # no branch right away
-    ["C(C)(C)(C)(C)C"],  # break bond limit of carbon
+
 
     # ['C/C(\F)=C/C'],  # conflicting cis/trans
 

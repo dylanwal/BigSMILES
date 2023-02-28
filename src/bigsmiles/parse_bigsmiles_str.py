@@ -10,12 +10,12 @@ from bigsmiles.bigsmiles import BigSMILES, Branch, StochasticFragment, has_node_
 
 def map_atom(parent: has_node_attr, tokens: list[Token], token: Token):
     if isinstance(parent, BigSMILES) and not parent:
-        return constructor.add_atom(parent, token.value)
+        return constructor.add_atom_str(parent, token.value)
 
     if isinstance(parent, StochasticFragment) and len(parent.nodes) == 0:
-        return constructor.add_atom(parent, token.value)
+        return constructor.add_atom_str(parent, token.value)
 
-    return constructor.add_bond_atom_pair(parent, "", token.value)
+    return constructor.add_bond_atom_pair_str(parent, "", token.value)
 
 
 def map_bond(parent: has_node_attr, tokens: list[Token], token: Token):

@@ -41,6 +41,8 @@ class Config:
         "s"
     }
 
+    elements_aromatic = elements.union(aromatic)
+
     organics = {
         "B",
         "C",

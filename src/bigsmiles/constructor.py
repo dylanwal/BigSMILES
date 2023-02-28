@@ -22,7 +22,7 @@ def add_bond_to_atom(bond: Bond, atom: Atom):
     # Validation for available valence
     if atom.bonds_available < bond.bond_order:
         if not atom._increase_valence(bond.bond_order):
-            raise ConstructorError(f"Too many bonds trying to be made. {str(atom)}")
+            logging.error(f"Too many bonds trying to be made. {str(atom)}")
 
     atom.bonds.append(bond)
 

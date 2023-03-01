@@ -119,7 +119,7 @@ test_polymers = [
 
     # test end groups in middle
     "{[]C([$])C([$])CC[]}",
-    "{[$]C([$])C([$])CC[$]}",
+    "[H]{[$]C([$])C([$])CC[$]}[H]",
 
     # nested linear
     "OC{[>][<]CC(C{[>][<]CCO[>][<]}CN)[>][<]}CC",
@@ -178,6 +178,7 @@ test_polymers = [
     "[H]{[$][$]CC([$])[$],[$]CC[$][$]}[H]",  # hyperbranch Poly(ethylene)
 
     # rings/polycyclic (stochastic)
+    "C1{[$][$]CC[$][$]}1",
     "C({[>][<]CCO[>][<]}1)CCCCCC1",
     "C1{[>][<]CCO[>][<]}CO1",  # PEG rings
     "C({[>][<]CCO[>][<]}1)CCO1",  # PEG rings wierd written
@@ -271,6 +272,7 @@ def test_add_explicit_hydrogens(case: list):
 
 cases_incomplete_valance = [
     ["N1=NN=C[N]1", "N1=NN=C[N]1"],  # under-saturated nitrogen
+    ["CCC[12C]CCC","CCC[12C]CCC"],  # under-saturated carbon
     ["[CH2]CCCC", "[CH2]CCCC"],  # under-saturated carbon
     ["[CH]C=C", "[CH]C=C"],  # under-saturated carbon
     ["[CH2]C=C", "[CH2]C=C"],  # under-saturated carbon

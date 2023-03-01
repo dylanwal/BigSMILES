@@ -1,12 +1,13 @@
 from __future__ import annotations
 import logging
 
+from bigsmiles.errors import ConstructorError
 from bigsmiles.config import Config
 
 
 class Atom:
     __slots__ = ["id_", "element", "isotope", "stereo", "hydrogens", "charge", "valence", "_valene_warning_raised"
-                 "organic", "bonds", "possible_valence", "_default_valence", "__dict__", "parent"]
+                 "organic", "_bonds", "possible_valence", "_default_valence", "__dict__", "parent"]
     _tree_print_repr = True
 
     def __init__(self,
@@ -14,7 +15,7 @@ class Atom:
                  element: str,
                  isotope: int | None = None,
                  stereo: str = '',
-                 hydrogens: int = 0,
+                 hydrogens: int | None = None,
                  charge: int = 0,
                  valence: int = None,
                  parent: BigSMILES | Branch | StochasticFragment | None = None,
@@ -41,7 +42,7 @@ class Atom:
             for k, v in kwargs.items():
                 setattr(self, k, v)
 
-        self.bonds = []
+        self._bonds = []
         self._valene_warning_raised = False
 
     def __str__(self):
@@ -51,9 +52,21 @@ class Atom:
         return str(self) + "{" + str(self.id_) + "}"
 
     @property
+    def bonds(self) -> list[Bond]:
+        return self._bonds
+
+    @bonds.setter
+    def bonds(self, bonds: list[Bond]):
+        self._bonds = bonds
+        # Validation for available valence
+        if self.bonds_available < 0:
+            if not self._increase_valence(self.bonds_available):
+                logging.error(f"Too many bonds trying to be made. {str(self)}")
+
+    @property
     def implicit_hydrogens(self) -> int:
         """ Number of implicit hydrogens. zero if explict hydrogens specified. """
-        return self.bonds_available if self.hydrogens == 0 else 0
+        return self.bonds_available if self.hydrogens is None else 0
 
     @property
     def bond_capacity(self) -> int:
@@ -63,7 +76,10 @@ class Atom:
     @property
     def number_of_bonds(self) -> int:
         """ Number of bonds already formed. Not including implicit hydrogens. """
-        return sum((bond.bond_order for bond in self.bonds)) + self.hydrogens
+        num_bonds = sum((bond.bond_order for bond in self.bonds))
+        if self.hydrogens is not None:
+            num_bonds += self.hydrogens
+        return num_bonds
 
     @property
     def bonds_available(self) -> int:
@@ -109,16 +125,21 @@ class Atom:
             text += self.stereo
             bracket_flag = True
 
-        if show_hydrogens or self.hydrogens > 0:
-            if self.hydrogens > 1:
-                text += f"H{self.hydrogens}"
+        if show_hydrogens or self.hydrogens is not None:
+            if self.hydrogens is not None:
+                if self.hydrogens == 1:
+                    text += f"H"
+                elif self.hydrogens > 1:
+                    text += f"H{self.hydrogens}"
+
                 bracket_flag = True
-            elif self.implicit_hydrogens > 1:
-                text += f"H{self.implicit_hydrogens}"
-                bracket_flag = True
-            elif self.hydrogens == 1 or self.implicit_hydrogens == 1:
-                text += f"H"
-                bracket_flag = True
+            else:
+                if self.implicit_hydrogens == 1:
+                    text += f"H"
+                    bracket_flag = True
+                if self.implicit_hydrogens > 1:
+                    text += f"H{self.implicit_hydrogens}"
+                    bracket_flag = True
 
         if self.charge > 0:
             text += f"+{self.charge if self.charge > 1 else ''}"
@@ -211,6 +232,9 @@ class Bond:
 
     def __iter__(self):
         return iter((self.atom1, self.atom2))
+
+    def __reversed__(self):
+        return iter((self.atom2, self.atom1))
 
     @property
     def bond_order(self) -> int:
@@ -305,10 +329,16 @@ class BondDescriptor:
     def bond_order(self) -> int:
         return bond_mapping[self.bond_symbol]
 
+    @property
+    def implicit(self) -> bool:
+        if self.descriptor == "":
+            return True
+        return False
+
 
 class BondDescriptorAtom:
     _tree_print_repr = True
-    __slots__ = ["descriptor", "id_", "bond", "__dict__", "parent"]
+    __slots__ = ["descriptor", "id_", "_bond", "__dict__", "parent"]
 
     def __init__(self,
                  bond_descriptor: BondDescriptor,
@@ -318,7 +348,7 @@ class BondDescriptorAtom:
         self.descriptor = bond_descriptor
         bond_descriptor.instances += [self]
         self.id_ = id_
-        self.bond = None  # Added after construction
+        self._bond = None  # Added after construction
         self.parent = parent
 
         if kwargs:
@@ -333,6 +363,16 @@ class BondDescriptorAtom:
 
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
         return Config.add_color(self.descriptor.to_string(show_hydrogens, print_repr), 'Green', skip_color)
+
+    @property
+    def bond(self) -> Bond:
+        return self._bond
+
+    @bond.setter
+    def bond(self, bond: Bond):
+        if self.bond is not None:
+            raise ConstructorError(f"Trying to make a bond to {self} when it already has a bond.")
+        self._bond = bond
 
     @property
     def root(self) -> BigSMILES:
@@ -424,17 +464,21 @@ class StochasticFragment:
 class StochasticObject:
     _tree_print_repr = False
     __slots__ = ["nodes", "bonding_descriptors", "id_", "parent", "bd_left", "bd_right",
-                 "bond_left", "bond_right", "__dict__"]
+                 "_bond_left", "_bond_right", "__dict__"]
 
-    def __init__(self, parent: BigSMILES | StochasticFragment | Branch, id_: int = None):
+    def __init__(self, parent: BigSMILES | StochasticFragment | Branch, id_: int = None, **kwargs):
         self.nodes: list[StochasticFragment] = []
         self.bonding_descriptors: list[BondDescriptor] = []
-        self.bd_left: BondDescriptorAtom | None = None
-        self.bd_right: BondDescriptorAtom | None = None
+        self.bd_left: BondDescriptor | None = None
+        self.bd_right: BondDescriptor | None = None
         self.id_ = id_
-        self.bond_left: Bond | None = None
-        self.bond_right: Bond | None = None
+        self._bond_left: Bond | None = None
+        self._bond_right: Bond | None = None
         self.parent = parent
+
+        if kwargs:
+            for k, v in kwargs.items():
+                setattr(self, k, v)
 
     def __str__(self):
         return self.to_string()
@@ -442,12 +486,32 @@ class StochasticObject:
     def __repr__(self):
         return self.to_string(print_repr=True, skip_color=True)
 
+    @property
+    def bond_left(self) -> Bond | None:
+        return self._bond_left
+
+    @bond_left.setter
+    def bond_left(self, bond: Bond):
+        if self._bond_left is not None:
+            raise ConstructorError(f"Trying to make a bond to {self} when it already has a bond.")
+        self._bond_left = bond
+
+    @property
+    def bond_right(self) -> Bond | None:
+        return self._bond_right
+
+    @bond_right.setter
+    def bond_right(self, bond: Bond):
+        if self._bond_right is not None:
+            raise ConstructorError(f"Trying to make a bond to {self} when it already has a bond.")
+        self._bond_right = bond
+
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
         text = ""
         text += Config.add_color("{", "Red", skip_color)
-        text += self.bd_left.to_string(show_hydrogens, print_repr, skip_color)
+        text += self.bd_left.to_string(show_hydrogens, print_repr, skip_color) if self.bd_left is not None else ""
         text += ",".join(node.to_string(show_hydrogens, print_repr, skip_color) for node in self.nodes)
-        text += self.bd_right.to_string(show_hydrogens, print_repr, skip_color)
+        text += self.bd_right.to_string(show_hydrogens, print_repr, skip_color) if self.bd_right is not None else ""
         text += Config.add_color("}", "Red", skip_color)
         if self.bond_right is not None and self.bond_right.ring_id is not None:
             text += self.bond_right.symbol + str(self.bond_right.ring_id)
@@ -456,8 +520,11 @@ class StochasticObject:
     @property
     def implicit_endgroups(self) -> bool:
         """ Returns true if one or more are implicit """
-        return True if self.bd_left.descriptor.descriptor == "" or \
-                       self.bd_right.descriptor.descriptor == "" else False
+        if (self.bd_left is not None and self.bd_left.implicit) or \
+                (self.bd_right is not None and self.bd_right.implicit):
+            return True
+
+        return False
 
     @property
     def in_stochastic_object(self) -> bool:

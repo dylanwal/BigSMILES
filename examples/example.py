@@ -5,7 +5,7 @@ import chemdraw
 # bigsmiles.Config.color_output = True
 
 cases = [
-    "N1=NN=C[N]1",  # None for Hydrogen
+    "C1{[$][$]CC[$][$]}1",
     "C(={[>][<]=CC=[>][<]}=1)CCCCCC1",
     "C(={[>][<]=CC=[>][<]}1)CCCCCC=1",
     "C(={[>][<]=CC=[>][<]}=1)CCCCCC=1",

@@ -32,7 +32,7 @@ class TokenKind(enum.Enum):
 
 
 _isotope_pattern = r'(?P<isotope>[\d]{1,3})?'
-_element_pattern = r'(?P<element>' + "|".join(Config.elements_ordered) + "|".join(Config.aromatic) + '{1})'
+_element_pattern = r'(?P<element>' + "|".join(Config.elements_ordered) + "|" + "|".join(Config.aromatic) + '{1})'
 _stereo_pattern = r'(?P<stereo>@{1,2})?'
 _hydrogen_pattern = r'(?P<hydrogens>H[\d]?)?'
 _charge_pattern = r'(?P<charge>[-|\+]{1,3}[\d]?)?'

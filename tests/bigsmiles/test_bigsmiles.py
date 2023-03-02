@@ -77,7 +77,7 @@ test_molecules = [
 
     # disconnected structures
     "C1.C1",  # ethane
-    "[Na+].[Cl-]", # sodium chloride
+    "[Na+].[Cl-]",  # sodium chloride
     "[Na+].[O-]c1ccccc1",  # sodium phenoxide
     "c1cc([Na+].[O-])ccc1",  # sodium phenoxide
     "NH4+].[NH4+].[O-]S(=O)(=O)[S-]",  # diammonium thiosulfate
@@ -258,6 +258,8 @@ test_polymers = [
     # multiple bonds
     "C(={[>][<]=CC=[>][<]}=1)CCCCCC=1",
     "C=1CCC(={[>][<]=CC=[>][<]}=1)CCC",
+    # aromatic notation
+    "c1c{[$][$]cc[$][$]}1",  # cyclic polyacetylene
 
     # networks
     "{[][$]CC=CC[$],[$]CC([<])C([>])C[$],[>]S[<],[$]C[]}",  # poly(1,4-butadiene) rubber vulcanized
@@ -265,9 +267,6 @@ test_polymers = [
 
     # ladder
 
-
-    # aromatic notation
-    "c1c{[$][$]cc[$][$]}1",  # cyclic polyacetylene
 
 ]
 
@@ -368,7 +367,7 @@ def test_add_explicit_hydrogens(case: list):
 
 cases_incomplete_valance = [
     ["N1=NN=C[N]1", "N1=NN=C[N]1"],  # under-saturated nitrogen
-    ["CCC[12C]CCC","CCC[12C]CCC"],  # under-saturated carbon
+    ["CCC[12C]CCC", "CCC[12C]CCC"],  # under-saturated carbon
     ["[CH2]CCCC", "[CH2]CCCC"],  # under-saturated carbon
     ["[CH]C=C", "[CH]C=C"],  # under-saturated carbon
     ["[CH2]C=C", "[CH2]C=C"],  # under-saturated carbon
@@ -435,6 +434,5 @@ validation_cases = [
 
 @pytest.mark.parametrize("polymer", validation_cases)
 def test_validation(polymer: list):
-    with pytest.raises(BigSMILESError) as e:
+    with pytest.raises(BigSMILESError) as _:
         bigsmiles.BigSMILES(polymer[0])
-

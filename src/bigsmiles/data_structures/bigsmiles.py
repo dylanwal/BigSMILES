@@ -1,14 +1,15 @@
 from __future__ import annotations
 import logging
 
-from bigsmiles.errors import ConstructorError
+import bigsmiles.errors as errors
 import bigsmiles.chemical_data as chemical_data
 from bigsmiles.config import Config
 
 
 class Atom:
     __slots__ = ["id_", "element", "isotope", "stereo", "hydrogens", "charge", "valence", "_valene_warning_raised"
-                 "organic", "_bonds", "possible_valence", "_default_valence", "__dict__", "parent"]
+                                                                                          "organic", "class_", "_bonds",
+                 "possible_valence", "_default_valence", "__dict__", "parent"]
     _tree_print_repr = True
 
     def __init__(self,
@@ -18,24 +19,27 @@ class Atom:
                  stereo: str = '',
                  hydrogens: int | None = None,
                  charge: int = 0,
-                 valence: int = None,
+                 valence: int | float | None = None,
+                 class_: int | None = None,
                  parent: BigSMILES | Branch | StochasticFragment | None = None,
                  **kwargs
                  ):
         self.id_ = id_
-        self.element = element
+        self.element = element.capitalize()
         self.isotope = isotope
         self.stereo = stereo
         self.hydrogens = hydrogens
         self.charge = charge
-        self.possible_valence: tuple[int] = chemical_data.get_atom_possible_valence(element)
+        self.class_ = class_
+        self.aromatic = True if element in chemical_data.aromatic else False
+        self.possible_valence: tuple[int] = chemical_data.get_atom_possible_valence(self.element)
         if valence is None:
             self._default_valence: bool = True
             self.valence = self.possible_valence[0]
         else:
             self._default_valence: bool = False
             self.valence = valence
-        self.organic = True if element in chemical_data.organics else False
+        self.organic = True if self.element in chemical_data.organics else False
 
         self.parent = parent
 
@@ -60,22 +64,22 @@ class Atom:
     def bonds(self, bonds: list[Bond]):
         self._bonds = bonds
         # Validation for available valence
-        if self.bonds_available < 0:
-            if not self._increase_valence(self.bonds_available):
+        if self.number_of_bonds > self.bond_capacity:
+            if not self._increase_valence(self.number_of_bonds - self.bond_capacity):
                 logging.error(f"Too many bonds trying to be made. {str(self)}")
 
     @property
-    def implicit_hydrogens(self) -> int:
+    def implicit_hydrogens(self) -> float:
         """ Number of implicit hydrogens. zero if explict hydrogens specified. """
         return self.bonds_available if self.hydrogens is None else 0
 
     @property
-    def bond_capacity(self) -> int:
+    def bond_capacity(self) -> float:
         """ Total capacity of the atom. """
         return self.valence + self.charge
 
     @property
-    def number_of_bonds(self) -> int:
+    def number_of_bonds(self) -> float:
         """ Number of bonds already formed. Not including implicit hydrogens. """
         num_bonds = sum((bond.bond_order for bond in self.bonds))
         if self.hydrogens is not None:
@@ -83,7 +87,7 @@ class Atom:
         return num_bonds
 
     @property
-    def bonds_available(self) -> int:
+    def bonds_available(self) -> float:
         """ Number bonds that remain open for bonding. Will reduce implicit hydrogen count. """
         bonds_available = self.bond_capacity - self.number_of_bonds
         if bonds_available < 0:
@@ -93,7 +97,7 @@ class Atom:
     @property
     def full_valence(self) -> bool:
         """ Returns true if the atoms valence is full"""
-        if self.valence - self.number_of_bonds - self.implicit_hydrogens == 0:
+        if self.valence - self.number_of_bonds - self.implicit_hydrogens + self.charge == 0:
             return True
 
         return False
@@ -116,11 +120,20 @@ class Atom:
         return text
 
     def _to_string(self, show_hydrogens: bool = False) -> str:
-        text = self.element
+        text = ""
         bracket_flag = False
 
         if self.element == "H":
             bracket_flag = True
+
+        if self.isotope is not None:
+            text += str(self.isotope)
+            bracket_flag = True
+
+        if self.aromatic:
+            text += self.element.lower()
+        else:
+            text += self.element
 
         if self.stereo:
             text += self.stereo
@@ -146,28 +159,40 @@ class Atom:
             text += f"+{self.charge if self.charge > 1 else ''}"
             bracket_flag = True
         elif self.charge < 0:
-            text += f"{self.charge}"
+            text += f"-{self.charge if self.charge > 1 else ''}"
             bracket_flag = True
 
-        if self.isotope is not None:
-            text = str(self.isotope) + text
-            bracket_flag = True
+        if self.class_ is not None:
+            text += ":" + str(self.class_)
 
         if bracket_flag:
             text = "[" + text + "]"
 
         if self.ring_indexes:
+            # get ring ids
+            rings = []
             for bond in self.bonds:
                 if bond.ring_id is not None:
-                    if bond.ring_id > 9:
-                        ring_id = "%" + str(bond.ring_id)
+                    rings.append([bond.ring_id, bond])
+
+            # sort to numerical order
+            rings.sort(key=lambda x: x[0])
+            for ring_id, bond in rings:
+                ring_text = ""
+                if bond.symbol != ":":  # don't show aromatic bonds in ring index
+                    if not self.root.contains_stochastic_object and not Config.show_multi_bonds_on_both_ring_index \
+                            and bond.atom2 == self:
+                        pass
                     else:
-                        ring_id = str(bond.ring_id)
-                    text += bond.symbol + ring_id
+                        ring_text += bond.symbol
+                if ring_id > 9:
+                    ring_text += "%"
+
+                text += ring_text + str(ring_id)
 
         return text
 
-    def _increase_valence(self, requested_valence_increase: int = 0) -> bool:
+    def _increase_valence(self, requested_valence_increase: float = 0) -> bool:
         """ If default valence, try to increase when an additional bond added that needs it. And does the increase!! """
         if not self._default_valence:
             return False
@@ -188,14 +213,6 @@ class Atom:
     @property
     def root(self) -> BigSMILES:
         return self.parent.root
-
-
-bond_mapping = {
-    None: 0,
-    "": 1,
-    "=": 2,
-    "#": 3
-}
 
 
 class Bond:
@@ -229,6 +246,8 @@ class Bond:
         return self.to_string(print_repr=True, skip_color=True)
 
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
+        if self.symbol == ":" and not Config.show_aromatic_bond:
+            return ""
         return Config.add_color(self.symbol, 'Blue', skip_color)
 
     def __iter__(self):
@@ -239,16 +258,16 @@ class Bond:
 
     @property
     def bond_order(self) -> int:
-        return bond_mapping[self.symbol]
+        return chemical_data.bond_mapping[self.symbol]
 
     @bond_order.setter
     def bond_order(self, count: int):
-        for k, v in bond_mapping.items():
+        for k, v in chemical_data.bond_mapping.items():
             if v == count:
                 self.symbol = k
                 return
 
-        raise ValueError(f"Invalid bond_order. \nGiven: {count} \n Acceptable: {bond_mapping}")
+        raise ValueError(f"Invalid bond_order. \nGiven: {count} \n Acceptable: {chemical_data.bond_mapping}")
 
     @property
     def root(self) -> BigSMILES:
@@ -278,7 +297,7 @@ class BondDescriptor:
         return self.to_string(print_repr=True, skip_color=True)
 
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
-        if self.index_ == 1 and not Config.show_bond_descriptor_zero_index:
+        if self.index_ == 1 and not Config.show_bond_descriptor_one_index:
             index = ""
         else:
             index = self.index_
@@ -328,7 +347,7 @@ class BondDescriptor:
 
     @property
     def bond_order(self) -> int:
-        return bond_mapping[self.bond_symbol]
+        return chemical_data.bond_mapping[self.bond_symbol]
 
     @property
     def implicit(self) -> bool:
@@ -372,7 +391,7 @@ class BondDescriptorAtom:
     @bond.setter
     def bond(self, bond: Bond):
         if self.bond is not None:
-            raise ConstructorError(f"Trying to make a bond to {self} when it already has a bond.")
+            raise errors.ConstructorError(f"Trying to make a bond to {self} when it already has a bond.")
         self._bond = bond
 
     @property
@@ -412,10 +431,7 @@ class Branch:
         return self.to_string(print_repr=True, skip_color=True)
 
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
-        text = "".join(
-            node.to_string(show_hydrogens, print_repr) for node in self.nodes
-        )
-
+        text = "".join(node.to_string(show_hydrogens, print_repr) for node in self.nodes)
         return "(" + text + ")"
 
     @property
@@ -494,7 +510,7 @@ class StochasticObject:
     @bond_left.setter
     def bond_left(self, bond: Bond):
         if self._bond_left is not None:
-            raise ConstructorError(f"Trying to make a bond to {self} when it already has a bond.")
+            raise errors.ConstructorError(f"Trying to make a bond to {self} when it already has a bond.")
         self._bond_left = bond
 
     @property
@@ -504,8 +520,15 @@ class StochasticObject:
     @bond_right.setter
     def bond_right(self, bond: Bond):
         if self._bond_right is not None:
-            raise ConstructorError(f"Trying to make a bond to {self} when it already has a bond.")
+            raise errors.ConstructorError(f"Trying to make a bond to {self} when it already has a bond.")
         self._bond_right = bond
+
+    @property
+    def aromatic(self) -> bool:
+        if self.bd_left.bond_order == 1.5:
+            # not checking right bond descriptor, maybe we should? but during construction it is not defined
+            return True
+        return False
 
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
         text = ""
@@ -576,7 +599,7 @@ class BigSMILES:
         # parse input string
         if input_text:
             # import here to avoid circular imports
-            from bigsmiles.constructors.parse_bigsmiles_str import parse_bigsmiles_str
+            from bigsmiles.constructors.construct_bigsmiles_from_tokens import parse_bigsmiles_str
             parse_bigsmiles_str(input_text, self)
 
     def __str__(self):

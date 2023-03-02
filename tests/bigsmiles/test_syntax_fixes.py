@@ -1,7 +1,8 @@
 import pytest
 
-from bigsmiles import BigSMILES
+import bigsmiles
 
+bigsmiles.Config.show_aromatic_bond = False
 
 branch_cases = [
     # Branch syntax fixes
@@ -21,13 +22,13 @@ def test_branch_syntax_fixes(case):
     * bigsmiles.syntax_fixes.remove_unnecessary_branch_symbols() --> remove unnecessary branches
     * bigsmiles.constructor.BigSMILESConstructor.close_branch() --> remove empty branches
     """
-    result = BigSMILES(case[0])
+    result = bigsmiles.BigSMILES(case[0])
     assert str(result) == case[1]
 
 
 ring_cases = [
     # Branch syntax fixes
-    ['C12CCCC12C', 'C=1CCCC=1C'],
+    ['C12CCCC12C', 'C=1CCCC1C'],
     ['C2CCCC2C', 'C1CCCC1C'],
     ['CC(CC2CCC2)CC', 'CC(CC1CCC1)CC'],
     ['C%10CCCC%10C', 'C1CCCC1C'],
@@ -42,7 +43,7 @@ def test_ring_syntax_fixes(case):
     * bigsmiles.constructor.BigSMILESConstructor.add_ring() --> two rings goes to a double bond
     * bigsmiles.constructor.BigSMILESConstructor.add_ring_from_atoms() --> two rings goes to a double bond
     """
-    result = BigSMILES(case[0])
+    result = bigsmiles.BigSMILES(case[0])
     assert str(result) == case[1]
 
 

@@ -17,8 +17,17 @@ class TerminalColors:
 
 
 class Config:
+    # Will show colors in terminal when any object is printed
     color_output = False
-    show_bond_descriptor_zero_index = False
+
+    # True: [$1]; False: [$]
+    show_bond_descriptor_one_index = False
+
+    # True: will add ':' symbol for aromatic bonds, False: hides the ':' in string outputs
+    show_aromatic_bond = True
+
+    # for small molecules only. True: 'C=1CCCCC=1'  False: 'C=1CCCCC1'
+    show_multi_bonds_on_both_ring_index = False
 
     @classmethod
     def add_color(cls, text: str, color: str, skip_color: bool = False) -> str:

@@ -16,17 +16,21 @@ from bigsmiles.data_structures.bigsmiles import BigSMILES
 
 
 class Reaction:
-    __slots__ = ["nodes", "atoms", "bonds", "rings", "__dict__"]
+    __slots__ = ["reactants", "agents", "products", "__dict__"]
 
-    def __init__(self, input_text: str = None):
+    def __init__(self, input_text: str = None, **kwargs):
         self.reactants: list[BigSMILES] = []
         self.agents: list[BigSMILES] = []
         self.products: list[BigSMILES] = []
 
         # parse input string
         if input_text:
-            from bigsmiles.constructors.parse_bigsmiles_str import parse_bigsmiles_str
-            parse_bigsmiles_str(input_text)
+            from bigsmiles.constructors.parse_reaction import parse_reaction
+            self.reactants, self.agents, self.products = parse_reaction(input_text)
+
+        if kwargs:
+            for k, v in kwargs.items():
+                setattr(self, k, v)
 
     def __str__(self):
         return self.to_string()

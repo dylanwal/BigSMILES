@@ -5,17 +5,12 @@ import chemdraw
 # bigsmiles.Config.color_output = True
 
 cases = [
-    "C1{[$][$]CC[$][$]}1",
+    "[O-][N+]1=CC=CC=C1",
+    "[O-][n+]1ccccc1",
+
     "C(={[>][<]=CC=[>][<]}=1)CCCCCC1",
-    "C(={[>][<]=CC=[>][<]}1)CCCCCC=1",
-    "C(={[>][<]=CC=[>][<]}=1)CCCCCC=1",
-    "C1CCC(={[>][<]=CC=[>][<]}=1)CCC",
-    "C=1CCC(={[>][<]=CC=[>][<]}1)CCC",
     "C=1CCC(={[>][<]=CC=[>][<]}=1)CCC",
-
     "C({[>][<]CCO[>][<]}1)CCCCCC1",
-    "C({[>][<]CCO[>][<]}12)CCCCCC12",
-
     "{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}",
     "CCC1(CO)C(O)CC(O1)N",
     "F/C=C/F",

@@ -1,53 +1,15 @@
-import re
+"""
+
+Extend existing construction functions for string input
+
+"""
+
 from functools import wraps
 
-import bigsmiles.chemical_data as chemical_data
 from bigsmiles.errors import BigSMILESError
-from bigsmiles.constructors.tokenizer import atom_pattern
+from bigsmiles.constructors.tokenizer import tokenize_atom_symbol, tokenize_bonding_descriptor
 from bigsmiles.data_structures.bigsmiles import StochasticObject, StochasticFragment
 from bigsmiles.constructors.constructor import *
-
-
-ATOM_PATTERN = re.compile(atom_pattern)
-
-
-def atom_symbol_to_attributes(symbol: str) -> dict:
-    if symbol in chemical_data.elements_aromatic:
-        return {"element": symbol}
-
-    try:
-        results = ATOM_PATTERN.match(symbol).groupdict()
-
-        if results["hydrogens"] is None:
-            results["hydrogens"] = 0
-        else:
-            if results["hydrogens"][-1].isdigit():
-                results["hydrogens"] = int(results["hydrogens"][-1])
-            else:
-                results["hydrogens"] = 1
-
-        if results["charge"] is None:
-            results["charge"] = 0
-        else:
-            results["charge"] = int(results["charge"])
-
-        return results
-    except AttributeError:
-        raise BigSMILESError(f"Issue parsing atom: {symbol}")
-
-
-DEFAULT_BONDING_DESCRIPTOR_INDEX = 1
-
-
-def process_bonding_descriptor_symbol(symbol: str) -> tuple[str, int]:
-    symbol = symbol.replace("[", "").replace("]", "")
-    if not symbol:
-        return symbol, DEFAULT_BONDING_DESCRIPTOR_INDEX
-
-    if symbol[-1].isdigit():
-        return symbol[0], int(symbol[-1])
-
-    return symbol, DEFAULT_BONDING_DESCRIPTOR_INDEX
 
 
 def in_stochastic_object(func):
@@ -62,43 +24,43 @@ def in_stochastic_object(func):
     return _in_stochastic_object
 
 
-## Extend existing construction functions for string inputs ##
+## Extend existing construction functions for string input ##
 #######################################################################################################################
 def add_atom_str(parent: has_node_attr, symbol: str) -> has_node_attr:
-    return add_atom(parent, **atom_symbol_to_attributes(symbol))
+    return add_atom(parent, **tokenize_atom_symbol(symbol))
 
 
 @in_stochastic_object
 def add_bonding_descriptor_str(parent: has_node_attr, bd_symbol: str) -> has_node_attr:
-    return add_bonding_descriptor(parent, *process_bonding_descriptor_symbol(bd_symbol))
+    return add_bonding_descriptor(parent, *tokenize_bonding_descriptor(bd_symbol))
 
 
 def add_bond_atom_pair_str(parent: has_node_attr, bond_symbol: str,
                            atom_symbol: str) -> has_node_attr:
-    return add_bond_atom_pair(parent, bond_symbol, **atom_symbol_to_attributes(atom_symbol))
+    return add_bond_atom_pair(parent, bond_symbol, **tokenize_atom_symbol(atom_symbol))
 
 
 @in_stochastic_object
 def add_bond_bonding_descriptor_pair_str(parent: has_node_attr, bond_symbol: str,
                                          bd_symbol: str) -> has_node_attr:
-    return add_bond_bonding_descriptor_pair(parent, bond_symbol, *process_bonding_descriptor_symbol(bd_symbol))
+    return add_bond_bonding_descriptor_pair(parent, bond_symbol, *tokenize_bonding_descriptor(bd_symbol))
 
 
 def open_stochastic_object_fragment_str(parent: has_node_attr, bd_symbol: str) -> StochasticFragment:
-    return open_stochastic_object_fragment(parent, *process_bonding_descriptor_symbol(bd_symbol))
+    return open_stochastic_object_fragment(parent, *tokenize_bonding_descriptor(bd_symbol))
 
 
 def open_stochastic_object_str(parent: has_node_attr, bd_symbol: str) -> StochasticObject:
-    return open_stochastic_object(parent, *process_bonding_descriptor_symbol(bd_symbol))
+    return open_stochastic_object(parent, *tokenize_bonding_descriptor(bd_symbol))
 
 
 def open_stochastic_object_with_bond_str(parent: has_node_attr, bond_symbol: str,
                                          bd_symbol: str) -> has_node_attr:
-    return open_stochastic_object_with_bond(parent, bond_symbol, *process_bonding_descriptor_symbol(bd_symbol))
+    return open_stochastic_object_with_bond(parent, bond_symbol, *tokenize_bonding_descriptor(bd_symbol))
 
 
 def close_stochastic_object_str(parent: has_node_attr, bd_symbol: str) -> has_node_attr:
-    return close_stochastic_object(parent, *process_bonding_descriptor_symbol(bd_symbol))
+    return close_stochastic_object(parent, *tokenize_bonding_descriptor(bd_symbol))
 
 
 @in_stochastic_object

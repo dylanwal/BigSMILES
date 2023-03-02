@@ -5,33 +5,15 @@ import pytest
 import bigsmiles
 from bigsmiles.errors import BigSMILESError
 
-test_molecules = [
+bigsmiles.Config.show_aromatic_bond = False
 
-    #
+
+test_molecules = [
+    # simple
     "C",
-    "CC",
     "U",
     "Zn",
-    "[C]",
-    "[Fe]",
-    "[Fe+]",
-    "[Fe++]",
-    "[Fe+2]",
-    "[OH-1]",
-    "[OH3+]",
-    "[12C]",
-    "[238U]",
-    "[13CH4]",
-    "[12C@@H2+1]",
-    "[38Br-1]",
-    "[34S6H2+2]",
-    "[CH4]",
-    "[H][CH2][H]",
-    "[H][CH]([H])[H]",
-    "[ClH]",
-    "[ClH1]",
-    "[2H][CH2]C",
-
+    "CC",
     "CCCCCC",  # hexane
     "O=C=O",  # carbon dioxide
     "CC#CC",  # 2-butyne
@@ -39,61 +21,28 @@ test_molecules = [
     "CCN(CC)CC",  # triethylamine
     "CC(=O)O",  # acetic acid
     "C1CCCCC1",  # cyclohexane
-    "c1ccccc1",  # benzene
-    "n1ccccc1",  # pyridine
-    "O=n1ccccc1",  # Pyridine-N-oxide
-    "[O-][n+]1ccccc1",  # Pyridine-N-oxide
-    "Cn1cccc1",  # Methyl-pyrrole
-    "[nH]1cccc1",  # 1H-pyrrole
-    "O=c1[nH]cccc1",  # 2-pyridone
-    "Oc1ncccc1",  # 2-pyridinol
-    "N[C@@H](C)C(=O)O",  # L-alanine
-    "N[C@H](C)C(=O)O",  # D-alanine
-    "N[C@](C)(F)C(=O)O",
-    "N[C@@](F)(C)C(=O)O",
-    "C[C@H]1CCCCO1",
-    "O1CCCC[C@@H]1C",
-    "N[P@](C(O)=O)C",
-    "OS(=O)(=S)O",
-    "CC1=C(C(=NC=C1C=O)C)O",
-    "C1=CC(C(C(=C1)C(=O)O)O)O",
-    "C(C(=O)COP(=O)(O)O)N",
-    "C1(C(C(C(C(C1O)O)OP(=O)(O)O)O)O)O",
-    "C1=CC(=C(C=C1Cl)Cl)Cl",
-    "CCCCCC(=O)C=CC1C(CC(=O)C1CCCCCCC(=O)O)O",
-    "C1=CC(=C(C(=C1)O)O)C(=O)O",
-    "CSCCC(=O)C(=COP(=O)(O)O)O",
-    "C(C(C(COP(=O)(O)O)O)O)C(=O)C(=O)O",
-    "CC(CC1=CC(=C(C=C1)O)O)(C(=O)OC)N",
-    "C1=CC=C(C=C1)S(=O)(=O)NNC2=NC(=NC(=N2)Cl)Cl",
-    "C=CC(CCC)C(C(C)C)CCC",  # 3-propyl-4-isopropyl-1-heptene
-
-
-
-    "[12C]C1=C(C(=NC=C1C=O)C)O",
-    "[C@]C1=C(C(=NC=C1C=O)C)O",
-    "[35Br]CC1=C(C(=NC=C1C=O)C)O",
-    "[35Br@@]CC1=C(C(=NC=C1C=O)C)O",
-    "[12CH2]C1=C(C(=NC=C1C=O)C)O",
-    "[BrH3]",
-    "[Fe+3]CCC",
-    "CC[12C]C1=C(C(=NC=C1C=O)C)O",
-    "CC[C@]C1=C(C(=NC=C1C=O)C)O",
-    "CC[12CH2]C1=C(C(=NC=C1C=O)C)O",
-    "CC[BrH3]",
-    "CC[Fe+3]CCC",
 
     # rings
-    "C=1CCCCC=1",
     "C=1CCCCC1",
-    "C1CCCCC=1",
     "C12C3C4C1C5C4C3C25",
     "O1CCCCC1N2CCCCC2",
     "C12(CCCCC1)CCCCC2",  # spiro[5.5]undecane
 
     # aromatic
-
+    "c1ccccc1",  # benzene
+    "n1ccccc1",  # pyridine
+    "Cn1cccc1",  # Methyl-pyrrole
+    "[nH]1cccc1",  # 1H-pyrrole
+    "O=c1[nH]cccc1",  # 2-pyridone
+    "Oc1ncccc1",  # 2-pyridinol
     "C1=CC=CC(CCC2)=C12",  # indane
+    "c1ccc2CCCc2c1",  # indane
+    "C1=CC=PC=C1",  # Phosphorine
+    "c1ccp(=O)cc1",  # Phosphorine oxide
+    "O=P1=CC=CC=C1",  # Phosphorine oxide
+    "O=p1ccccc1",  # Phosphorine oxide
+    "c1ccccc1-c2ccccc2",
+    "C1(C=C2)=C3C2=CC=C3C=C1",  # Acepentalene
 
 
     # cis/trans
@@ -109,6 +58,23 @@ test_molecules = [
     # "F/C=C/C/C=C\C",
     # "F/C=C/CC=CC",  # partially specified
 
+    # charges
+    "[Fe+]",
+    "[Fe+2]",
+    "[OH-]",
+    "[OH3+]",
+    "[O-][n+]1ccccc1",  # Pyridine-N-oxide
+    "[O-][N+]1=CC=CC=C1",
+
+    # chiral
+    "N[C@@H](C)C(=O)O",  # L-alanine
+    "N[C@H](C)C(=O)O",  # D-alanine
+    "N[C@](C)(F)C(=O)O",
+    "N[C@@](F)(C)C(=O)O",
+    "C[C@H]1CCCCO1",
+    "O1CCCC[C@@H]1C",
+    "N[P@](C(O)=O)C",
+
     # disconnected structures
     "C1.C1",  # ethane
     "[Na+].[Cl-]", # sodium chloride
@@ -120,12 +86,54 @@ test_molecules = [
     # atom indexing
     "[CH3:1][CH2:2][CH2:3][CH2:4][CH2:5][CH3:6]",  # hexane
     "[CH3:1]1[CH2:2][CH2:3]=[CH2:4][CH2:5][CH3:6]1",  # cylcohexene
-    "[CH3:1]CC[CH2:4][C:5]",  # hexane
+    "[CH3:1]CC[CH2:2][C:3]",  # hexane
     "[CH2:1]=[CH:2][CH2:1][CH2:3][CH:4](C)[CH3:3]",
     "[OH:1][C:2](=[O:3])[CH:4]([CH3:5])[OH:6]",  # lactic acid
 
     # metal complex
     "[Rh-](Cl)(Cl)(Cl)(Cl)$[Rh-](Cl)(Cl)(Cl)Cl",
+
+    # extended atom
+    "[C]",
+    "[Fe]",
+    "[12C]",
+    "[238U]",
+    "[13CH4]",
+    "[12C@@H2+]",
+    "[38Br-]",
+    "[34SH2+2]",
+    "[CH4]",
+    "[H][CH2][H]",
+    "[H][CH]([H])[H]",
+    "[ClH]",
+    "[2H][CH2]C",
+
+    # complex / random
+    "OS(=O)(=S)O",
+    "CC1=C(C(=NC=C1C=O)C)O",
+    "C1=CC(C(C(=C1)C(=O)O)O)O",
+    "C(C(=O)COP(=O)(O)O)N",
+    "C1(C(C(C(C(C1O)O)OP(=O)(O)O)O)O)O",
+    "C1=CC(=C(C=C1Cl)Cl)Cl",
+    "CCCCCC(=O)C=CC1C(CC(=O)C1CCCCCCC(=O)O)O",
+    "C1=CC(=C(C(=C1)O)O)C(=O)O",
+    "CSCCC(=O)C(=COP(=O)(O)O)O",
+    "C(C(C(COP(=O)(O)O)O)O)C(=O)C(=O)O",
+    "CC(CC1=CC(=C(C=C1)O)O)(C(=O)OC)N",
+    "C1=CC=C(C=C1)S(=O)(=O)NNC2=NC(=NC(=N2)Cl)Cl",
+    "C=CC(CCC)C(C(C)C)CCC",  # 3-propyl-4-isopropyl-1-heptene
+    "[12C]C1=C(C(=NC=C1C=O)C)O",
+    "[C@]C1=C(C(=NC=C1C=O)C)O",
+    "[35Br]CC1=C(C(=NC=C1C=O)C)O",
+    "[35Br@@]CC1=C(C(=NC=C1C=O)C)O",
+    "[12CH2]C1=C(C(=NC=C1C=O)C)O",
+    "[BrH3]",
+    "[Fe+3]CCC",
+    "CC[12C]C1=C(C(=NC=C1C=O)C)O",
+    "CC[C@]C1=C(C(=NC=C1C=O)C)O",
+    "CC[12CH2]C1=C(C(=NC=C1C=O)C)O",
+    "CC[BrH3]",
+    "CC[Fe+3]CCC",
 
 ]
 
@@ -256,6 +264,11 @@ test_polymers = [
     "[H]{[>][<]CCN([>])[<][<]}[H]",  # branched polyethylenimine
 
     # ladder
+
+
+    # aromatic notation
+    "c1c{[$][$]cc[$][$]}1",  # cyclic polyacetylene
+
 ]
 
 
@@ -266,15 +279,26 @@ def test_whole_system(polymer: str):
 
 
 cases_with_changes = [
+    # hydrogens
+    ["[ClH1]", "[ClH]"],
+
+    # charges
+    ["[OH-1]", "[OH-]"],
+    ["[Fe++]", "[Fe+2]"],
+    ["[12C@@H2+1]", "[12C@@H2+]"],
+    ["[O-1][n+1]1ccccc1", "[O-][n+]1ccccc1"],
 
     # branching
     ["C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C))))))))))))))))))))C",
      "C(CCCCCCCCCCCCCCCCCCCC)C"],
 
     # rings
-    ["c1ccc2CCCc2c1", "C1=CC=CC(CCC2)=C12"],  # indane
+    ["C=1CCCCC=1", "C=1CCCCC1"],
+    ["C1CCCCC=1", "C=1CCCCC1"],
     ["C1=CN=C[NH]C(=O)1", "C1=CN=C[NH]C1=O"],  # ring number position change
     ["c1cnc[nH]c(=O)1", "c1cnc[nH]c1=O"],  # ring number position change
+    ["C(={[>][<]=CC=[>][<]}12)CCCCCC12", "C(={[>][<]=CC=[>][<]}=1)CCCCCC=1"],
+    ["C2(C=C3)=C1C3=CC=C1C=C2",  'C1(C=C2)=C3C2=CC=C3C=C1'],  # Acepentalene
 
     # polymers
     ["{[][>]C([>])([>]),[<]C[>][>]}C", "{[][>]C([>])[>],[<]C[>][>]}C"],  # drop () around bond descriptor
@@ -351,6 +375,7 @@ cases_incomplete_valance = [
     ["CC[35Br]CC1=C(C(=NC=C1C=O)C)O", "CC[35Br]CC1=C(C(=NC=C1C=O)C)O"],  # over-saturated Br
     ["CC[35Br@@]CC1=C(C(=NC=C1C=O)C)O", "CC[35Br@@]CC1=C(C(=NC=C1C=O)C)O"],  # over-saturated Br
     ["C(C)(C)(C)(C)C", "C(C)(C)(C)(C)C"],  # over-saturated C
+    ["O=n1ccccc1", "O=n1ccccc1"],  # Pyridine-N-oxide
 ]
 
 

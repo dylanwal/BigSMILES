@@ -2,7 +2,7 @@
 import logging
 
 from bigsmiles.errors import ValidationError
-from bigsmiles.tokenizer import Token, TokenKind
+from bigsmiles.constructors.tokenizer import Token, TokenKind
 
 
 def run_token_validation(tokens: list[Token]) -> list[Token]:

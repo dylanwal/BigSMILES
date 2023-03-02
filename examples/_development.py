@@ -1,10 +1,10 @@
 
-import bigsmiles.tokenizer
+import bigsmiles.constructors.tokenizer
 
 
 def generate_list_of_tokens():
     text = "C%123"
-    results = bigsmiles.tokenizer.tokenize(text)
+    results = bigsmiles.constructors.tokenizer.tokenize(text)
 
     output = "[" + ", ".join([str(token.kind) for token in results]) + "]"
     print(output)

@@ -10,8 +10,7 @@ This is mainly to catch additional leftover validation.
 
 """
 
-from bigsmiles.bigsmiles import BigSMILES, StochasticObject, Branch, BondDescriptor, StochasticFragment, \
-    Bond, Atom, has_node_attr
+from bigsmiles.data_structures.bigsmiles import BigSMILES, StochasticObject, Branch, BondDescriptor, Bond, has_node_attr
 from bigsmiles.errors import ValidationError
 
 

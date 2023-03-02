@@ -7,14 +7,46 @@ from bigsmiles.errors import BigSMILESError
 
 test_molecules = [
 
-    # daylight tests
+    #
+    "C",
+    "CC",
+    "U",
+    "Zn",
+    "[C]",
+    "[Fe]",
+    "[Fe+]",
+    "[Fe++]",
+    "[Fe+2]",
+    "[OH-1]",
+    "[OH3+]",
+    "[12C]",
+    "[238U]",
+    "[13CH4]",
+    "[12C@@H2+1]",
+    "[38Br-1]",
+    "[34S6H2+2]",
+    "[CH4]",
+    "[H][CH2][H]",
+    "[H][CH]([H])[H]",
+    "[ClH]",
+    "[ClH1]",
+    "[2H][CH2]C",
+
     "CCCCCC",  # hexane
     "O=C=O",  # carbon dioxide
+    "CC#CC",  # 2-butyne
     "C#N",  # hydrogen cyanide
     "CCN(CC)CC",  # triethylamine
     "CC(=O)O",  # acetic acid
     "C1CCCCC1",  # cyclohexane
     "c1ccccc1",  # benzene
+    "n1ccccc1",  # pyridine
+    "O=n1ccccc1",  # Pyridine-N-oxide
+    "[O-][n+]1ccccc1",  # Pyridine-N-oxide
+    "Cn1cccc1",  # Methyl-pyrrole
+    "[nH]1cccc1",  # 1H-pyrrole
+    "O=c1[nH]cccc1",  # 2-pyridone
+    "Oc1ncccc1",  # 2-pyridinol
     "N[C@@H](C)C(=O)O",  # L-alanine
     "N[C@H](C)C(=O)O",  # D-alanine
     "N[C@](C)(F)C(=O)O",
@@ -22,6 +54,7 @@ test_molecules = [
     "C[C@H]1CCCCO1",
     "O1CCCC[C@@H]1C",
     "N[P@](C(O)=O)C",
+    "OS(=O)(=S)O",
     "CC1=C(C(=NC=C1C=O)C)O",
     "C1=CC(C(C(=C1)C(=O)O)O)O",
     "C(C(=O)COP(=O)(O)O)N",
@@ -34,9 +67,8 @@ test_molecules = [
     "CC(CC1=CC(=C(C=C1)O)O)(C(=O)OC)N",
     "C1=CC=C(C=C1)S(=O)(=O)NNC2=NC(=NC(=N2)Cl)Cl",
     "C=CC(CCC)C(C(C)C)CCC",  # 3-propyl-4-isopropyl-1-heptene
-    "O1CCCCC1N2CCCCC2",
 
-    "C12C3C4C1C5C4C3C25",
+
 
     "[12C]C1=C(C(=NC=C1C=O)C)O",
     "[C@]C1=C(C(=NC=C1C=O)C)O",
@@ -51,6 +83,19 @@ test_molecules = [
     "CC[BrH3]",
     "CC[Fe+3]CCC",
 
+    # rings
+    "C=1CCCCC=1",
+    "C=1CCCCC1",
+    "C1CCCCC=1",
+    "C12C3C4C1C5C4C3C25",
+    "O1CCCCC1N2CCCCC2",
+    "C12(CCCCC1)CCCCC2",  # spiro[5.5]undecane
+
+    # aromatic
+
+    "C1=CC=CC(CCC2)=C12",  # indane
+
+
     # cis/trans
     # "F/C=C/F",  # E-difluoroethene
     # "F\C=C\F",  # Z-difluoroethene
@@ -63,6 +108,24 @@ test_molecules = [
     # "F/C=C=C=C\F", # cis
     # "F/C=C/C/C=C\C",
     # "F/C=C/CC=CC",  # partially specified
+
+    # disconnected structures
+    "C1.C1",  # ethane
+    "[Na+].[Cl-]", # sodium chloride
+    "[Na+].[O-]c1ccccc1",  # sodium phenoxide
+    "c1cc([Na+].[O-])ccc1",  # sodium phenoxide
+    "NH4+].[NH4+].[O-]S(=O)(=O)[S-]",  # diammonium thiosulfate
+    "c1c2c3c4cc1.Br2.Cl3.Cl4",  # 1-bromo-2,3-dichlorobenzene
+
+    # atom indexing
+    "[CH3:1][CH2:2][CH2:3][CH2:4][CH2:5][CH3:6]",  # hexane
+    "[CH3:1]1[CH2:2][CH2:3]=[CH2:4][CH2:5][CH3:6]1",  # cylcohexene
+    "[CH3:1]CC[CH2:4][C:5]",  # hexane
+    "[CH2:1]=[CH:2][CH2:1][CH2:3][CH:4](C)[CH3:3]",
+    "[OH:1][C:2](=[O:3])[CH:4]([CH3:5])[OH:6]",  # lactic acid
+
+    # metal complex
+    "[Rh-](Cl)(Cl)(Cl)(Cl)$[Rh-](Cl)(Cl)(Cl)Cl",
 
 ]
 
@@ -203,8 +266,17 @@ def test_whole_system(polymer: str):
 
 
 cases_with_changes = [
+
+    # branching
+    ["C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C))))))))))))))))))))C",
+     "C(CCCCCCCCCCCCCCCCCCCC)C"],
+
+    # rings
+    ["c1ccc2CCCc2c1", "C1=CC=CC(CCC2)=C12"],  # indane
     ["C1=CN=C[NH]C(=O)1", "C1=CN=C[NH]C1=O"],  # ring number position change
     ["c1cnc[nH]c(=O)1", "c1cnc[nH]c1=O"],  # ring number position change
+
+    # polymers
     ["{[][>]C([>])([>]),[<]C[>][>]}C", "{[][>]C([>])[>],[<]C[>][>]}C"],  # drop () around bond descriptor
     ["[H]{[>][<]CC(C1=CC=CC=C1)[<],[>]C2C(C(=O)OC2(=O))[>][<]}[H]",
      "[H]{[>][<]CC(C1=CC=CC=C1)[<],[>]C2C(C(=O)OC2=O)[>][<]}[H]"],  # drop () around =O
@@ -292,6 +364,12 @@ def test_incomplete_valance(caplog, case: list):
 
 
 validation_cases = [
+    ["DJW"],  # not an element
+    ["[C"],
+    ["[C]]"],
+    ["[]"],
+    ["[.]"],
+    ["[rings=]"],
     ["CCCCC1"],  # Ring not closed
     ["CCCC("],  # branch not closed
     ["CCCC)"],  # branch not started

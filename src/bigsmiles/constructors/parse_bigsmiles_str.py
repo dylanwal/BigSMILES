@@ -1,11 +1,11 @@
 import logging
 
 from bigsmiles.errors import BigSMILESError
-from bigsmiles.validation_string import run_string_validation
-from bigsmiles.tokenizer import Token, TokenKind, tokenize
-from bigsmiles.validation_tokens import run_token_validation
-import bigsmiles.constructor_str as constructor
-from bigsmiles.bigsmiles import BigSMILES, Branch, StochasticFragment, has_node_attr
+from bigsmiles.validation.validation_string import run_string_validation
+from bigsmiles.constructors.tokenizer import Token, TokenKind, tokenize
+from bigsmiles.validation.validation_tokens import run_token_validation
+import bigsmiles.constructors.constructor_str as constructor
+from bigsmiles.data_structures.bigsmiles import BigSMILES, Branch, StochasticFragment, has_node_attr
 
 
 def map_atom(parent: has_node_attr, tokens: list[Token], token: Token):

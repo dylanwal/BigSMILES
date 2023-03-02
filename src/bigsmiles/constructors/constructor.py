@@ -11,9 +11,9 @@ There are two approaches:
 import logging
 
 from bigsmiles.errors import ConstructorError
-from bigsmiles.bigsmiles import Atom, Bond, BondDescriptor, Branch, StochasticFragment, StochasticObject, \
+from bigsmiles.data_structures.bigsmiles import Atom, Bond, BondDescriptor, Branch, StochasticFragment, StochasticObject, \
     BigSMILES, BondDescriptorAtom, has_node_attr, has_ring_attr, has_parent_attr, bond_mapping
-import bigsmiles.validation_bigsmiles_obj as validation_bigsmiles_obj
+import bigsmiles.validation.validation_bigsmiles_obj as validation_bigsmiles_obj
 
 
 ## Utility functions for construction ##

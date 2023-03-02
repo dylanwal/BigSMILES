@@ -2,6 +2,7 @@ from __future__ import annotations
 import logging
 
 from bigsmiles.errors import ConstructorError
+import bigsmiles.chemical_data as chemical_data
 from bigsmiles.config import Config
 
 
@@ -27,14 +28,14 @@ class Atom:
         self.stereo = stereo
         self.hydrogens = hydrogens
         self.charge = charge
-        self.possible_valence: tuple[int] = Config.get_atom_possible_valence(element)
+        self.possible_valence: tuple[int] = chemical_data.get_atom_possible_valence(element)
         if valence is None:
             self._default_valence: bool = True
             self.valence = self.possible_valence[0]
         else:
             self._default_valence: bool = False
             self.valence = valence
-        self.organic = True if element in Config.organics else False
+        self.organic = True if element in chemical_data.organics else False
 
         self.parent = parent
 
@@ -571,9 +572,11 @@ class BigSMILES:
         self.rings: list[Bond] = []  # does not include rings in sub-objects
 
         self.__id = 0
+
         # parse input string
         if input_text:
-            from bigsmiles.parse_bigsmiles_str import parse_bigsmiles_str
+            # import here to avoid circular imports
+            from bigsmiles.constructors.parse_bigsmiles_str import parse_bigsmiles_str
             parse_bigsmiles_str(input_text, self)
 
     def __str__(self):

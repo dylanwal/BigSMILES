@@ -1,7 +1,7 @@
 import pytest
 
 from bigsmiles.errors import TokenizeError
-from bigsmiles.tokenizer import TokenKind, tokenize
+from bigsmiles.constructors.tokenizer import TokenKind, tokenize
 
 token_tests = [
     # Atoms
@@ -38,7 +38,7 @@ token_tests = [
     ["C.C", [TokenKind.Atom, TokenKind.Mix, TokenKind.Atom]],
 
     # Reaction
-    ["C>CC>>CCC", [TokenKind.Atom, TokenKind.Rxn, TokenKind.Atom, TokenKind.Atom, TokenKind.Rxn, TokenKind.Atom,
+    ["C>CC>CCC", [TokenKind.Atom, TokenKind.Rxn, TokenKind.Atom, TokenKind.Atom, TokenKind.Rxn, TokenKind.Atom,
                    TokenKind.Atom, TokenKind.Atom]],
 
     # Bonding Descriptor

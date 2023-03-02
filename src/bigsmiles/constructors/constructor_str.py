@@ -1,18 +1,18 @@
 import re
 from functools import wraps
 
-from bigsmiles.config import Config
+import bigsmiles.chemical_data as chemical_data
 from bigsmiles.errors import BigSMILESError
-from bigsmiles.tokenizer import atom_pattern
-from bigsmiles.bigsmiles import StochasticObject, StochasticFragment
-from bigsmiles.constructor import *
+from bigsmiles.constructors.tokenizer import atom_pattern
+from bigsmiles.data_structures.bigsmiles import StochasticObject, StochasticFragment
+from bigsmiles.constructors.constructor import *
 
 
 ATOM_PATTERN = re.compile(atom_pattern)
 
 
 def atom_symbol_to_attributes(symbol: str) -> dict:
-    if symbol in Config.elements_aromatic:
+    if symbol in chemical_data.elements_aromatic:
         return {"element": symbol}
 
     try:

@@ -167,7 +167,7 @@ def add_atom(
 
 def add_bond(
         parent: has_node_attr,
-        bond_symbol: str,
+        bond_symbol: str | None,
         atom1: Atom | BondDescriptorAtom,
         atom2: Atom | BondDescriptorAtom | StochasticObject | None,
         **kwargs
@@ -180,7 +180,7 @@ def add_bond(
     return parent
 
 
-def add_ring(parent: has_node_attr, ring_id: int, bond_symbol: str = "", **kwargs) -> has_node_attr:
+def add_ring(parent: has_node_attr, ring_id: int, bond_symbol: str | None = "", **kwargs) -> has_node_attr:
     # check if ring_id already exists
     ring_parent = get_ring_parent(parent)
     for ring in ring_parent.rings:
@@ -220,7 +220,7 @@ def add_ring(parent: has_node_attr, ring_id: int, bond_symbol: str = "", **kwarg
     return parent
 
 
-def add_ring_from_atoms(parent: has_node_attr, atom1: Atom, atom2: Atom, bond_symbol: str = "", **kwargs) \
+def add_ring_from_atoms(parent: has_node_attr, atom1: Atom, atom2: Atom, bond_symbol: str | None = "", **kwargs) \
         -> has_node_attr:
     ring_parent = get_ring_parent(parent)
     bond = get_common_bond(atom1, atom2)  # Check if ring already between two atoms
@@ -277,7 +277,7 @@ def add_bonding_descriptor(parent, descriptor: str, index_: int, **kwargs) -> Bo
 
 def add_bond_atom_pair(
         parent: has_node_attr,
-        bond_symbol: str,
+        bond_symbol: str | None,
         element: str,
         isotope: int | None = None,
         stereo: str = '',
@@ -303,7 +303,7 @@ def add_bond_atom_pair(
 
 def add_bond_bonding_descriptor_pair(
         parent: StochasticFragment | Branch,
-        bond_symbol: str,
+        bond_symbol: str | None,
         descriptor: str,
         index_: int,
         kwargs_bond_descriptor: dict = None,
@@ -360,7 +360,7 @@ def open_stochastic_object_fragment(parent: has_node_attr, descriptor: str, inde
     return fragment
 
 
-def open_stochastic_object_with_bond(parent, bond_symbol: str, descriptor: str, index_: int, **kwargs) \
+def open_stochastic_object_with_bond(parent, bond_symbol: str | None, descriptor: str, index_: int, **kwargs) \
         -> StochasticFragment:
     stoch_obj = StochasticObject(parent, parent._get_id(), **kwargs)
     stoch_obj.bd_left = _get_bonding_descriptor(stoch_obj, descriptor, index_)
@@ -417,7 +417,7 @@ def close_stochastic_fragment(parent):
 
 ## functions for building BigSMILES in chunks ##
 ###################################################################################################################
-def append_bigsmiles_fragment(parent, bigsmiles_: BigSMILES, bond_symbol: str, **kwargs) -> BigSMILES:
+def append_bigsmiles_fragment(parent, bigsmiles_: BigSMILES, bond_symbol: str | None, **kwargs) -> BigSMILES:
     if not isinstance(bigsmiles_.nodes[0], Atom | StochasticObject):
         raise errors.ConstructorError("First node must be an 'Atom' or 'StochasticObject' to added fragment.")
     if not parent:
@@ -438,7 +438,7 @@ def append_bigsmiles_fragment(parent, bigsmiles_: BigSMILES, bond_symbol: str, *
     return parent
 
 
-def attach_bigsmiles_branch(parent, bond_symbol: str | None, bigsmiles_: BigSMILES, index_: int,
+def attach_bigsmiles_branch(parent, bond_symbol: str | None | None, bigsmiles_: BigSMILES, index_: int,
                             kwargs_bond: dict = None, kwargs_branch: dict = None):
     kwargs_bond = kwargs_bond if kwargs_bond is not None else {}
     kwargs_branch = kwargs_branch if kwargs_branch is not None else {}
@@ -471,7 +471,7 @@ def attach_bigsmiles_branch(parent, bond_symbol: str | None, bigsmiles_: BigSMIL
 def insert_atom_and_bond(
         parent: has_node_attr,
         prior_atom: Atom | BondDescriptorAtom | Branch | StochasticObject | None,
-        bond_symbol: str,
+        bond_symbol: str | None,
         element: str,
         isotope: int | None = None,
         stereo: str = '',
@@ -554,7 +554,7 @@ def insert_atom_into_bond(
 
 def add_bonding_descriptor_bond_via_index(
         parent: StochasticFragment,
-        bond_symbol: str,
+        bond_symbol: str | None,
         descriptor: str,
         index_: int,
         prior_atom: Atom,

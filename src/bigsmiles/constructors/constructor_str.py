@@ -35,14 +35,13 @@ def add_bonding_descriptor_str(parent: has_node_attr, bd_symbol: str) -> has_nod
     return add_bonding_descriptor(parent, *tokenize_bonding_descriptor(bd_symbol))
 
 
-def add_bond_atom_pair_str(parent: has_node_attr, bond_symbol: str | None,
-                           atom_symbol: str) -> has_node_attr:
+def add_bond_atom_pair_str(parent: has_node_attr, bond_symbol: str | None, atom_symbol: str) -> has_node_attr:
     return add_bond_atom_pair(parent, bond_symbol, **tokenize_atom_symbol(atom_symbol))
 
 
 @in_stochastic_object
-def add_bond_bonding_descriptor_pair_str(parent: has_node_attr, bond_symbol: str | None,
-                                         bd_symbol: str) -> has_node_attr:
+def add_bond_bonding_descriptor_pair_str(parent: has_node_attr, bond_symbol: str | None, bd_symbol: str)\
+        -> has_node_attr:
     return add_bond_bonding_descriptor_pair(parent, bond_symbol, *tokenize_bonding_descriptor(bd_symbol))
 
 

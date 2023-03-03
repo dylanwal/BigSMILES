@@ -246,6 +246,8 @@ class Bond:
         return self.to_string(print_repr=True, skip_color=True)
 
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
+        if self.symbol is None:
+            return "."
         if self.symbol == ":" and not Config.show_aromatic_bond:
             return ""
         return Config.add_color(self.symbol, 'Blue', skip_color)

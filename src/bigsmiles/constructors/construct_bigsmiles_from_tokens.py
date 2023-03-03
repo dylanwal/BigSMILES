@@ -37,7 +37,7 @@ def map_bond(parent: has_node_attr, tokens: list[Token], token: Token):
     next_token = get_next_token(tokens, "Bond")
 
     if next_token.kind in atom_tokens:
-        return constructor.add_bond_atom_pair(parent, token.value, next_token.value)
+        return constructor.add_bond_atom_pair_str(parent, token.value, next_token.value)
 
     if next_token.kind is TokenKind.BondDescriptor:
         return constructor.add_bond_bonding_descriptor_pair_str(parent, token.value, next_token.value)
@@ -115,15 +115,15 @@ def map_reaction(parent: has_node_attr, tokens: list[Token], token: Token):
 def map_disconnect(parent: has_node_attr, tokens: list[Token], token: Token):
     next_token = get_next_token(tokens, "Disconnect")
     if next_token.kind in atom_tokens:
-        return constructor.add_bond_atom_pair_str(parent, None, token.value)
+        return constructor.add_bond_atom_pair_str(parent, None, next_token.value)
 
     if next_token.kind is TokenKind.StochasticStart:
         return constructor.open_stochastic_object_with_bond_str(parent, None, next_token.value)
 
     if next_token.kind is TokenKind.BondDescriptor:
-        return constructor.add_bond_bonding_descriptor_pair_str(parent, None, token.value)
+        return constructor.add_bond_bonding_descriptor_pair_str(parent, None, next_token.value)
 
-    raise errors.BigSMILESError(f"Disconnect can't be followed by '{token.kind.name}'. ")
+    raise errors.BigSMILESError(f"Disconnect can't be followed by '{next_token.kind.name}'. ")
 
 
 def NotImplementedFunc(*args, **kwargs):
@@ -169,7 +169,7 @@ def tokens_to_bigsmiles(parent: has_node_attr, tokens: list[Token]):
     # guard statements
     if num_tokens < 1:
         raise errors.BigSMILESError(f"No BigSMILES symbols detected.")
-    if tokens[0] not in valid_first_symbols:
+    if tokens[0].kind not in valid_first_symbols:
         raise errors.BigSMILESError(f"BigSMILES can't start with a '{tokens[0].kind.name}' symbol.")
 
     # main loop

@@ -76,16 +76,16 @@ test_molecules = [
     "N[P@](C(O)=O)C",
 
     # disconnected structures
-    "C1.C1",  # ethane
+    "C1.CCCCC1",  # hexane
     "[Na+].[Cl-]",  # sodium chloride
     "[Na+].[O-]c1ccccc1",  # sodium phenoxide
     "c1cc([Na+].[O-])ccc1",  # sodium phenoxide
-    "NH4+].[NH4+].[O-]S(=O)(=O)[S-]",  # diammonium thiosulfate
+    "[NH4+].[NH4+].[O-]S(=O)(=O)[S-]",  # diammonium thiosulfate
     "c1c2c3c4cc1.Br2.Cl3.Cl4",  # 1-bromo-2,3-dichlorobenzene
 
     # atom indexing
     "[CH3:1][CH2:2][CH2:3][CH2:4][CH2:5][CH3:6]",  # hexane
-    "[CH3:1]1[CH2:2][CH2:3]=[CH2:4][CH2:5][CH3:6]1",  # cylcohexene
+    "[CH2:1]1[CH2:2][CH:3]=[CH:4][CH2:5][CH2:6]1",  # cylcohexene
     "[CH3:1]CC[CH2:2][C:3]",  # hexane
     "[CH2:1]=[CH:2][CH2:1][CH2:3][CH:4](C)[CH3:3]",
     "[OH:1][C:2](=[O:3])[CH:4]([CH3:5])[OH:6]",  # lactic acid
@@ -308,6 +308,9 @@ cases_with_changes = [
     ["C(={[>][<]=CC=[>][<]}1)CCCCCC=1", "C(={[>][<]=CC=[>][<]}=1)CCCCCC=1"],  # add double bond to second ring
     ["C1CCC(={[>][<]=CC=[>][<]}=1)CCC", "C=1CCC(={[>][<]=CC=[>][<]}=1)CCC"],  # add double bond to second ring
     ["C=1CCC(={[>][<]=CC=[>][<]}1)CCC", "C=1CCC(={[>][<]=CC=[>][<]}=1)CCC"],  # add double bond to second ring
+
+    # random
+    ["C1.C1", "CC"],  # disconnect and ring notation cancel out
 ]
 
 

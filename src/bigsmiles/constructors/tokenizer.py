@@ -43,7 +43,7 @@ atom_pattern = r"(?:\[)" + _isotope_pattern + _element_pattern + _stereo_pattern
 
 token_specification = [
     # order in the list is important; regex stops at first match
-    (TokenKind.Bond.name, r'[-|=|#]'),
+    (TokenKind.Bond.name, r'[-|=|#|$]'),
     (TokenKind.Atom.name, "|".join(chemical_data.elements_ordered)),
     (TokenKind.Aromatic.name, "|".join(chemical_data.aromatic)),
     (TokenKind.AtomExtend.name, atom_pattern),  # Atom in brackets

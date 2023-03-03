@@ -180,7 +180,7 @@ def add_bond(
     return parent
 
 
-def add_ring(parent: has_node_attr, ring_id: int, bond_symbol: str | None = "", **kwargs) -> has_node_attr:
+def add_ring(parent: has_node_attr, ring_id: int, bond_symbol: str | None, **kwargs) -> has_node_attr:
     # check if ring_id already exists
     ring_parent = get_ring_parent(parent)
     for ring in ring_parent.rings:
@@ -238,20 +238,25 @@ def add_ring_from_atoms(parent: has_node_attr, atom1: Atom, atom2: Atom, bond_sy
     return parent
 
 
-def _get_bonding_descriptor_atom(parent, descriptor: str, index_: int, **kwargs) -> BondDescriptorAtom:
+def _get_bonding_descriptor_atom(parent, descriptor: str, index_: int, bond_symbol: str | None, **kwargs) \
+        -> BondDescriptorAtom:
     stoch_obj = _get_current_stochastic_object(parent)
-    bd = _get_bonding_descriptor(stoch_obj, descriptor, index_)
+    bd = _get_bonding_descriptor(stoch_obj, descriptor, index_, bond_symbol)
     return BondDescriptorAtom(bd, parent._get_id(), parent=parent, **kwargs)
 
 
-def _get_bonding_descriptor(stoch_obj: StochasticObject, descriptor: str, index_: int) -> BondDescriptor:
+def _get_bonding_descriptor(stoch_obj: StochasticObject, descriptor: str, index_: int, bond_symbol: str | None) \
+        -> BondDescriptor:
     # check if bd in there already
     for bd in stoch_obj.bonding_descriptors:
         if descriptor == bd.descriptor and index_ == bd.index_:
+            if bond_symbol is not None and bd.bond_symbol != bond_symbol:
+                raise errors.ConstructorError("Multiple bond orders to same bonding descriptor.")
+                # logging.warning("Multiple bond orders to same bonding descriptor.")
             return bd
 
     # create new bonding descriptor
-    new_bd = BondDescriptor(stoch_obj, descriptor, index_)
+    new_bd = BondDescriptor(stoch_obj, descriptor, index_, bond_symbol)
     stoch_obj.bonding_descriptors.append(new_bd)
     return new_bd
 
@@ -267,9 +272,10 @@ def _get_current_stochastic_object(parent) -> StochasticObject:
         raise errors.ConstructorError("No stochastic object found.")
 
 
-def add_bonding_descriptor(parent, descriptor: str, index_: int, **kwargs) -> BondDescriptorAtom:
+def add_bonding_descriptor(parent, descriptor: str, index_: int, bond_symbol: str | None = None, **kwargs) \
+        -> BondDescriptorAtom:
     """ [<], [>], [$], [$1], [>2], ... """
-    bd_atom = _get_bonding_descriptor_atom(parent, descriptor, index_, **kwargs)
+    bd_atom = _get_bonding_descriptor_atom(parent, descriptor, index_, bond_symbol, **kwargs)
     parent.nodes.append(bd_atom)
     parent.root.atoms.append(bd_atom)
     return parent
@@ -312,7 +318,7 @@ def add_bond_bonding_descriptor_pair(
     kwargs_bond_descriptor = kwargs_bond_descriptor if kwargs_bond_descriptor is not None else {}
     kwargs_bond = kwargs_bond if kwargs_bond is not None else {}
 
-    bd_atom = _get_bonding_descriptor_atom(parent, descriptor, index_, **kwargs_bond_descriptor)
+    bd_atom = _get_bonding_descriptor_atom(parent, descriptor, index_, bond_symbol, **kwargs_bond_descriptor)
     prior_atom = get_prior(parent, (Atom, BondDescriptorAtom, StochasticObject))
     add_bond(parent, bond_symbol, prior_atom, bd_atom, **kwargs_bond)
     parent.nodes.append(bd_atom)
@@ -345,14 +351,14 @@ def close_branch(parent):
 
 def open_stochastic_object(parent: has_node_attr, descriptor: str, index_: int, **kwargs) -> StochasticObject:
     stoch_obj = StochasticObject(parent, parent._get_id(), **kwargs)
-    stoch_obj.bd_left = _get_bonding_descriptor(stoch_obj, descriptor, index_)
+    stoch_obj.bd_left = _get_bonding_descriptor(stoch_obj, descriptor, index_, None)
     parent.nodes.append(stoch_obj)
 
     return stoch_obj
 
 
-def open_stochastic_object_fragment(parent: has_node_attr, descriptor: str, index_: int,
-                                    **kwargs) -> StochasticFragment:
+def open_stochastic_object_fragment(parent: has_node_attr, descriptor: str, index_: int, **kwargs) \
+        -> StochasticFragment:
     stoch_obj = open_stochastic_object(parent, descriptor, index_, **kwargs)
     fragment = StochasticFragment(stoch_obj, stoch_obj._get_id())
     stoch_obj.nodes.append(fragment)
@@ -363,27 +369,26 @@ def open_stochastic_object_fragment(parent: has_node_attr, descriptor: str, inde
 def open_stochastic_object_with_bond(parent, bond_symbol: str | None, descriptor: str, index_: int, **kwargs) \
         -> StochasticFragment:
     stoch_obj = StochasticObject(parent, parent._get_id(), **kwargs)
-    stoch_obj.bd_left = _get_bonding_descriptor(stoch_obj, descriptor, index_)
+    stoch_obj.bd_left = _get_bonding_descriptor(stoch_obj, descriptor, index_, bond_symbol)
 
     # bond made without 'add_bond' function to ensure its added to 'bond_left'
     prior_atom = get_prior(parent, (Atom, StochasticObject))
     bond = Bond(bond_symbol, prior_atom, stoch_obj, parent._get_id(), parent=parent)
     parent.nodes.append(bond)
     parent.root.bonds.append(bond)
-    # stoch_obj.bond_left = bond
     add_bond_to_connected_objects(bond)
     parent.nodes.append(stoch_obj)
 
     return open_stochastic_fragment(stoch_obj)
 
 
-def close_stochastic_object(parent, descriptor: str, index_: int):
+def close_stochastic_object(parent, descriptor: str, index_: int, bond_symbol: str | None):
     if not isinstance(parent, StochasticObject):
         raise errors.ConstructorError("Error closing StochasticObject. Possible issues: "
                                       "\n\tClosing a StochasticObject with another intermediate node started."
                                       "\n\tNo starting StochasticObject symbol.")
 
-    parent.bd_right = _get_bonding_descriptor(parent, descriptor, index_)
+    parent.bd_right = _get_bonding_descriptor(parent, descriptor, index_, bond_symbol)
     return parent.parent
 
 

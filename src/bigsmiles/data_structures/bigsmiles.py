@@ -7,9 +7,8 @@ from bigsmiles.config import Config
 
 
 class Atom:
-    __slots__ = ["id_", "element", "isotope", "stereo", "hydrogens", "charge", "valence", "_valene_warning_raised"
-                                                                                          "organic", "class_", "_bonds",
-                 "possible_valence", "_default_valence", "__dict__", "parent"]
+    __slots__ = ["id_", "element", "isotope", "stereo", "hydrogens", "charge", "valence", "_valene_warning_raised",
+                 "organic", "class_", "_bonds", "possible_valence", "_default_valence", "__dict__", "parent"]
     _tree_print_repr = True
 
     def __init__(self,
@@ -246,8 +245,6 @@ class Bond:
         return self.to_string(print_repr=True, skip_color=True)
 
     def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
-        if self.symbol is None:
-            return "."
         if self.symbol == ":" and not Config.show_aromatic_bond:
             return ""
         return Config.add_color(self.symbol, 'Blue', skip_color)
@@ -279,14 +276,20 @@ class Bond:
 class BondDescriptor:
     __slots__ = ["parent", "descriptor", "index_", "_instances", "_instances_up_to_date", "_bond_symbol", "__dict__"]
 
-    def __init__(self, parent: StochasticObject, descriptor: str, index_: int, **kwargs):
+    def __init__(self,
+                 parent: StochasticObject,
+                 descriptor: str,
+                 index_: int,
+                 bond_symbol: str | None,
+                 **kwargs
+                 ):
         self.parent = parent
         self.descriptor = descriptor
         self.index_ = index_
 
         self._instances_up_to_date: bool = True
         self._instances: list[BondDescriptorAtom] = []
-        self._bond_symbol: str | None = None
+        self.bond_symbol: str | None = bond_symbol
 
         if kwargs:
             for k, v in kwargs.items():
@@ -332,23 +335,7 @@ class BondDescriptor:
         self._instances_up_to_date = False
 
     @property
-    def bond_symbol(self) -> str:
-        if not self._instances_up_to_date:
-            self._get_bond_symbol()
-            self._instances_up_to_date = True
-
-        return self._bond_symbol
-
-    def _get_bond_symbol(self):
-        for instance_ in self.instances:
-            if instance_.bond_symbol is not None:
-                if self._bond_symbol is not None and self._bond_symbol != instance_.bond_symbol:
-                    logging.warning("Multiple bond orders to same bonding descriptor.")
-                else:
-                    self._bond_symbol = instance_.bond_symbol
-
-    @property
-    def bond_order(self) -> int:
+    def bond_order(self) -> int | None:
         return chemical_data.bond_mapping[self.bond_symbol]
 
     @property
@@ -356,6 +343,10 @@ class BondDescriptor:
         if self.descriptor == "":
             return True
         return False
+
+    @property
+    def aromatic(self) -> bool:
+        return self.bond_symbol == ":"
 
 
 class BondDescriptorAtom:
@@ -401,16 +392,8 @@ class BondDescriptorAtom:
         return self.parent.root
 
     @property
-    def bond_symbol(self) -> str | None:
-        if self.bond is None:
-            return None
-        return self.bond.symbol
-
-    @property
-    def bond_order(self) -> 0:
-        if self.bond is None:
-            return 0
-        return self.bond.bond_order
+    def aromatic(self) -> bool:
+        return self.descriptor.aromatic
 
 
 class Branch:
@@ -540,7 +523,9 @@ class StochasticObject:
         text += self.bd_right.to_string(show_hydrogens, print_repr, skip_color) if self.bd_right is not None else ""
         text += Config.add_color("}", "Red", skip_color)
         if self.bond_right is not None and self.bond_right.ring_id is not None:
-            text += self.bond_right.symbol + str(self.bond_right.ring_id)
+            if self.bond_right.symbol != ":":
+                text += self.bond_right.symbol
+            text += str(self.bond_right.ring_id)
         return text
 
     @property

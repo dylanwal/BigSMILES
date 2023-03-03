@@ -119,7 +119,7 @@ def _do_check_bonding_descriptors(stoch_obj: StochasticObject):
 
         # if [$], [$0], [$1], ... must be 2 or more
         if bd.descriptor == "$":
-            if len(bd.instances) <= 1:
+            if len(bd.instances) < 1:
                 raise ValidationError("[$] type bonding descriptors require more than one instances in a string.")
 
         # if [>] there must be [<] and if [<] there must be [>]

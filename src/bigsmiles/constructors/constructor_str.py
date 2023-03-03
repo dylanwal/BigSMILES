@@ -31,8 +31,8 @@ def add_atom_str(parent: has_node_attr, symbol: str) -> has_node_attr:
 
 
 @in_stochastic_object
-def add_bonding_descriptor_str(parent: has_node_attr, bd_symbol: str) -> has_node_attr:
-    return add_bonding_descriptor(parent, *tokenize_bonding_descriptor(bd_symbol))
+def add_bonding_descriptor_str(parent: has_node_attr, bd_symbol: str, bond_symbol: str | None = None) -> has_node_attr:
+    return add_bonding_descriptor(parent, *tokenize_bonding_descriptor(bd_symbol), bond_symbol=bond_symbol)
 
 
 def add_bond_atom_pair_str(parent: has_node_attr, bond_symbol: str | None, atom_symbol: str) -> has_node_attr:
@@ -53,13 +53,13 @@ def open_stochastic_object_str(parent: has_node_attr, bd_symbol: str) -> Stochas
     return open_stochastic_object(parent, *tokenize_bonding_descriptor(bd_symbol))
 
 
-def open_stochastic_object_with_bond_str(parent: has_node_attr, bond_symbol: str | None,
-                                         bd_symbol: str) -> has_node_attr:
+def open_stochastic_object_with_bond_str(parent: has_node_attr, bond_symbol: str | None, bd_symbol: str) \
+        -> has_node_attr:
     return open_stochastic_object_with_bond(parent, bond_symbol, *tokenize_bonding_descriptor(bd_symbol))
 
 
-def close_stochastic_object_str(parent: has_node_attr, bd_symbol: str) -> has_node_attr:
-    return close_stochastic_object(parent, *tokenize_bonding_descriptor(bd_symbol))
+def close_stochastic_object_str(parent: has_node_attr, bd_symbol: str, bond_symbol: str | None) -> has_node_attr:
+    return close_stochastic_object(parent, *tokenize_bonding_descriptor(bd_symbol), bond_symbol=bond_symbol)
 
 
 @in_stochastic_object

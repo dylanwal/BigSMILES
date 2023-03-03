@@ -173,7 +173,7 @@ test_polymers = [
     "[H]{[<][$]C1(CCCCC1)[$][>]}[H]",  # 6 membered rings
     # multiple bonds
     "C={[$][$]=CC=[$][$]}=C",  # polyacetylene (traditional)
-    "C={[$][$]=C[$][$]}[H]",  # polyacetylene (minimal)
+    "C={[$][$]=C[$2][$2]}[H]",  # polyacetylene (minimal)
     "C#{[$][$]#CC1=CC=C(C=C1)C#[$][$]}#C",
 
     # copolymers
@@ -240,6 +240,8 @@ test_polymers = [
     "[H]{[>][<]CC([>2])[>],[<2]CC[>2],[<2][H][<]}[H]",  # bottlebrush
     "[H]{[>][<]CC([>2])[>],[<]CC(C)[>],[<2]CC[>2],[<2][H][<]}[H]",  # graft copolymerization
     "[H]{[>][<]CC([>2])[>],[<2]CC[>2],[<2][>3],[<3]CC(C)[>3],[<3][H][<]}[H]",  # graft diblock brushes
+    "C={[>][<]=CC([>2])=[>],[<2]CC[>2],[<2][>3],[<3]CC(C)[>3],[<3][H][<]}=C",  # graft diblock brushes (double bond)
+    "C={[>][<]=CC(=[>2])=[>],[<2]=CC=[>2],[<2]=[>3],[<3]=CC(C)=[>3],[<3]=C[<]}=C",  # graft diblock brushes(double bond)
     "[H]{[>][<]CC([>2])[>],[<2]CC(C)[>2],[<2]CC[>2],[<2][H][<]}[H]",  # graft random copolymer brushes
     # nesting
     "[H]{[>][<]CC({[>][<]CC[>][<]}[H])[>][<]}[H]",  # bottlebrush
@@ -424,6 +426,8 @@ validation_cases = [
     # ["{[][>]CC[>];[$]C[]}"],
     # ["{[$2][$]CC[$][$2]}"],  # index don't match
     ["{[$][<]CC[>][$]"],  # end group bonding descriptor don't match stochastic fragment
+    ["C={[$][$]=C[$][$]}[H]"],  # multiple bond types to [$]
+    ["C{[>][<]=CC([>2])=[>],[<2]CC[>2],[<2][>3],[<3]CC(C)[>3],[<3][H][<]}C"],  # multiple bond types to [>]
     ["{[$][$]=CC=[$][$]}"],  # end group must have double bond
     ["C={[$][$]=CC=[$][$]}"],  # end group must have double bond
     ["{[$][$]=CC=[$][$]}=C"],  # end group must have double bond
@@ -431,6 +435,10 @@ validation_cases = [
     ["={[$][$]CC[$][$]}1"],  # ring id can't start
     ["[$]{[$][$]CC[$][$]}1"],  # ring id can't start
     ["C1{[$][$]CC[$][$]}1C"],  # last carbon has nothing to bond to
+    ["C{[>][<]=CC=([>2])=[>],[<2]CC[>2],[<2][>3],[<3]CC(C)[>3],[<3][H][<]}C"],  # first repeat extra =
+    ["C{[>][<]=CC=([>2])[>],[<2]CC[>2],[<2][>3],[<3]CC(C)[>3],[<3][H][<]}C"],  # first repeat wrong = location
+
+    # ["C{[$][$]C.C[$][$]}C"]
 
 ]
 

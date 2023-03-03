@@ -1,6 +1,7 @@
 
 bond_mapping = {
-    None: 0,
+    None: None,
+    ".": 0,
     "": 1,
     "-": 1,
     ":": 1.5,

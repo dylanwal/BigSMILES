@@ -3,7 +3,6 @@
 Code for turing a python class into a terminal printable tree.
 
 """
-import dataclasses
 from typing import Protocol
 
 

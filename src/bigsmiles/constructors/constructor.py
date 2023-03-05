@@ -11,7 +11,7 @@ There are two approaches:
 import logging
 
 import bigsmiles.errors as errors
-import bigsmiles.chemical_data as chemical_data
+import bigsmiles.reference_data.chemical_data as chemical_data
 from bigsmiles.data_structures.bigsmiles import Atom, Bond, BondDescriptor, Branch, StochasticFragment, \
     StochasticObject, BigSMILES, BondDescriptorAtom, has_node_attr, has_ring_attr, has_parent_attr
 import bigsmiles.validation.validation_bigsmiles_obj as validation_bigsmiles_obj
@@ -21,7 +21,7 @@ import bigsmiles.validation.validation_bigsmiles_obj as validation_bigsmiles_obj
 ######################################################################################################################
 def add_bond_to_connected_objects(bond: Bond):
     """
-    Adds Bond to Atoms.bond attribute
+    Adds Bond to Atoms.bonds attribute
     also works on BondDescriptorAtom and stochastic objects
     """
     if bond.ring_id is not None and isinstance(bond.atom2, StochasticObject):
@@ -204,7 +204,7 @@ def add_ring(parent: has_node_attr, ring_id: int, bond_symbol: str | None, **kwa
             if chemical_data.bond_mapping[bond_symbol] > ring.bond_order:
                 ring.symbol = bond_symbol
 
-            # aromatic ring closure
+            # aromatic_elements ring closure
             if ring.atom1.aromatic and ring.atom2.aromatic:
                 ring.symbol = ":"
 
@@ -371,7 +371,7 @@ def open_stochastic_object_with_bond(parent, bond_symbol: str | None, descriptor
     stoch_obj = StochasticObject(parent, parent._get_id(), **kwargs)
     stoch_obj.bd_left = _get_bonding_descriptor(stoch_obj, descriptor, index_, bond_symbol)
 
-    # bond made without 'add_bond' function to ensure its added to 'bond_left'
+    # bond made without 'add_bond' function to ensure it's added to 'bond_left'
     prior_atom = get_prior(parent, (Atom, StochasticObject))
     bond = Bond(bond_symbol, prior_atom, stoch_obj, parent._get_id(), parent=parent)
     parent.nodes.append(bond)
@@ -567,7 +567,7 @@ def add_bonding_descriptor_bond_via_index(
 ):
     kwargs_bond = kwargs_bond if kwargs_bond is not None else {}
 
-    bd_atom = _get_bonding_descriptor_atom(parent, descriptor, index_)
+    bd_atom = _get_bonding_descriptor_atom(parent, descriptor, index_, bond_symbol)
     bond = Bond(bond_symbol, prior_atom, bd_atom, parent._get_id(), parent=parent, **kwargs_bond)
     add_bond_to_connected_objects(bond)
 

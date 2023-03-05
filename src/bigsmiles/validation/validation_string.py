@@ -33,10 +33,10 @@ def stochastic_object_validation(text: str):
     count = text.count('{') - text.count('}')
     if count != 0:
         if count > 0:
-            raise ValidationError(f"Invalid BigSMILES. Missing {count} closing stochastic object symbols" + " '}'. "
-                                                                                                            f"\n Invalid string: {text}")
-        raise ValidationError(f"Invalid BigSMILES. Missing {count} opening stochastic object symbols " + "'{'. "
-                                                                                                         f"\n Invalid string: {text}")
+            raise ValidationError(f"Invalid BigSMILES. Missing {count} closing stochastic object symbols"
+                                  + " '}'. " + f"\n Invalid string: {text}")
+        raise ValidationError(f"Invalid BigSMILES. Missing {count} opening stochastic object symbols "
+                              + "'{'. " + f"\n Invalid string: {text}")
 
 
 def brackets_validation(text: str):

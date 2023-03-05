@@ -2,7 +2,7 @@ from __future__ import annotations
 import logging
 
 import bigsmiles.errors as errors
-import bigsmiles.chemical_data as chemical_data
+import bigsmiles.reference_data.chemical_data as chemical_data
 from bigsmiles.config import Config
 
 
@@ -10,9 +10,9 @@ _conjugated_warning = True
 
 
 class Atom:
-    __slots__ = ["id_", "element", "isotope", "stereo", "hydrogens", "charge", "valence", "_valene_warning_raised",
-                 "organic", "aromatic", "class_", "_bonds", "possible_valence", "_default_valence", "__dict__",
-                 "parent"]
+    __slots__ = ["id_", "element", "isotope", "stereo", "hydrogens", "charge", "class_", "organic",
+                 "aromatic", "valence", "possible_valence", "_default_valence", "_valene_warning_raised", "_bonds",
+                 "parent", "__dict__"]
     _tree_print_repr = True
     _eq_attr = ("id_", "element", "isotope", "stereo", "hydrogens", "charge", "valence", "aromatic")
 
@@ -35,16 +35,16 @@ class Atom:
         self.hydrogens = hydrogens
         self.charge = charge
         self.class_ = class_
+        self.organic = True if self.element in chemical_data.organic_elements else False
         # TODO: calculate aromatic
-        self.aromatic = True if element in chemical_data.aromatic else False
-        self.possible_valence: tuple[int] = chemical_data.get_atom_possible_valence(self.element)
+        self.aromatic = True if element in chemical_data.aromatic_elements else False
+        self.possible_valence: tuple[int] = chemical_data.atom_valences[self.element]
         if valence is None:
             self._default_valence: bool = True
             self.valence = self.possible_valence[0]
         else:
             self._default_valence: bool = False
             self.valence = valence
-        self.organic = True if self.element in chemical_data.organics else False
 
         self.parent = parent
 
@@ -124,7 +124,7 @@ class Atom:
 
     @property
     def full_valence(self) -> bool:
-        """ Returns true if the atoms valence is full"""
+        """ Returns true if the atom valence is full"""
         if self.valence - self.number_of_bonds - self.implicit_hydrogens - abs(self.charge) == 0:
             return True
 
@@ -256,7 +256,7 @@ class Atom:
 
 
 class Bond:
-    __slots__ = ["id_", "symbol", "atom1", "atom2", "ring_id", "__dict__", "parent"]
+    __slots__ = ["id_", "symbol", "atom1", "atom2", "ring_id", "parent", "__dict__", "double_bond_stereo"]
     _tree_print_repr = True
     _eq_attr = ("id_", "symbol", "ring_id")
 
@@ -264,8 +264,8 @@ class Bond:
                  symbol: str,
                  atom1: Atom | BondDescriptorAtom | StochasticObject,
                  atom2: Atom | BondDescriptorAtom | StochasticObject | None = None,
-                 id_: int = None,
-                 ring_id: int = None,
+                 id_: int | None = None,
+                 ring_id: int | None = None,
                  parent: BigSMILES | Branch | StochasticFragment | None = None,
                  **kwargs
                  ):
@@ -352,7 +352,24 @@ class Bond:
         return self.parent.root
 
     @property
+    def double_bond_ez(self) -> str | None:
+        if self.symbol != "=":
+            return None
+
+        # check if atoms have bonds with "/" or "\"
+        left_stereo_bond = len([True for bond in self.atom1.bonds if bond.symbol in chemical_data.stereo_bonds])
+        right_stereo_bond = len([True for bond in self.atom2.bonds if bond.symbol in chemical_data.stereo_bonds])
+
+        if left_stereo_bond == 0 and right_stereo_bond == 0:
+            return None
+        if left_stereo_bond == 1 and right_stereo_bond == 1:
+            return get_double_bond_ez(self)
+
+        raise errors.BigSMILESError("Only one double bond stereochemistry detected.")
+
+    @property
     def aromatic(self) -> bool:
+        """ Limited accuracy """
         if self.symbol == ":":
             return True
         return False
@@ -763,9 +780,11 @@ class StochasticObject:
                   ) -> str:
         text = ""
         text += Config.add_color("{", "Red", skip_color)
-        text += self.bd_left.to_string(show_hydrogens, show_atom_index, print_repr, skip_color) if self.bd_left is not None else ""
+        if self.bd_left is not None:
+            text += self.bd_left.to_string(show_hydrogens, show_atom_index, print_repr, skip_color)
         text += ",".join(node.to_string(show_hydrogens, show_atom_index, print_repr, skip_color) for node in self.nodes)
-        text += self.bd_right.to_string(show_hydrogens, show_atom_index, print_repr, skip_color) if self.bd_right is not None else ""
+        if self.bd_right is not None:
+            text += self.bd_right.to_string(show_hydrogens, show_atom_index, print_repr, skip_color)
         text += Config.add_color("}", "Red", skip_color)
         if self.bond_right is not None and self.bond_right.ring_id is not None:
             if self.bond_right.symbol != ":":
@@ -920,9 +939,6 @@ class BigSMILES:
         """
         from bigsmiles.tree_to_string import tree_to_string  # here to avoid circular imports
         print(tree_to_string(self, show_object_label, print_repr))
-
-
-    # TODO: add molecular formula
 
 
 # types

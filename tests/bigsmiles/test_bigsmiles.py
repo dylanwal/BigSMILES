@@ -7,7 +7,6 @@ from bigsmiles.errors import BigSMILESError
 
 bigsmiles.Config.show_aromatic_bond = False
 
-
 test_molecules = [
     # simple
     "C",
@@ -28,7 +27,7 @@ test_molecules = [
     "O1CCCCC1N2CCCCC2",
     "C12(CCCCC1)CCCCC2",  # spiro[5.5]undecane
 
-    # aromatic
+    # aromatic_elements
     "c1ccccc1",  # benzene
     "n1ccccc1",  # pyridine
     "Cn1cccc1",  # Methyl-pyrrole
@@ -44,19 +43,18 @@ test_molecules = [
     "c1ccccc1-c2ccccc2",
     "C1(C=C2)=C3C2=CC=C3C=C1",  # Acepentalene
 
-
     # cis/trans
-    # "F/C=C/F",  # E-difluoroethene
-    # "F\C=C\F",  # Z-difluoroethene
-    # "C(\F)=C/F",  # trans
-    # "F\C=C/F",  # cis
-    # "F/C=C\F",  # cis
-    # "C(/F)=C/F",  # cis
-    # "F/C(CC)=C/F",
-    # "F/C=C=C=C/F",  # trans
-    # "F/C=C=C=C\F", # cis
-    # "F/C=C/C/C=C\C",
-    # "F/C=C/CC=CC",  # partially specified
+    "F/C=C/F",  # E-difluoroethene
+    r"F\C=C\F",  # Z-difluoroethene
+    r"C(\F)=C/F",  # trans
+    r"F\C=C/F",  # cis
+    r"F/C=C\F",  # cis
+    "C(/F)=C/F",  # cis
+    "F/C(CC)=C/F",
+    "F/C=C=C=C/F",  # trans
+    r"F/C=C=C=C\F",  # cis
+    r"F/C=C/C/C=C\C",
+    "F/C=C/CC=CC",  # partially specified
 
     # charges
     "[Fe+]",
@@ -159,8 +157,8 @@ test_polymers = [
     "[H]{[>][<]CC(C)O[>][<]}[H]",  # polypropylene oxide
     "[H]{[>][<]CC(C#N)[>][<]}[H]",  # polyacrylonitrile
     "[H]{[>][<]CC=CC[>][<]}[H]",  # polybutadiene
-    # r"[H]{[<][>]CC\=\CC[<][>]}[H]",  # polybutadiene (trans)
-    # r"[H]{[<][>]CC\=/CC[<][>]}[H]",  # polybutadiene (cis)
+    r"[H]{[<][>]C\C=C\C[<][>]}[H]",  # polybutadiene (trans)
+    r"[H]{[<][>]C\C=C/C[<][>]}[H]",  # polybutadiene (cis)
     # with branches
     "[H]{[<][$]CC(C)(CC)[$][>]}[H]",
     "[H]{[<][$]CC(CCC)[$][>]}[H]",
@@ -208,9 +206,9 @@ test_polymers = [
     "CCC(C){[$][$]CC(C1CCCCC1)[$][$]}{[$][$]CCCC[$],[$]CC(CC)[$][$]}[H]",
     '[H]{[>][<]OCC[>][<]}O{[>][<]C(=O)C(C)O[>][<]}[H]',  # PEG-Oxygen-PLA
     'O{[>][<]CCO[>][<]}{[>][<]C(=O)C(C)O[>][<]}[H]',  # Oxygen - PEG-block-PLA
-    # "{[][<]CCO[>][<]}{[$][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][]}",
-    # "{[][$]C\C=C/C[$],[$]C\C=C\C[$],[$]CC(C=C)[$][$]}{[>][<][Si](C)(C)O[>][]}",
-    # "{[][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][$]}{[$][$]CC(c1ccccc1)[$][]}",
+    r"{[][<]CCO[>][<]}{[$][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][]}",
+    r"{[][$]C\C=C/C[$],[$]C\C=C\C[$],[$]CC(C=C)[$][$]}{[>][<][Si](C)(C)O[>][]}",
+    r"{[][$]C\C=C(C)/C[$],[$]C\C=C(C)\C[$],[$]CC(C(C)=C)[$],[$]CC(C)(C=C)[$][$]}{[$][$]CC(c1ccccc1)[$][]}",
     "{[][$]CCC(C)C[$],[$]CC(C(C)C)[$],[$]CC(C)(CC)[$][$]}{[$][$]CCCC[$],[$]CC(CC)[$][]}",
     "COCCOCCO{[>][<]CCO[>][<]}{[>][<]C(CC)CO[>][<]}[H]",
     "{[][<]CCO[>][<]}{[>][<]C(CC)CO[>][]}",
@@ -260,7 +258,7 @@ test_polymers = [
     # multiple bonds
     "C(={[>][<]=CC=[>][<]}=1)CCCCCC=1",
     "C=1CCC(={[>][<]=CC=[>][<]}=1)CCC",
-    # aromatic notation
+    # aromatic_elements notation
     "c1c{[$][$]cc[$][$]}1",  # cyclic polyacetylene
 
     # networks
@@ -268,7 +266,6 @@ test_polymers = [
     "[H]{[>][<]CCN([>])[<][<]}[H]",  # branched polyethylenimine
 
     # ladder
-
 
 ]
 
@@ -299,7 +296,7 @@ cases_with_changes = [
     ["C1=CN=C[NH]C(=O)1", "C1=CN=C[NH]C1=O"],  # ring number position change
     ["c1cnc[nH]c(=O)1", "c1cnc[nH]c1=O"],  # ring number position change
     ["C(={[>][<]=CC=[>][<]}12)CCCCCC12", "C(={[>][<]=CC=[>][<]}=1)CCCCCC=1"],
-    ["C2(C=C3)=C1C3=CC=C1C=C2",  'C1(C=C2)=C3C2=CC=C3C=C1'],  # Acepentalene
+    ["C2(C=C3)=C1C3=CC=C1C=C2", 'C1(C=C2)=C3C2=CC=C3C=C1'],  # Acepentalene
 
     # polymers
     ["{[][>]C([>])([>]),[<]C[>][>]}C", "{[][>]C([>])[>],[<]C[>][>]}C"],  # drop () around bond descriptor
@@ -448,7 +445,6 @@ def test_validation(polymer: list):
     with pytest.raises(BigSMILESError) as _:
         bigsmiles.BigSMILES(polymer[0])
 
-
 # case_for_conjugated = [
 #     ["c1ccccc1", {0: True, 1: True, 2: True, 3: True, 4: True, 5: True}],  # benzene
 #     ["c1cnccc1", {0: True, 1: True, 2: True, 3: True, 4: True, 5: True}],  # pyridine
@@ -478,4 +474,5 @@ def test_validation(polymer: list):
 
 
 #    "OCCn2c(=N)n(CCOc1ccc(Cl)cc1Cl)c3ccccc23", Too many bonds to n, c, n
-    # "OCCN2C(=N)N(CCOC1=CC=C(Cl)C=C1Cl)C3=CC=CC=C23",
+# "s1ccsc2=c1c(=O)c1c(c2=O)cccc1"  # ambigous aromatics O=C(C1=C(C=CC=C1)C2=O)C3=C2SC=CS3
+# "OCCN2C(=N)N(CCOC1=CC=C(Cl)C=C1Cl)C3=CC=CC=C23",

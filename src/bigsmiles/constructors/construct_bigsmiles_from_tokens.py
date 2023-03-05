@@ -27,6 +27,7 @@ map_next_token_to_bond = {
     TokenKind.BondDescriptor: "",
 }
 
+
 ## Functions for mapping tokens to BigSMILES ##
 #######################################################################################################################
 def map_atom(parent: has_node_attr, tokens: list[Token], token: Token):
@@ -135,7 +136,6 @@ def map_stochastic_object_start(parent: has_node_attr, tokens: list[Token], toke
     return constructor.open_stochastic_object_with_bond_str(parent, bond, next_token.value)
 
 
-
 def map_stochastic_object_end(parent: has_node_attr, tokens: list[Token], token: Token) -> TokenKind:
     parent = constructor.close_stochastic_fragment_str(parent)
 
@@ -176,6 +176,10 @@ def map_disconnect(parent: has_node_attr, tokens: list[Token], token: Token):
     raise errors.BigSMILESError(f"Disconnect can't be followed by '{next_token.kind.name}'. ")
 
 
+# def map_bondez():
+#     # the pattern must be Atom() / Atom () = Atom () / Atom
+
+
 def NotImplementedFunc(*args, **kwargs):
     raise NotImplementedError()
 
@@ -195,7 +199,7 @@ map_token_functions = {
     TokenKind.BranchEnd: map_branch_end,
     TokenKind.Ring: map_ring,
     TokenKind.Ring2: map_ring,
-    TokenKind.BondEZ: SkipSymbol,
+    TokenKind.BondEZ: map_bond,
     TokenKind.Disconnected: map_disconnect,
     TokenKind.Rxn: map_reaction,
     TokenKind.BondDescriptor: map_bond_descriptor,

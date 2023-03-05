@@ -35,7 +35,7 @@ cases_for_atom_pattern = [
     ["[CH3:1]", {"element": "C", "isotope": None, "stereo": None, "hydrogens": 3, "charge": 0, "class_": 1}],
     ["[Zn:53]", {"element": "Zn", "isotope": None, "stereo": None, "hydrogens": 0, "charge": 0, "class_": 53}],
 
-    # aromatic
+    # aromatic_elements
     ["[13cH:1]", {"element": "c", "isotope": 13, "stereo": None, "hydrogens": 1, "charge": 0, "class_": 1}],
 
 ]
@@ -168,7 +168,7 @@ cases_for_full_tokenizer = [
       Token(TokenKind.Atom, "C"), Token(TokenKind.AtomExtend, "[CH2:2]"),
       Token(TokenKind.AtomExtend, "[CH2:3]"), Token(TokenKind.AtomExtend, "[CH3:4]")]],
 
-    # aromatic
+    # aromatic_elements
     ["c", [Token(TokenKind.Aromatic, "c")]],
     ["c1ccccc1", [Token(TokenKind.Aromatic, "c"), Token(TokenKind.Ring, "1"), Token(TokenKind.Aromatic, "c"),
                   Token(TokenKind.Aromatic, "c"), Token(TokenKind.Aromatic, "c"), Token(TokenKind.Aromatic, "c"),

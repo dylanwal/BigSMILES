@@ -8,7 +8,7 @@ import enum
 import re
 
 from bigsmiles.errors import TokenizeError
-import bigsmiles.chemical_data as chemical_data
+import bigsmiles.reference_data.chemical_data as chemical_data
 
 
 class TokenKind(enum.Enum):
@@ -32,7 +32,7 @@ class TokenKind(enum.Enum):
 
 
 _isotope_pattern = r'(?P<isotope>[\d]{1,3})?'
-_element_pattern = r'(?P<element>' + "|".join(chemical_data.aromatic) + "|"\
+_element_pattern = r'(?P<element>' + "|".join(chemical_data.aromatic_elements) + "|" \
                    + "|".join(chemical_data.elements_ordered) + ')'
 _stereo_pattern = r'(?P<stereo>@{1,2})?'
 _hydrogen_pattern = r'(?P<hydrogens>H[\d]?)?'
@@ -45,7 +45,7 @@ token_specification = [
     # order in the list is important; regex stops at first match
     (TokenKind.Bond.name, r'[-|=|#|$]'),
     (TokenKind.Atom.name, "|".join(chemical_data.elements_ordered)),
-    (TokenKind.Aromatic.name, "|".join(chemical_data.aromatic)),
+    (TokenKind.Aromatic.name, "|".join(chemical_data.aromatic_elements)),
     (TokenKind.AtomExtend.name, atom_pattern),  # Atom in brackets
     (TokenKind.BranchStart.name, r'\('),
     (TokenKind.BranchEnd.name, r'\)'),

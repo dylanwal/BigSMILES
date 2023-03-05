@@ -23,7 +23,7 @@ class Config:
     # True: [$1]; False: [$]
     show_bond_descriptor_one_index = False
 
-    # True: will add ':' symbol for aromatic bonds, False: hides the ':' in string outputs
+    # True: will add ':' symbol for aromatic_elements bonds, False: hides the ':' in string outputs
     show_aromatic_bond = True
 
     # for small molecules only. True: 'C=1CCCCC=1'  False: 'C=1CCCCC1'

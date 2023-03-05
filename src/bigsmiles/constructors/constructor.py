@@ -57,7 +57,7 @@ def get_common_bond(atom1: Atom, atom2: Atom | StochasticObject) -> Bond | None:
     """ Checks if the two atoms have a bond in common. """
     if isinstance(atom2, StochasticObject):
         if atom2.bond_right is not None and atom2.bond_right in atom1.bonds:
-            raise errors.ConstructorError("An atom can have two bonds to a stochastic object.")
+            raise errors.ConstructorError("An atom can't have two bonds to the same stochastic object.")
     else:
         for bond in atom1.bonds:
             if bond in atom2.bonds:

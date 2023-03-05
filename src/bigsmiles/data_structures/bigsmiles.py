@@ -6,10 +6,15 @@ import bigsmiles.chemical_data as chemical_data
 from bigsmiles.config import Config
 
 
+_conjugated_warning = True
+
+
 class Atom:
     __slots__ = ["id_", "element", "isotope", "stereo", "hydrogens", "charge", "valence", "_valene_warning_raised",
-                 "organic", "class_", "_bonds", "possible_valence", "_default_valence", "__dict__", "parent"]
+                 "organic", "aromatic", "class_", "_bonds", "possible_valence", "_default_valence", "__dict__",
+                 "parent"]
     _tree_print_repr = True
+    _eq_attr = ("id_", "element", "isotope", "stereo", "hydrogens", "charge", "valence", "aromatic")
 
     def __init__(self,
                  id_: int,
@@ -30,6 +35,7 @@ class Atom:
         self.hydrogens = hydrogens
         self.charge = charge
         self.class_ = class_
+        # TODO: calculate aromatic
         self.aromatic = True if element in chemical_data.aromatic else False
         self.possible_valence: tuple[int] = chemical_data.get_atom_possible_valence(self.element)
         if valence is None:
@@ -55,6 +61,22 @@ class Atom:
     def __repr__(self):
         return str(self) + "{" + str(self.id_) + "}"
 
+    def __eq__(self, other: Atom):
+        if not isinstance(other, Atom):
+            return False
+
+        # check attributes
+        for attr in self._eq_attr:
+            if getattr(self, attr) != getattr(other, attr):
+                return False
+
+        # check atoms
+        for bond, other_bond in zip(self.bonds, other.bonds):
+            if bond.id_ != other_bond.id_:
+                return False
+
+        return True
+
     @property
     def bonds(self) -> list[Bond]:
         return self._bonds
@@ -66,6 +88,13 @@ class Atom:
         if self.number_of_bonds > self.bond_capacity:
             if not self._increase_valence(self.number_of_bonds - self.bond_capacity):
                 logging.error(f"Too many bonds trying to be made. {str(self)}")
+
+    def delete_bond(self, delete_bond: Bond):
+        try:
+            self.bonds.remove(delete_bond)
+        except ValueError:
+            raise ValueError("Bond not connect to atom so it can't be deleted."
+                             f"\n Atom:{self.details}\nBond attempting to remove: {delete_bond.details}")
 
     @property
     def implicit_hydrogens(self) -> float:
@@ -96,7 +125,7 @@ class Atom:
     @property
     def full_valence(self) -> bool:
         """ Returns true if the atoms valence is full"""
-        if self.valence - self.number_of_bonds - self.implicit_hydrogens + self.charge == 0:
+        if self.valence - self.number_of_bonds - self.implicit_hydrogens - abs(self.charge) == 0:
             return True
 
         return False
@@ -110,15 +139,27 @@ class Atom:
 
         return ring_index
 
-    def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False) -> str:
-        text = self._to_string(show_hydrogens)
+    @property
+    def details(self) -> str:
+        text = str(self) + "{"
+        for attr in self._eq_attr:
+            text += f"{attr}: {getattr(self, attr)}"
+        return text + "}"
+
+    def to_string(self,
+                  show_hydrogens: bool = False,
+                  show_atom_index: bool = True,
+                  print_repr: bool = False,
+                  skip_color: bool = False
+                  ) -> str:
+        text = self._to_string(show_hydrogens, show_atom_index)
         if not self.full_valence and not self._valene_warning_raised:
             self._valene_warning_raised = True
             logging.warning(f"Incomplete valence detected on atom: {text}")
 
         return text
 
-    def _to_string(self, show_hydrogens: bool = False) -> str:
+    def _to_string(self, show_hydrogens: bool = False, show_atom_index: bool = True) -> str:
         text = ""
         bracket_flag = False
 
@@ -161,7 +202,7 @@ class Atom:
             text += f"-{self.charge if self.charge > 1 else ''}"
             bracket_flag = True
 
-        if self.class_ is not None:
+        if self.class_ is not None and show_atom_index:
             text += ":" + str(self.class_)
 
         if bracket_flag:
@@ -217,6 +258,7 @@ class Atom:
 class Bond:
     __slots__ = ["id_", "symbol", "atom1", "atom2", "ring_id", "__dict__", "parent"]
     _tree_print_repr = True
+    _eq_attr = ("id_", "symbol", "ring_id")
 
     def __init__(self,
                  symbol: str,
@@ -244,7 +286,12 @@ class Bond:
     def __repr__(self):
         return self.to_string(print_repr=True, skip_color=True)
 
-    def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
+    def to_string(self,
+                  show_hydrogens: bool = False,
+                  show_atom_index: bool = True,
+                  print_repr: bool = False,
+                  skip_color: bool = False
+                  ) -> str:
         if self.symbol == ":" and not Config.show_aromatic_bond:
             return ""
         return Config.add_color(self.symbol, 'Blue', skip_color)
@@ -254,6 +301,36 @@ class Bond:
 
     def __reversed__(self):
         return iter((self.atom2, self.atom1))
+
+    def __eq__(self, other: Bond):
+        if not isinstance(other, Bond):
+            return False
+
+        # check attributes
+        for attr in self._eq_attr:
+            if getattr(self, attr) != getattr(other, attr):
+                return False
+
+        # check atoms
+        if self.atom1.id_ != other.atom1.id_ or self.atom2.id_ != other.atom2.id_:
+            return False
+
+        return True
+
+    def delete(self):
+        self.atom1.delete_bond(self)
+        self.atom2.delete_bond(self)
+        self.parent.nodes.remove(self)
+        if self.parent is not self.root:
+            self.root.bonds.remove(self)
+        del self
+
+    @property
+    def details(self) -> str:
+        text = str(self) + "{"
+        for attr in self._eq_attr:
+            text += f"{attr}: {getattr(self, attr)},"
+        return text[:-1] + "}"
 
     @property
     def bond_order(self) -> int:
@@ -272,9 +349,47 @@ class Bond:
     def root(self) -> BigSMILES:
         return self.parent.root
 
+    @property
+    def aromatic(self) -> bool:
+        if self.symbol == ":":
+            return True
+        return False
+
+    # @property
+    # def conjugated(self) -> bool:
+    #     # TODO: small molecules and bridge across stochastic object and stochastic fragments
+    #     # only for
+    #
+    #     global _conjugated_warning  # so it is only raised once
+    #     if _conjugated_warning and self.root.contains_stochastic_object:
+    #
+    #         logging.warning("May be wrong for bonds bridging stochastic objects and stochastic fragments.")
+    #         _conjugated_warning = False
+    #
+    #     if self.bond_order <= 1:
+    #         return False
+    #
+    #     if self.aromatic:
+    #         return True
+    #
+    #     # a depth of two graph traversal looking for a double or triple bond
+    #     for atom in self:
+    #         for bond in atom.bonds:
+    #             if bond.id_ == self.id_:
+    #                 continue  # skip self
+    #             for atom_ in bond:
+    #                 if atom_.id_ == atom.id_:
+    #                     continue  # skip if past atom
+    #                 for bond_ in atom_.bonds:
+    #                     if bond_.bond_order > 1:
+    #                         return True
+    #
+    #     return False
+
 
 class BondDescriptor:
-    __slots__ = ["parent", "descriptor", "index_", "_instances", "_instances_up_to_date", "_bond_symbol", "__dict__"]
+    __slots__ = ["parent", "descriptor", "index_", "_instances", "_instances_up_to_date", "bond_symbol", "__dict__"]
+    _eq_attr = ("descriptor", "index_", "bond_symbol")
 
     def __init__(self,
                  parent: StochasticObject,
@@ -301,12 +416,34 @@ class BondDescriptor:
     def __repr__(self):
         return self.to_string(print_repr=True, skip_color=True)
 
-    def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
+    def __eq__(self, other: BondDescriptor):
+        if not isinstance(other, BondDescriptor):
+            return False
+
+        for attr in self._eq_attr:
+            if getattr(self, attr) != getattr(other, attr):
+                return False
+
+        return True
+
+    def to_string(self,
+                  show_hydrogens: bool = False,
+                  show_atom_index: bool = True,
+                  print_repr: bool = False,
+                  skip_color: bool = False
+                  ) -> str:
         if self.index_ == 1 and not Config.show_bond_descriptor_one_index:
             index = ""
         else:
             index = self.index_
         return "[" + self.descriptor + str(index) + "]"
+
+    @property
+    def details(self) -> str:
+        text = str(self) + "{"
+        for attr in self._eq_attr:
+            text += f"{attr}: {getattr(self, attr)},"
+        return text[:-1] + "}"
 
     @property
     def symbol(self) -> str:
@@ -374,8 +511,38 @@ class BondDescriptorAtom:
     def __repr__(self):
         return self.to_string(print_repr=True, skip_color=True)
 
-    def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
+    def __eq__(self, other: BondDescriptorAtom):
+        if not isinstance(other, BondDescriptorAtom):
+            return False
+
+        if self.descriptor != other.descriptor:
+            return False
+
+        if self.id_ != other.id_:
+            return False
+
+        if self.bond is None:
+            if other.bond is not None:
+                return False
+        else:
+            if other.bond is None or self.id_ != other.id_:
+                return False
+
+        return True
+
+    def to_string(self,
+                  show_hydrogens: bool = False,
+                  show_atom_index: bool = True,
+                  print_repr: bool = False,
+                  skip_color: bool = False
+                  ) -> str:
         return Config.add_color(self.descriptor.to_string(show_hydrogens, print_repr), 'Green', skip_color)
+
+    @property
+    def details(self) -> str:
+        text = str(self) + "{"
+        text += f"id_: {self.id_}"
+        return text + "}"
 
     @property
     def bond(self) -> Bond:
@@ -415,9 +582,31 @@ class Branch:
     def __repr__(self):
         return self.to_string(print_repr=True, skip_color=True)
 
-    def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
-        text = "".join(node.to_string(show_hydrogens, print_repr) for node in self.nodes)
+    def __eq__(self, other: Branch):
+        if not isinstance(other, Branch):
+            return False
+
+        for node, other_node in zip(self.nodes, other.nodes):
+            if node != other_node:
+                return False
+
+        return True
+
+    def to_string(self,
+                  show_hydrogens: bool = False,
+                  show_atom_index: bool = True,
+                  print_repr: bool = False,
+                  skip_color: bool = False
+                  ) -> str:
+        text = "".join(node.to_string(show_hydrogens, show_atom_index, print_repr, skip_color) for node in self.nodes)
         return "(" + text + ")"
+
+    @property
+    def details(self) -> str:
+        text = str(self) + "{"
+        text += f"id_: {self.id_},"
+        text += f"num_nodes: {len(self.nodes)}"
+        return text + "}"
 
     @property
     def in_stochastic_object(self) -> bool:
@@ -448,8 +637,34 @@ class StochasticFragment:
     def __repr__(self):
         return self.to_string(print_repr=True, skip_color=True)
 
-    def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
-        return "".join(node.to_string(show_hydrogens, print_repr, skip_color) for node in self.nodes)
+    def __eq__(self, other: StochasticFragment):
+        if not isinstance(other, StochasticFragment):
+            return False
+
+        for node, other_node in zip(self.nodes, other.nodes):
+            if node != other_node:
+                return False
+
+        for ring, other_ring in zip(self.rings, other.rings):
+            if ring != other_ring:
+                return False
+
+        return True
+
+    def to_string(self,
+                  show_hydrogens: bool = False,
+                  show_atom_index: bool = True,
+                  print_repr: bool = False,
+                  skip_color: bool = False
+                  ) -> str:
+        return "".join(node.to_string(show_hydrogens, show_atom_index, print_repr, skip_color) for node in self.nodes)
+
+    @property
+    def details(self) -> str:
+        text = str(self) + "{"
+        text += f"id_: {self.id_},"
+        text += f"num_nodes: {len(self.nodes)}"
+        return text + "}"
 
     @property
     def in_stochastic_object(self) -> bool:
@@ -488,6 +703,29 @@ class StochasticObject:
     def __repr__(self):
         return self.to_string(print_repr=True, skip_color=True)
 
+    def __eq__(self, other: StochasticObject):
+        if not isinstance(other, StochasticObject):
+            return False
+
+        for node, other_node in zip(self.nodes, other.nodes):
+            if node != other_node:
+                return False
+
+        if self.bd_left != other.bd_left:
+            return False
+
+        if self.bd_right != other.bd_right:
+            return False
+
+        return True
+
+    @property
+    def details(self) -> str:
+        text = str(self) + "{"
+        text += f"id_: {self.id_},"
+        text += f"num_nodes: {len(self.nodes)}"
+        return text + "}"
+
     @property
     def bond_left(self) -> Bond | None:
         return self._bond_left
@@ -515,12 +753,17 @@ class StochasticObject:
             return True
         return False
 
-    def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False):
+    def to_string(self,
+                  show_hydrogens: bool = False,
+                  show_atom_index: bool = True,
+                  print_repr: bool = False,
+                  skip_color: bool = False
+                  ) -> str:
         text = ""
         text += Config.add_color("{", "Red", skip_color)
-        text += self.bd_left.to_string(show_hydrogens, print_repr, skip_color) if self.bd_left is not None else ""
-        text += ",".join(node.to_string(show_hydrogens, print_repr, skip_color) for node in self.nodes)
-        text += self.bd_right.to_string(show_hydrogens, print_repr, skip_color) if self.bd_right is not None else ""
+        text += self.bd_left.to_string(show_hydrogens, show_atom_index, print_repr, skip_color) if self.bd_left is not None else ""
+        text += ",".join(node.to_string(show_hydrogens, show_atom_index, print_repr, skip_color) for node in self.nodes)
+        text += self.bd_right.to_string(show_hydrogens, show_atom_index, print_repr, skip_color) if self.bd_right is not None else ""
         text += Config.add_color("}", "Red", skip_color)
         if self.bond_right is not None and self.bond_right.ring_id is not None:
             if self.bond_right.symbol != ":":
@@ -607,8 +850,35 @@ class BigSMILES:
         else:
             return False
 
-    def to_string(self, show_hydrogens: bool = False, print_repr: bool = False, skip_color: bool = False) -> str:
-        return "".join(node.to_string(show_hydrogens, print_repr, skip_color) for node in self.nodes)
+    def __eq__(self, other: BigSMILES):
+        if not isinstance(other, BigSMILES):
+            return False
+
+        for node, other_node in zip(self.nodes, other.nodes):
+            if node != other_node:
+                return False
+
+        for ring, other_ring in zip(self.rings, other.rings):
+            if ring != other_ring:
+                return False
+
+        return True
+
+    def to_string(self,
+                  show_hydrogens: bool = False,
+                  show_atom_index: bool = True,
+                  print_repr: bool = False,
+                  skip_color: bool = False
+                  ) -> str:
+        return "".join(node.to_string(show_hydrogens, show_atom_index, print_repr, skip_color) for node in self.nodes)
+
+    @property
+    def details(self) -> str:
+        text = str(self) + "{"
+        text += f"num_nodes: {len(self.nodes)},"
+        text += f"num_atoms: {len(self.atoms)},"
+        text += f"num_bonds: {len(self.bonds)},"
+        return text + "}"
 
     @property
     def in_stochastic_object(self) -> bool:
@@ -617,6 +887,13 @@ class BigSMILES:
     @property
     def contains_stochastic_object(self) -> bool:
         return contains_stochastic_object(self.nodes)
+
+    @property
+    def has_disconnect(self) -> bool:
+        for bond in self.bonds:
+            if bond.symbol == ":":
+                return True
+        return False
 
     @property
     def root(self) -> BigSMILES:
@@ -641,6 +918,9 @@ class BigSMILES:
         """
         from bigsmiles.tree_to_string import tree_to_string  # here to avoid circular imports
         print(tree_to_string(self, show_object_label, print_repr))
+
+
+    # TODO: add molecular formula
 
 
 # types

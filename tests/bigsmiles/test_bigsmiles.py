@@ -447,3 +447,35 @@ validation_cases = [
 def test_validation(polymer: list):
     with pytest.raises(BigSMILESError) as _:
         bigsmiles.BigSMILES(polymer[0])
+
+
+# case_for_conjugated = [
+#     ["c1ccccc1", {0: True, 1: True, 2: True, 3: True, 4: True, 5: True}],  # benzene
+#     ["c1cnccc1", {0: True, 1: True, 2: True, 3: True, 4: True, 5: True}],  # pyridine
+#     ["c1cocc1", {0: True, 1: True, 2: True, 3: True, 4: True, 5: True}],  # furan
+#     ["CCc1ccccc1", {0: False, 1: False, 2: True, 3: True, 4: True, 5: True, 6: True, 7: True}],  # ethyl benzene
+#     ["C=Cc1ccccc1", {0: True, 1: True, 2: True, 3: True, 4: True, 5: True, 6: True, 7: True}],  # styrene
+#     ["C=CC=C", {0: True, 1: True, 2: True}],  # butadiene
+#     ["C=CC(C)=C", {0: True, 1: True, 2: False, 3: True}],  # isoprene
+#     ["C=COC=C", {0: True, 1: True, 2: True, 3: True}],
+#     ["CC=COC=C", {0: False, 1: True, 2: True, 3: True, 4: True}],
+#     ["C=C[C+]C=C", {0: True, 1: True, 2: True, 3: True}],
+#     ["C=C[C-]C=C", {0: True, 1: True, 2: True, 3: True}],
+#     ["c1ccc(cc1)/C=C/C=O",  {0: True, 1: True, 2: True, 3: True, 4: True, 5: True, 6: True, 7: True}]
+# c1ccc2cc3ccccc3cc2c1  # anthacene
+#
+#     # negative
+#     ["C=CCC=C", {0: False, 1: False, 2: False, 3: False}],
+# ]
+#
+#
+# @pytest.mark.parametrize("case", case_for_conjugated)
+# def test_incomplete_conjugated(case: list):
+#     input_, answer = case
+#     result = bigsmiles.BigSMILES(input_)
+#     for k, v in answer.items():
+#         assert result.bonds[k].conjugated == v
+
+
+#    "OCCn2c(=N)n(CCOc1ccc(Cl)cc1Cl)c3ccccc23", Too many bonds to n, c, n
+    # "OCCN2C(=N)N(CCOC1=CC=C(Cl)C=C1Cl)C3=CC=CC=C23",

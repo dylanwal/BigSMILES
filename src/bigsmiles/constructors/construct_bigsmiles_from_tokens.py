@@ -236,11 +236,10 @@ def parse_bigsmiles_str(input_text: str, bigsmiles: BigSMILES):
     """
     Main function that turns BigSMILES string tokens then into a BigSMILES object.
     """
-    input_text = run_string_validation(input_text)
-    tokens = tokenize(input_text)
-    tokens = run_token_validation(tokens)
-
     try:
+        input_text = run_string_validation(input_text)
+        tokens = tokenize(input_text)
+        tokens = run_token_validation(tokens)
         tokens_to_bigsmiles(bigsmiles, tokens)
         constructor.exit_construction(bigsmiles)
     except errors.BigSMILESError as e:

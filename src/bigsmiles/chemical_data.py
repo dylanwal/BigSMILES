@@ -11,7 +11,7 @@ bond_mapping = {
 }
 
 
-elements = {
+elements_full = {
     'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K',
     'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb',
     'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe', 'Cs',
@@ -21,7 +21,31 @@ elements = {
     'Ds', 'Rg', 'Cn', 'Nh', 'Fl', 'Mc', 'Lv', 'Ts', 'Og', 'D'
 }
 
+elements = {
+    'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K',
+    'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe',  'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb',
+    'Sr', 'Y', 'Zr', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'Te', 'I', 'Xe',
+    'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy',  'Er', 'Tm',  'Lu', 'Hf', 'Ta',
+    'W', 'Re', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Bi',  'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 'Pa',
+    'U', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md',  'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt',
+    'Ds', 'Rg',  'Nh', 'Fl', 'Mc', 'Lv', 'Ts', 'Og', 'D'
+}
+
+# elements removed as they prevent Atom followed by aromatic Atom
+# 'Cn', 'Sn', 'In'
+# 'Sb', 'Nb', 'Yb', 'Pb'
+# 'Cs', 'Os',
+# 'Co', 'Ho', 'Po', 'No',
+# 'Np',
+
 elements_ordered = sorted(elements, reverse=True)  # sorted in reverse so "Cl" hits before "C"
+# ['Zr', 'Zn', 'Yb', 'Y', 'Xe', 'W', 'V', 'U', 'Ts', 'Tm', 'Tl', 'Ti', 'Th', 'Te', 'Tc', 'Tb', 'Ta', 'Sr', 'Sn', 'Sm',
+# 'Si', 'Sg', 'Se', 'Sc', 'Sb', 'S', 'Ru', 'Rn', 'Rh', 'Rg', 'Rf', 'Re', 'Rb', 'Ra', 'Pu', 'Pt', 'Pr', 'Po', 'Pm', 'Pd',
+# 'Pb', 'Pa', 'P', 'Os', 'Og', 'O', 'Np', 'No', 'Ni', 'Nh', 'Ne', 'Nd', 'Nb', 'Na', 'N', 'Mt', 'Mo', 'Mn', 'Mg', 'Md',
+# 'Mc', 'Lv', 'Lu', 'Lr', 'Li', 'La', 'Kr', 'K', 'Ir', 'In', 'I', 'Hs', 'Ho', 'Hg', 'Hf', 'He', 'H', 'Ge', 'Gd', 'Ga',
+# 'Fr', 'Fm', 'Fl', 'Fe', 'F', 'Eu', 'Es', 'Er', 'Dy', 'Ds', 'Db', 'D', 'Cu', 'Cs', 'Cr', 'Co', 'Cn', 'Cm', 'Cl', 'Cf',
+# 'Ce', 'Cd', 'Ca', 'C', 'Br', 'Bk', 'Bi', 'Bh', 'Be', 'Ba', 'B', 'Au', 'At', 'As', 'Ar', 'Am', 'Al', 'Ag', 'Ac']
+
 
 aromatic = {
     "b",

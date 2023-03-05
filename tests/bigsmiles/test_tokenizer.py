@@ -184,7 +184,17 @@ cases_for_full_tokenizer = [
         Token(TokenKind.Aromatic, "c"), Token(TokenKind.Ring, "2"), Token(TokenKind.Aromatic, "c"),
         Token(TokenKind.Aromatic, "c"), Token(TokenKind.Aromatic, "c"), Token(TokenKind.Aromatic, "c"),
         Token(TokenKind.Aromatic, "c"), Token(TokenKind.Ring, "2")
-    ]]
+    ]],
+    ["OCCn2c(=N)nc3ccccc23", [
+        Token(TokenKind.Atom, "O"), Token(TokenKind.Atom, "C"), Token(TokenKind.Atom, "C"),
+        Token(TokenKind.Aromatic, "n"), Token(TokenKind.Ring, "2"), Token(TokenKind.Aromatic, "c"),
+        Token(TokenKind.BranchStart, "("), Token(TokenKind.Bond, "="), Token(TokenKind.Atom, "N"),
+        Token(TokenKind.BranchEnd, ")"), Token(TokenKind.Aromatic, "n"), Token(TokenKind.Aromatic, "c"),
+        Token(TokenKind.Ring, "3"), Token(TokenKind.Aromatic, "c"), Token(TokenKind.Aromatic, "c"),
+        Token(TokenKind.Aromatic, "c"), Token(TokenKind.Aromatic, "c"), Token(TokenKind.Aromatic, "c"),
+        Token(TokenKind.Ring, "2"), Token(TokenKind.Ring, "3")
+
+    ]],
 
 ]
 

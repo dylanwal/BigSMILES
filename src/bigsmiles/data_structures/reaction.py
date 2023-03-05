@@ -40,7 +40,7 @@ class Reaction:
 
     def to_string(self,
                   show_hydrogens: bool = False,
-                  show_atom_index: bool = False,
+                  show_atom_index: bool = True,
                   print_repr: bool = False,
                   skip_color: bool = False
                   ) -> str:

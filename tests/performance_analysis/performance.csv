@@ -30,3 +30,4 @@ date/time (UTF), package version, time per parse (us), memory usage per bigsmile
 2023-02-28 13:38:33.911445, 0.0.6, 0.21319, 12606, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0
 2023-03-01 00:42:03.180376, 0.0.6, 0.24154, 12106, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0,"adding more validation on valence, rings, bonding"
 2023-03-04 16:53:36.505618, 0.0.7, 0.24646, 13132, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0,"adding rxn, disconnect, atom index"
+2023-03-05 17:13:10.536754, 0.0.6, 0.24699, 13243, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0

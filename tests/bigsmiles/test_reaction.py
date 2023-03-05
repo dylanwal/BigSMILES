@@ -1,9 +1,8 @@
-import logging
 
 import pytest
 
 import bigsmiles
-from bigsmiles.errors import BigSMILESError
+
 
 bigsmiles.Config.show_aromatic_bond = False
 
@@ -13,7 +12,19 @@ test_rxn = [
     ["CC(=O)[OH]>>CC(=O)OCC", [[bigsmiles.BigSMILES("CC(=O)[OH]")], [], [bigsmiles.BigSMILES("CC(=O)OCC")]]],
 
     # agent
-    ["CC(=O)[OH]>>CC(=O)OCC", [[bigsmiles.BigSMILES("CC(=O)[OH]")], [], [bigsmiles.BigSMILES("CC(=O)OCC")]]],
+    ["C1=CC=CC=C1C(O)C(C)NC>SO(Cl)Cl>C1=CC=CC=C1C(Cl)C(C)NC",
+     [[bigsmiles.BigSMILES("C1=CC=CC=C1C(O)C(C)NC")],
+      [bigsmiles.BigSMILES("SO(Cl)Cl")],
+      [bigsmiles.BigSMILES("C1=CC=CC=C1C(Cl)C(C)NC")]
+      ]
+     ],
+    ["C1=CC=CC=C1C(Cl)C(C)NC>Pd,[H][H]>C1=CC=CC=C1CC(C)NC",
+     [[bigsmiles.BigSMILES("C1=CC=CC=C1C(Cl)C(C)NC")],
+      [bigsmiles.BigSMILES("Pd"), bigsmiles.BigSMILES("[H][H]")],
+      [bigsmiles.BigSMILES("C1=CC=CC=C1CC(C)NC")]
+      ]
+     ],
+
 
     # polymer
     ["C=C(C(=O)OC)>CCCCSC(=S)SC(C)C(=O)O,CS(=O)C>{[>][<]CC(C(=O)OC)[>][<]}",  # RAFT of MA in DMSO
@@ -21,6 +32,31 @@ test_rxn = [
       [bigsmiles.BigSMILES("CCCCSC(=S)SC(C)C(=O)O"), bigsmiles.BigSMILES("CS(=O)C")],
       [bigsmiles.BigSMILES("{[>][<]CC(C(=O)OC)[>][<]}")]]
      ],
+    ["C=Cc1ccccc1.C[CH-](.[Li+])CC>Cc1ccccc1>CC(CC){[>][<]CC(c1ccccc1)[>][<]}[H]",
+     [
+         [bigsmiles.BigSMILES("C=Cc1ccccc1"), bigsmiles.BigSMILES("C[CH-](.[Li+])CC")],
+         [bigsmiles.BigSMILES("Cc1ccccc1")],
+         [bigsmiles.BigSMILES("CC(CC){[>][<]CC(c1ccccc1)[>][<]}[H]")]
+     ]
+     ],  # anionic of styrene
+    ["OCCO,OC(=O)c1ccc(cc1)C(=O)O>>{[][<]OCCO[<],[>]C(=O)c1ccc(cc1)C(=O)[>],[>][H],[<]O[]},O",
+     [
+         [bigsmiles.BigSMILES("OCCO"), bigsmiles.BigSMILES("OC(=O)c1ccc(cc1)C(=O)O")],
+         [],
+         [bigsmiles.BigSMILES("{[][<]OCCO[<],[>]C(=O)c1ccc(cc1)C(=O)[>],[>][H],[<]O[]}"), bigsmiles.BigSMILES("O")]
+     ]
+     ],  # PET synthesis
+
+    # atom index
+    ["[OH:1][CH2:2][CH2:3][OH:4],OC(=O)c1ccc(cc1)C(=O)O>>"
+     "{[][<][O:1][CH2:2][CH2:3][O:4][<],[>]C(=O)c1ccc(cc1)C(=O)[>],[>][H],[<]O[]},O",
+     [
+         [bigsmiles.BigSMILES("[OH:1][CH2:2][CH2:3][OH:4]"), bigsmiles.BigSMILES("OC(=O)c1ccc(cc1)C(=O)O")],
+         [],
+         [bigsmiles.BigSMILES("{[][<][O:1][CH2:2][CH2:3][O:4][<],[>]C(=O)c1ccc(cc1)C(=O)[>],[>][H],[<]O[]}"),
+          bigsmiles.BigSMILES("O")]
+     ]
+     ],  # PET synthesis
 ]
 
 

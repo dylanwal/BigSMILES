@@ -141,10 +141,10 @@ class Atom:
 
     @property
     def details(self) -> str:
-        text = str(self) + "{"
+        text = str(self) + "  {"
         for attr in self._eq_attr:
-            text += f"{attr}: {getattr(self, attr)}"
-        return text + "}"
+            text += f"{attr}: {getattr(self, attr)}, "
+        return text[:-2] + "}"
 
     def to_string(self,
                   show_hydrogens: bool = False,
@@ -327,10 +327,12 @@ class Bond:
 
     @property
     def details(self) -> str:
-        text = str(self) + "{"
+        text = str(self) + "  {"
         for attr in self._eq_attr:
-            text += f"{attr}: {getattr(self, attr)},"
-        return text[:-1] + "}"
+            text += f"{attr}: {getattr(self, attr)}, "
+        text += f"bond_order: {self.bond_order}, "
+        text += "atoms: " + str(self.atom1) + " <--> " + str(self.atom2)
+        return text + "}"
 
     @property
     def bond_order(self) -> int:
@@ -440,9 +442,9 @@ class BondDescriptor:
 
     @property
     def details(self) -> str:
-        text = str(self) + "{"
+        text = str(self) + "  {"
         for attr in self._eq_attr:
-            text += f"{attr}: {getattr(self, attr)},"
+            text += f"{attr}: {getattr(self, attr)}, "
         return text[:-1] + "}"
 
     @property
@@ -540,7 +542,7 @@ class BondDescriptorAtom:
 
     @property
     def details(self) -> str:
-        text = str(self) + "{"
+        text = str(self) + "  {"
         text += f"id_: {self.id_}"
         return text + "}"
 
@@ -603,8 +605,8 @@ class Branch:
 
     @property
     def details(self) -> str:
-        text = str(self) + "{"
-        text += f"id_: {self.id_},"
+        text = str(self) + "  {"
+        text += f"id_: {self.id_}, "
         text += f"num_nodes: {len(self.nodes)}"
         return text + "}"
 
@@ -661,8 +663,8 @@ class StochasticFragment:
 
     @property
     def details(self) -> str:
-        text = str(self) + "{"
-        text += f"id_: {self.id_},"
+        text = str(self) + "  {"
+        text += f"id_: {self.id_}, "
         text += f"num_nodes: {len(self.nodes)}"
         return text + "}"
 
@@ -721,8 +723,8 @@ class StochasticObject:
 
     @property
     def details(self) -> str:
-        text = str(self) + "{"
-        text += f"id_: {self.id_},"
+        text = str(self) + "  {"
+        text += f"id_: {self.id_}, "
         text += f"num_nodes: {len(self.nodes)}"
         return text + "}"
 
@@ -874,10 +876,10 @@ class BigSMILES:
 
     @property
     def details(self) -> str:
-        text = str(self) + "{"
-        text += f"num_nodes: {len(self.nodes)},"
-        text += f"num_atoms: {len(self.atoms)},"
-        text += f"num_bonds: {len(self.bonds)},"
+        text = str(self) + "  {"
+        text += f"num_nodes: {len(self.nodes)}, "
+        text += f"num_atoms: {len(self.atoms)}, "
+        text += f"num_bonds: {len(self.bonds)}"
         return text + "}"
 
     @property

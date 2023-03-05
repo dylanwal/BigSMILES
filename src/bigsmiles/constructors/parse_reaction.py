@@ -14,7 +14,6 @@ def parse_reaction(text: str) -> tuple[list[BigSMILES], list[BigSMILES], list[Bi
     try:
         if ">>" in result:
             return parse_no_agent_reaction(result)
-
         return parse_agent_reaction(result)
     except errors.BigSMILESError as e:
         raise errors.BigSMILESError(f"Parsing failed on '{text}'.", e) from e
@@ -25,7 +24,6 @@ def parse_no_agent_reaction(text_list: list[str]) -> tuple[list[BigSMILES], list
     if len(text_list) != 3:
         raise errors.TokenizeError("Invalid BigSMILES reaction. Too many or few '>' or '>>' detected. "
                                    f"\nDetected chunks: {len(text_list)} (expected chunks: 3)")
-
     if ">" in text_list:
         raise errors.TokenizeError("Invalid BigSMILES reaction. Reactions must follow one of these patterns: "
                                    "\n\t 'reactants >> products'\n\t 'reactants > agents > products' ")
@@ -43,7 +41,6 @@ def parse_agent_reaction(text_list: list[str]) -> tuple[list[BigSMILES], list[Bi
     if len(text_list) != 5:
         raise errors.TokenizeError("Invalid BigSMILES reaction. Too many or few '>' or '>>' detected. "
                                    f"\nDetected chunks: {len(text_list)} (expected chunks: 5)")
-
     if text_list[1] != ">" and text_list[3] != ">":
         raise errors.TokenizeError("Invalid BigSMILES reaction. "
                                    "The pattern should be: 'reactants > agents > products'.")
@@ -56,7 +53,7 @@ def parse_agent_reaction(text_list: list[str]) -> tuple[list[BigSMILES], list[Bi
 
 
 def process_chemical_block(text: str) -> list[BigSMILES]:
-    text_list = text.split(",")
+    text_list = comma_split(text)
 
     chemicals = []
     for chunk in text_list:
@@ -65,6 +62,28 @@ def process_chemical_block(text: str) -> list[BigSMILES]:
         chemicals += chemical
 
     return chemicals
+
+
+def comma_split(text: str) -> list[str]:
+    flag = 0
+    buffer = ""
+    result = []
+    for char_ in text:
+        if char_ == "{":
+            flag += 1
+        elif char_ == "}":
+            flag -= 1
+        elif char_ == "," and flag == 0:
+            result.append(buffer)
+            buffer = ""
+            continue
+
+        buffer += char_
+
+    if buffer:
+        result.append(buffer)
+
+    return result
 
 
 ## Split chemicals with '.' disconnect notation ##
@@ -117,6 +136,8 @@ def find_bridging_bond(node, cut_off_index: int) -> bool:
         return False
 
     for bond in node.bonds:
+        if bond.bond_order == 0:
+            continue
         for atom in bond:
             if atom.id_ > cut_off_index:
                 return True  # found a bond that bridge across disconnect
@@ -138,16 +159,30 @@ def split_bigsmiles(bigsmiles_: BigSMILES, split_index: list[int], delete_index:
         if delete_index:
             bigsmiles_.nodes[index_].delete()
 
+        # move nodes
         new_bigsmiles.nodes += bigsmiles_.nodes[index_:]
         del bigsmiles_.nodes[index_:]
-        new_bigsmiles.root.atoms += bigsmiles_.atoms[index_:]
-        del bigsmiles_.atoms[index_:]
-        new_bigsmiles.root.bonds += bigsmiles_.bonds[index_:]
-        del bigsmiles_.bonds[index_:]
-        new_bigsmiles.root.rings += bigsmiles_.rings[index_:]
-        del bigsmiles_.rings[index_:]
+
+        # move atoms
+        atom_index = get_index(new_bigsmiles.nodes, bigsmiles_.atoms, Atom)
+        if atom_index is not None:
+            new_bigsmiles.root.atoms += bigsmiles_.atoms[atom_index:]
+            del bigsmiles_.atoms[atom_index:]
+
+        # move bonds
+        bond_index = get_index(new_bigsmiles.nodes, bigsmiles_.bonds, Bond)
+        if bond_index is not None:
+            new_bigsmiles.root.bonds += bigsmiles_.bonds[bond_index:]
+            del bigsmiles_.bonds[bond_index:]
+
+        # move rings
+        ring_index = get_ring_index(new_bigsmiles, bigsmiles_)
+        if ring_index is not None:
+            new_bigsmiles.root.rings += bigsmiles_.rings[index_:]
+            del bigsmiles_.rings[index_:]
 
         set_new_parent(new_bigsmiles, new_bigsmiles)
+        re_number_node_ids(new_bigsmiles)
         result.append(new_bigsmiles)
 
     result.append(bigsmiles_)
@@ -159,3 +194,34 @@ def set_new_parent(new_parent, obj):
     for node in obj.nodes:
         if hasattr(node, 'parent'):
             node.parent = new_parent
+
+
+def get_index(node_list, other_list, type_) -> int | None:
+    for node in node_list:
+        if isinstance(node, type_):
+            break
+    else:
+        return None
+
+    for i, obj in enumerate(other_list):
+        if obj == node:
+            return i
+
+    return None
+
+
+def get_ring_index(new_bigsmiles: BigSMILES, old_bigsmiles: BigSMILES) -> int | None:
+    for i, ring in enumerate(old_bigsmiles.rings):
+        if ring.atom1 in new_bigsmiles.atoms:
+            return i
+
+    return None
+
+
+def re_number_node_ids(obj, id_: int = 0):
+    """ Recursive renumbering 'id_'. """
+    for node in obj.nodes:
+        node.id_ = id_
+        id_ += 1
+        if hasattr(node, 'nodes'):
+            re_number_node_ids(node, id_)

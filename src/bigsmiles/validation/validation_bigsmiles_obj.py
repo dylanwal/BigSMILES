@@ -17,6 +17,7 @@ from bigsmiles.errors import ValidationError
 def run_syntax_fixes(bigsmiles: BigSMILES):
     remove_unnecessary_branch_symbols(bigsmiles)
     check_ring_numbers(bigsmiles)
+    re_number_node_ids(bigsmiles)
 
 
 def remove_unnecessary_branch_symbols(obj: has_node_attr):

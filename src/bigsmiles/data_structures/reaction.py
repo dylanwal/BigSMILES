@@ -11,7 +11,7 @@ reactant,reactant>>product,product (comma supported for easier parsing)
 agents: are not consumed during the reaction
 
 """
-
+from __future__ import annotations
 from bigsmiles.data_structures.bigsmiles import BigSMILES
 
 

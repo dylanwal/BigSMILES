@@ -1,4 +1,4 @@
-
+from __future__ import annotations
 import logging
 
 from bigsmiles.errors import ValidationError
@@ -56,4 +56,3 @@ def validate_ring_numbering(tokens: list[Token], renumber: bool = True) -> list[
             raise ValidationError(f"Invalid BigSMILES. More than 2 ring index found for: '{key}'. ")
 
     return tokens
-

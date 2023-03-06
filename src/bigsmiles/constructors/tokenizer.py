@@ -3,7 +3,7 @@
 Code for tokenizing a BigSMILES string.
 
 """
-
+from __future__ import annotations
 import enum
 import re
 

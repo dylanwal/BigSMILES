@@ -1,6 +1,6 @@
 import bigsmiles
 
-import chemdraw
+# import chemdraw
 
 # bigsmiles.Config.color_output = True
 

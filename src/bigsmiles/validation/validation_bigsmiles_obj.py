@@ -9,6 +9,7 @@ Note:
 This is mainly to catch additional leftover validation.
 
 """
+from __future__ import annotations
 
 from bigsmiles.data_structures.bigsmiles import BigSMILES, StochasticObject, Branch, BondDescriptor, Bond, has_node_attr
 from bigsmiles.errors import ValidationError

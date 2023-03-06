@@ -941,8 +941,16 @@ class BigSMILES:
         print(tree_to_string(self, show_object_label, print_repr))
 
 
-# types
-has_node_attr = BigSMILES | Branch | StochasticObject | StochasticFragment
-has_ring_attr = BigSMILES | StochasticFragment
-has_parent_attr = Branch | StochasticObject | StochasticFragment | Bond | BondDescriptorAtom | Atom
-has_root_attr = BigSMILES | has_parent_attr
+# types  (for python >3.10)
+# has_node_attr = BigSMILES | Branch | StochasticObject | StochasticFragment
+# has_ring_attr = BigSMILES | StochasticFragment
+# has_parent_attr = Branch | StochasticObject | StochasticFragment | Bond | BondDescriptorAtom | Atom
+# has_root_attr = BigSMILES | has_parent_attr
+
+# types (for python <=3.9)
+import typing
+
+has_node_attr = typing.Union[BigSMILES, Branch, StochasticObject, StochasticFragment]
+has_ring_attr = typing.Union[BigSMILES, StochasticObject]
+has_parent_attr = typing.Union[Branch, StochasticObject, StochasticFragment, Bond, BondDescriptorAtom, Atom]
+has_root_attr = typing.Union[BigSMILES, has_parent_attr]

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from bigsmiles.errors import TokenizeError

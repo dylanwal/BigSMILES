@@ -3,7 +3,7 @@
 Code for turing a python class into a terminal printable tree.
 
 """
-from typing import Protocol
+from __future__ import annotations
 
 
 class TreeConfig:
@@ -31,8 +31,9 @@ class TreeConfig:
     def corner(cls) -> str:
         return cls.tree_symbol_options[cls.symbols][2]
 
-
-class TreeNode(Protocol):
+# from typing import Protocol (remove for 3.7 compatibility)
+# class TreeNode(Protocol):
+class TreeNode:
     _tree_print_repr: bool
 
 

@@ -8,6 +8,7 @@ There are two approaches:
 * build it in chunks;  where you build the branch in a separate BigSMILES object and attach it.
 
 """
+from __future__ import annotations
 import logging
 
 import bigsmiles.errors as errors
@@ -190,7 +191,8 @@ def add_ring(parent: has_node_attr, ring_id: int, bond_symbol: str | None, **kwa
             atom2 = get_prior(parent, (Atom, StochasticObject))
 
             # validation
-            if bond := get_common_bond(ring.atom1, atom2):
+            bond = get_common_bond(ring.atom1, atom2)
+            if bond:
                 logging.warning("Duplicate ring detected and merged into one with a higher bond order. ")
                 bond.bond_order += chemical_data.bond_mapping[bond_symbol]
                 remove_partial_ring(ring_parent, ring_id)
@@ -273,7 +275,7 @@ def _get_current_stochastic_object(parent) -> StochasticObject:
 
 
 def add_bonding_descriptor(parent, descriptor: str, index_: int, bond_symbol: str | None = None, **kwargs) \
-        -> BondDescriptorAtom:
+        -> has_node_attr:
     """ [<], [>], [$], [$1], [>2], ... """
     bd_atom = _get_bonding_descriptor_atom(parent, descriptor, index_, bond_symbol, **kwargs)
     parent.nodes.append(bd_atom)
@@ -423,7 +425,7 @@ def close_stochastic_fragment(parent):
 ## functions for building BigSMILES in chunks ##
 ###################################################################################################################
 def append_bigsmiles_fragment(parent, bigsmiles_: BigSMILES, bond_symbol: str | None, **kwargs) -> BigSMILES:
-    if not isinstance(bigsmiles_.nodes[0], Atom | StochasticObject):
+    if not isinstance(bigsmiles_.nodes[0], (Atom, StochasticObject)):
         raise errors.ConstructorError("First node must be an 'Atom' or 'StochasticObject' to added fragment.")
     if not parent:
         return bigsmiles_

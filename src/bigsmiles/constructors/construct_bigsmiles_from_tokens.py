@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 
 import bigsmiles.errors as errors
@@ -136,7 +138,7 @@ def map_stochastic_object_start(parent: has_node_attr, tokens: list[Token], toke
     return constructor.open_stochastic_object_with_bond_str(parent, bond, next_token.value)
 
 
-def map_stochastic_object_end(parent: has_node_attr, tokens: list[Token], token: Token) -> TokenKind:
+def map_stochastic_object_end(parent: has_node_attr, tokens: list[Token], token: Token) -> has_node_attr:
     parent = constructor.close_stochastic_fragment_str(parent)
 
     # get bond

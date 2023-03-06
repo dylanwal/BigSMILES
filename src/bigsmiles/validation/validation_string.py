@@ -3,6 +3,7 @@
 Validation on SMILES or BigSMILES string.
 
 """
+from __future__ import annotations
 import re
 
 from bigsmiles.errors import ValidationError

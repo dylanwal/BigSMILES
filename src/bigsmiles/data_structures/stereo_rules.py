@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 import bigsmiles.errors as errors
 import bigsmiles.reference_data.chemical_data as chemical_data

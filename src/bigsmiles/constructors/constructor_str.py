@@ -3,7 +3,7 @@
 Extend existing construction functions for string input
 
 """
-
+from __future__ import annotations
 from functools import wraps
 
 from bigsmiles.errors import BigSMILESError

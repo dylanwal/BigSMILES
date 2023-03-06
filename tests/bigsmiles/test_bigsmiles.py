@@ -10,8 +10,11 @@ bigsmiles.Config.show_aromatic_bond = False
 test_molecules = [
     # simple
     "C",
-    "U",
-    "Zn",
+    "Cl",
+    "[U]",
+    "[Zn]",
+    "Cn",
+    "[Cn]",
     "CC",
     "CCCCCC",  # hexane
     "O=C=O",  # carbon dioxide

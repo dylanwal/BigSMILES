@@ -10,8 +10,8 @@ branch_cases = [
     ['CC(CC(CC))', 'CCCCCC'],
     ['CCCCCC()', 'CCCCCC'],
     ["C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C))))))))))))))))))))C", "C(CCCCCCCCCCCCCCCCCCCC)C"],
-    ["{[][$]CC(c1cc(C(=O)Oc2ccc(OCCCC)cc2)ccc1(C(=O)Oc3ccc(OCCCC)cc3))[$][$]}{[>][<]Si(C)(C)O[>][]}",
-     "{[][$]CC(c1cc(C(=O)Oc2ccc(OCCCC)cc2)ccc1C(=O)Oc3ccc(OCCCC)cc3)[$][$]}{[>][<]Si(C)(C)O[>][]}"],
+    ["{[][$]CC(c1cc(C(=O)Oc2ccc(OCCCC)cc2)ccc1(C(=O)Oc3ccc(OCCCC)cc3))[$][$]}{[>][<][Si](C)(C)O[>][]}",
+     "{[][$]CC(c1cc(C(=O)Oc2ccc(OCCCC)cc2)ccc1C(=O)Oc3ccc(OCCCC)cc3)[$][$]}{[>][<][Si](C)(C)O[>][]}"],
 ]
 
 

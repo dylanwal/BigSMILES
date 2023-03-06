@@ -50,6 +50,7 @@ def get_double_bond_ez(double_bond: Bond):
     graph traversal in 4 bond coming off double bond
 
     """
+    return None
     left_side = DoubleBondSide(double_bond, "left")
     right_side = DoubleBondSide(double_bond, "right")
 

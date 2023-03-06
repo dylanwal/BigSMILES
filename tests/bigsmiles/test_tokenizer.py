@@ -74,7 +74,7 @@ def test_bonding_descriptor_tokenizer(case: list[str, list]):
 
 cases_for_full_tokenizer = [
     # Atoms
-    ["Zn", [Token(TokenKind.Atom, "Zn")]],
+    ["[Zn]", [Token(TokenKind.AtomExtend, "[Zn]")]],
     ["C", [Token(TokenKind.Atom, "C")]],
     ["CCC", [Token(TokenKind.Atom, "C"), Token(TokenKind.Atom, "C"), Token(TokenKind.Atom, "C")]],
     ["c", [Token(TokenKind.Aromatic, "c")]],
@@ -208,6 +208,7 @@ def test_tokenizer(case: list):
 
 
 negative_token_tests = [
+    "Zn",  # not in brackets
     "E",  # not an element
     "%",  # not valid on its own
     "[C<]",  # not valid

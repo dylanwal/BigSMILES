@@ -44,7 +44,7 @@ atom_pattern = r"(?:\[)" + _isotope_pattern + _element_pattern + _stereo_pattern
 token_specification = [
     # order in the list is important; regex stops at first match
     (TokenKind.Bond.name, r'[-|=|#|$]'),
-    (TokenKind.Atom.name, "|".join(chemical_data.elements_ordered)),
+    (TokenKind.Atom.name, "|".join(chemical_data.organic_ordered)),
     (TokenKind.Aromatic.name, "|".join(chemical_data.aromatic_elements)),
     (TokenKind.AtomExtend.name, atom_pattern),  # Atom in brackets
     (TokenKind.BranchStart.name, r'\('),
@@ -117,6 +117,12 @@ def tokenize(text: str) -> list[Token]:
         if kind == 'SKIP':
             continue
         elif kind == 'MISMATCH':
+            if text[:2] in chemical_data.element_symbols:
+                raise TokenizeError(f"Invalid symbol. If the element is not in the list below it must be in []."
+                                    f"\nNon-bracket elements: {chemical_data.organic_elements}"
+                                    f"\n(starting with {value!r}; index: {match.span()[0]})"
+                                f'\n{text}' + "\n" + " " * match.span()[0] + "^(and forward)")
+
             raise TokenizeError(f'Invalid symbol (or group of symbols). (starting with {value!r}; '
                                 f'index: {match.span()[0]})'
                                 f'\n{text}' + "\n" + " " * match.span()[0] + "^(and forward)")

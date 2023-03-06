@@ -64,10 +64,10 @@ periodic_table = tuple(Element(atomic_number=k, **v) for k, v in element_data.it
 del element_data
 
 # create tuples, sets, and dictionaries for performance
-elements_full = {element.symbol for element in periodic_table}
-element_symbols = {element.symbol for element in periodic_table if not element.conflict}
+element_symbols = {element.symbol for element in periodic_table}
 elements_ordered = sorted(element_symbols, reverse=True)  # sorted in reverse so "Cl" hits before "C"
 aromatic_elements = {element.symbol.lower() for element in periodic_table if element.aromatic}
 elements_aromatic = element_symbols.union(aromatic_elements)
 organic_elements = {element.symbol for element in periodic_table if element.organics}
+organic_ordered = sorted(organic_elements, reverse=True)  # sorted in reverse so "Cl" hits before "C"
 atom_valences = {element.symbol: element.valences for element in periodic_table}

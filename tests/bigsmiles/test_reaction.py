@@ -18,9 +18,9 @@ test_rxn = [
       [bigsmiles.BigSMILES("C1=CC=CC=C1C(Cl)C(C)NC")]
       ]
      ],
-    ["C1=CC=CC=C1C(Cl)C(C)NC>Pd,[H][H]>C1=CC=CC=C1CC(C)NC",
+    ["C1=CC=CC=C1C(Cl)C(C)NC>[Pd],[H][H]>C1=CC=CC=C1CC(C)NC",
      [[bigsmiles.BigSMILES("C1=CC=CC=C1C(Cl)C(C)NC")],
-      [bigsmiles.BigSMILES("Pd"), bigsmiles.BigSMILES("[H][H]")],
+      [bigsmiles.BigSMILES("[Pd]"), bigsmiles.BigSMILES("[H][H]")],
       [bigsmiles.BigSMILES("C1=CC=CC=C1CC(C)NC")]
       ]
      ],

@@ -16,7 +16,9 @@ cases = [
     "F/C=C=C=C\F", # cis
     "F/C=C/C/C=C\C",
     "F/C=C/CC=CC",  # partially specified
-    "CC(F)/C=C/F"
+    "CC(F)/C=C/F",
+    "CCC(\F)=C/F",  #
+    "CCC(\F)=C(/F)CC",
     "CC/C(\F)=C/F",  # error
 
     # "{[][<]OCCO[<],[>]C(=O)c1ccc(cc1)C(=O)[>],[>][H],[<]O[]}",

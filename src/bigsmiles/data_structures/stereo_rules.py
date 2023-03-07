@@ -16,7 +16,6 @@ from __future__ import annotations
 import enum
 import logging
 
-import bigsmiles.errors as errors
 import bigsmiles.reference_data.chemical_data as chemical_data
 from bigsmiles.data_structures.bigsmiles import Bond, Atom, StochasticObject, BondDescriptorAtom
 

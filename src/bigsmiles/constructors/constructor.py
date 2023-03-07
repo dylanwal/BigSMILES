@@ -18,7 +18,7 @@ from bigsmiles.data_structures.bigsmiles import Atom, Bond, BondDescriptor, Bran
 import bigsmiles.validation.validation_bigsmiles_obj as validation_bigsmiles_obj
 
 
-## Utility functions for construction ##
+## Utility functions for construction ## noqa
 ######################################################################################################################
 def add_bond_to_connected_objects(bond: Bond):
     """
@@ -145,7 +145,7 @@ def exit_construction(parent: BigSMILES, syntax_fix: bool = True, validation: bo
         validation_bigsmiles_obj.run_validation(parent)
 
 
-## Functions for constructing a bigsmiles sequentially or step by step ##
+## Functions for constructing a bigsmiles sequentially or step by step ## noqa
 #######################################################################################################################
 def add_atom(
         parent: has_node_attr,
@@ -158,7 +158,7 @@ def add_atom(
         class_: int | None = None,
         **kwargs
 ) -> has_node_attr:
-    atom = Atom(parent._get_id(), element, isotope, stereo, hydrogens, charge, valance, class_,
+    atom = Atom(parent._get_id(Atom), element, isotope, stereo, hydrogens, charge, valance, class_,
                 parent=parent, **kwargs)
     parent.nodes.append(atom)
     parent.root.atoms.append(atom)
@@ -173,7 +173,7 @@ def add_bond(
         atom2: Atom | BondDescriptorAtom | StochasticObject | None,
         **kwargs
 ) -> has_node_attr:
-    bond = Bond(bond_symbol, atom1, atom2, parent._get_id(), parent=parent, **kwargs)
+    bond = Bond(bond_symbol, atom1, atom2, parent._get_id(Bond), parent=parent, **kwargs)
     parent.nodes.append(bond)
     parent.root.bonds.append(bond)
     add_bond_to_connected_objects(bond)
@@ -214,7 +214,7 @@ def add_ring(parent: has_node_attr, ring_id: int, bond_symbol: str | None, **kwa
             return parent
 
     # Make new ring_id
-    bond = Bond(bond_symbol, get_prior(parent, (Atom, StochasticObject)), None, parent._get_id(), ring_id,
+    bond = Bond(bond_symbol, get_prior(parent, (Atom, StochasticObject)), None, parent._get_id(Bond), ring_id,
                 parent=parent, **kwargs)
     parent.root.bonds.append(bond)
     ring_parent.rings.append(bond)
@@ -228,7 +228,7 @@ def add_ring_from_atoms(parent: has_node_attr, atom1: Atom, atom2: Atom, bond_sy
     bond = get_common_bond(atom1, atom2)  # Check if ring already between two atoms
     if bond is None:
         # Make new ring_id
-        bond = Bond(bond_symbol, atom1, atom2, parent._get_id(), len(parent.root.rings) + 1,
+        bond = Bond(bond_symbol, atom1, atom2, parent._get_id(Bond), len(parent.root.rings) + 1,
                     parent=parent, **kwargs)
         parent.root.bonds.append(bond)
         ring_parent.rings.append(bond)
@@ -244,7 +244,7 @@ def _get_bonding_descriptor_atom(parent, descriptor: str, index_: int, bond_symb
         -> BondDescriptorAtom:
     stoch_obj = _get_current_stochastic_object(parent)
     bd = _get_bonding_descriptor(stoch_obj, descriptor, index_, bond_symbol)
-    return BondDescriptorAtom(bd, parent._get_id(), parent=parent, **kwargs)
+    return BondDescriptorAtom(bd, parent._get_id(BondDescriptorAtom), parent=parent, **kwargs)
 
 
 def _get_bonding_descriptor(stoch_obj: StochasticObject, descriptor: str, index_: int, bond_symbol: str | None) \
@@ -299,7 +299,7 @@ def add_bond_atom_pair(
     kwargs_atom = kwargs_atom if kwargs_atom is not None else {}
     kwargs_bond = kwargs_bond if kwargs_bond is not None else {}
 
-    atom = Atom(parent._get_id(), element, isotope, stereo, hydrogens, charge, valance, class_,
+    atom = Atom(parent._get_id(Atom), element, isotope, stereo, hydrogens, charge, valance, class_,
                 parent=parent, **kwargs_atom)
     prior_atom = get_prior(parent, (Atom, BondDescriptorAtom, StochasticObject))
     add_bond(parent, bond_symbol, prior_atom, atom, **kwargs_bond)
@@ -332,7 +332,7 @@ def open_branch(parent, **kwargs):
     if len(parent.nodes) == 0 and hasattr(parent, 'parent') and isinstance(parent.parent, Branch):
         raise errors.ConstructorError("BigSMILES string or branch can't start with branch")
 
-    branch = Branch(parent, parent._get_id(), **kwargs)
+    branch = Branch(parent, parent._get_id(Branch), **kwargs)
     parent.nodes.append(branch)
 
     return branch
@@ -352,7 +352,7 @@ def close_branch(parent):
 
 
 def open_stochastic_object(parent: has_node_attr, descriptor: str, index_: int, **kwargs) -> StochasticObject:
-    stoch_obj = StochasticObject(parent, parent._get_id(), **kwargs)
+    stoch_obj = StochasticObject(parent, parent._get_id(StochasticObject), **kwargs)
     stoch_obj.bd_left = _get_bonding_descriptor(stoch_obj, descriptor, index_, None)
     parent.nodes.append(stoch_obj)
 
@@ -362,7 +362,7 @@ def open_stochastic_object(parent: has_node_attr, descriptor: str, index_: int, 
 def open_stochastic_object_fragment(parent: has_node_attr, descriptor: str, index_: int, **kwargs) \
         -> StochasticFragment:
     stoch_obj = open_stochastic_object(parent, descriptor, index_, **kwargs)
-    fragment = StochasticFragment(stoch_obj, stoch_obj._get_id())
+    fragment = StochasticFragment(stoch_obj, stoch_obj._get_id(StochasticFragment))
     stoch_obj.nodes.append(fragment)
 
     return fragment
@@ -370,12 +370,12 @@ def open_stochastic_object_fragment(parent: has_node_attr, descriptor: str, inde
 
 def open_stochastic_object_with_bond(parent, bond_symbol: str | None, descriptor: str, index_: int, **kwargs) \
         -> StochasticFragment:
-    stoch_obj = StochasticObject(parent, parent._get_id(), **kwargs)
+    stoch_obj = StochasticObject(parent, parent._get_id(StochasticObject), **kwargs)
     stoch_obj.bd_left = _get_bonding_descriptor(stoch_obj, descriptor, index_, bond_symbol)
 
     # bond made without 'add_bond' function to ensure it's added to 'bond_left'
     prior_atom = get_prior(parent, (Atom, StochasticObject))
-    bond = Bond(bond_symbol, prior_atom, stoch_obj, parent._get_id(), parent=parent)
+    bond = Bond(bond_symbol, prior_atom, stoch_obj, parent._get_id(Bond), parent=parent)
     parent.nodes.append(bond)
     parent.root.bonds.append(bond)
     add_bond_to_connected_objects(bond)
@@ -395,7 +395,7 @@ def close_stochastic_object(parent, descriptor: str, index_: int, bond_symbol: s
 
 
 def open_stochastic_fragment(parent) -> StochasticFragment:
-    stoch_frag = StochasticFragment(parent, parent._get_id())
+    stoch_frag = StochasticFragment(parent, parent._get_id(StochasticFragment))
     parent.nodes.append(stoch_frag)
     return stoch_frag
 
@@ -422,7 +422,7 @@ def close_stochastic_fragment(parent):
     return parent.parent
 
 
-## functions for building BigSMILES in chunks ##
+## functions for building BigSMILES in chunks ## noqa
 ###################################################################################################################
 def append_bigsmiles_fragment(parent, bigsmiles_: BigSMILES, bond_symbol: str | None, **kwargs) -> BigSMILES:
     if not isinstance(bigsmiles_.nodes[0], (Atom, StochasticObject)):
@@ -457,14 +457,14 @@ def attach_bigsmiles_branch(parent, bond_symbol: str | None | None, bigsmiles_: 
     set_new_parent(parent, bigsmiles_)
 
     # make branch
-    branch = Branch(parent, parent._get_id(), **kwargs_branch)
+    branch = Branch(parent, parent._get_id(Branch), **kwargs_branch)
     branch.nodes = bigsmiles_.nodes
     parent.root.atoms += bigsmiles_.atoms
     parent.root.bonds += bigsmiles_.bonds
 
     # make bond
     atom = parent.root.atoms[index_]
-    bond = Bond(bond_symbol, atom, branch.nodes[0], parent._get_id(), parent=parent, **kwargs_bond)
+    bond = Bond(bond_symbol, atom, branch.nodes[0], parent._get_id(Bond), parent=parent, **kwargs_bond)
     branch.nodes.insert(0, bond)
     parent.root.bonds.append(bond)
     add_bond_to_connected_objects(bond)
@@ -492,27 +492,28 @@ def insert_atom_and_bond(
     kwargs_atom = kwargs_atom if kwargs_atom is not None else {}
     kwargs_bond = kwargs_bond if kwargs_bond is not None else {}
 
-    atom = Atom(parent._get_id(), element, isotope, stereo, hydrogens, charge, valance, class_,
+    atom = Atom(parent._get_id(Atom), element, isotope, stereo, hydrogens, charge, valance, class_,
                 parent=parent, **kwargs_atom)
 
     if prior_atom is None and isinstance(parent, BigSMILES):  # add to beginning
         prior_atom = parent.nodes[0]
-        bond = Bond(bond_symbol, atom, prior_atom, parent._get_id(), parent=parent, **kwargs_bond)
+        bond = Bond(bond_symbol, atom, prior_atom, parent._get_id(Bond), parent=parent, **kwargs_bond)
         add_bond_to_connected_objects(bond)
         parent.nodes.insert(0, bond)
         parent.root.bonds.insert(0, bond)
         parent.nodes.insert(0, atom)
         parent.root.atoms.insert(0, atom)
-        return
 
-    if prior_atom == prior_atom.parent.nodes[-1]:  # add to end
-        bond = Bond(bond_symbol, parent.atoms[-1], atom, parent._get_id(), parent=parent, **kwargs_bond)
+    elif prior_atom == prior_atom.parent.nodes[-1]:  # add to end
+        bond = Bond(bond_symbol, parent.atoms[-1], atom, parent._get_id(Bond), parent=parent, **kwargs_bond)
         add_bond_to_connected_objects(bond)
         parent.nodes.append(bond)
         parent.root.bonds.append(bond)
         parent.nodes.append(atom)
         parent.root.atoms.append(atom)
-        return
+
+    validation_bigsmiles_obj.re_number_node_ids(parent.root)
+    return parent
 
 
 def insert_atom_into_bond(
@@ -530,12 +531,12 @@ def insert_atom_into_bond(
     kwargs_atom = kwargs_atom if kwargs_atom is not None else {}
 
     # create atom
-    atom = Atom(parent._get_id(), element, isotope, stereo, hydrogens, charge, valance, class_,
+    atom = Atom(parent._get_id(Atom), element, isotope, stereo, hydrogens, charge, valance, class_,
                 parent=parent, **kwargs_atom)
 
     # create bonds
-    new_bond1 = Bond(bond_to_insert_into.symbol, bond_to_insert_into.atom1, atom, parent._get_id(), parent=parent)
-    new_bond2 = Bond(bond_to_insert_into.symbol, atom, bond_to_insert_into.atom2, parent._get_id(), parent=parent)
+    new_bond1 = Bond(bond_to_insert_into.symbol, bond_to_insert_into.atom1, atom, parent._get_id(Bond), parent=parent)
+    new_bond2 = Bond(bond_to_insert_into.symbol, atom, bond_to_insert_into.atom2, parent._get_id(Bond), parent=parent)
 
     # remove old bond and add new bonds and atoms to parent
     bond_index = parent.nodes.index(bond_to_insert_into)
@@ -558,6 +559,8 @@ def insert_atom_into_bond(
     add_bond_to_connected_objects(new_bond1)
     add_bond_to_connected_objects(new_bond2)
 
+    return parent
+
 
 def add_bonding_descriptor_bond_via_index(
         parent: StochasticFragment,
@@ -570,7 +573,7 @@ def add_bonding_descriptor_bond_via_index(
     kwargs_bond = kwargs_bond if kwargs_bond is not None else {}
 
     bd_atom = _get_bonding_descriptor_atom(parent, descriptor, index_, bond_symbol)
-    bond = Bond(bond_symbol, prior_atom, bd_atom, parent._get_id(), parent=parent, **kwargs_bond)
+    bond = Bond(bond_symbol, prior_atom, bd_atom, parent._get_id(Bond), parent=parent, **kwargs_bond)
     add_bond_to_connected_objects(bond)
 
     if prior_atom == prior_atom.parent.nodes[0]:  # if first atom
@@ -586,7 +589,7 @@ def add_bonding_descriptor_bond_via_index(
         parent.nodes.append(bd_atom)
         parent.root.atoms.append(bd_atom)
     else:
-        branch = Branch(parent, parent._get_id())
+        branch = Branch(parent, parent._get_id(Branch))
         branch.nodes = [bond, bd_atom]
         insert_obj_into_list(parent.nodes, prior_atom, branch)
         insert_obj_into_list(parent.root.bonds, prior_atom.bonds[0], bond)
@@ -616,7 +619,7 @@ def add_stochastic_fragment(stoch_object: StochasticObject, stoch_fragment: Stoc
 
 
 def add_bigsmiles_as_stochastic_fragment(stoch_obj: StochasticObject, bigsmiles_: BigSMILES):
-    stoch_fragment = StochasticFragment(stoch_obj, stoch_obj.root._get_id())
+    stoch_fragment = StochasticFragment(stoch_obj, stoch_obj.root._get_id(StochasticFragment))
     stoch_fragment.nodes = bigsmiles_.nodes
     stoch_fragment.rings = bigsmiles_.rings
     stoch_fragment.bonding_descriptors = \

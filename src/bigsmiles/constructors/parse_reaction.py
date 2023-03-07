@@ -87,7 +87,7 @@ def comma_split(text: str) -> list[str]:
     return result
 
 
-## Split chemicals with '.' disconnect notation ##
+## Split chemicals with '.' disconnect notation ## noqa
 #######################################################################################################################
 def split_chemical(bigsmiles_: BigSMILES) -> list[BigSMILES]:
     """ Only look at first level. """
@@ -221,8 +221,8 @@ def get_ring_index(new_bigsmiles: BigSMILES, old_bigsmiles: BigSMILES) -> int | 
 
 def re_number_node_ids(obj, id_: int = 0):
     """ Recursive renumbering 'id_'. """
+    root = obj.root
     for node in obj.nodes:
-        node.id_ = id_
-        id_ += 1
+        node.id_ = root._get_id(type(node))
         if hasattr(node, 'nodes'):
             re_number_node_ids(node, id_)

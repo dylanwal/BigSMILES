@@ -635,8 +635,8 @@ class Branch:
     def root(self) -> BigSMILES:
         return self.parent.root
 
-    def _get_id(self) -> int:
-        return self.root._get_id()
+    def _get_id(self, node_type) -> int:
+        return self.root._get_id(node_type)  # noqa
 
 
 class StochasticFragment:
@@ -693,8 +693,8 @@ class StochasticFragment:
     def root(self) -> BigSMILES:
         return self.parent.root
 
-    def _get_id(self) -> int:
-        return self.root._get_id()
+    def _get_id(self, node_type) -> int:
+        return self.root._get_id(node_type)  # noqa
 
 
 class StochasticObject:
@@ -818,8 +818,8 @@ class StochasticObject:
             bonds.append(self.bond_right)
         return bonds
 
-    def _get_id(self) -> int:
-        return self.root._get_id()
+    def _get_id(self, node_type) -> int:
+        return self.root._get_id(node_type)  # noqa
 
 
 def contains_stochastic_object(nodes: list[Atom, Bond, Branch, StochasticObject]):
@@ -845,7 +845,7 @@ class BigSMILES:
         self.bonds: list[Bond] = []  # includes bonds in sub-objects
         self.rings: list[Bond] = []  # does not include rings in sub-objects
 
-        self.__id = 0
+        self._ids_ = {Atom: 0, Bond: 0, BondDescriptorAtom: 0, StochasticFragment: 0, StochasticObject: 0, Branch: 0}
 
         # parse input string
         if input_text:
@@ -920,10 +920,9 @@ class BigSMILES:
     def root(self) -> BigSMILES:
         return self
 
-    def _get_id(self) -> int:
-        id_ = self.__id
-        self.__id += 1
-        return id_
+    def _get_id(self, node_type) -> int:
+        self._ids_[node_type] += 1
+        return self._ids_[node_type]
 
     def print_tree(self, show_object_label: bool = True, print_repr: bool = False):
         """

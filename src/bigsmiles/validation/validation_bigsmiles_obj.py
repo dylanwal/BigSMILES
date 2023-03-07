@@ -1,6 +1,6 @@
 """
 
-Remaining validation done on the bigsmile object
+Remaining validation done on the BigSMILES object
 
 Note:
 * tokenization should take care of symbol validation
@@ -18,7 +18,6 @@ from bigsmiles.errors import ValidationError
 def run_syntax_fixes(bigsmiles: BigSMILES):
     remove_unnecessary_branch_symbols(bigsmiles)
     check_ring_numbers(bigsmiles)
-    re_number_node_ids(bigsmiles)
 
 
 def remove_unnecessary_branch_symbols(obj: has_node_attr):
@@ -70,7 +69,7 @@ def re_number_node_ids(obj: has_node_attr, id_: int = 0):
             re_number_node_ids(node, id_)
 
 
-## Error checks ##
+## Error checks ## noqa
 #######################################################################################################################
 def run_validation(bigsmiles: BigSMILES):
     """ Main entry point for post-construction validation. """
@@ -90,7 +89,6 @@ def check_bonding_descriptors(bigsmiles: BigSMILES | StochasticObject | Branch):
     """
 
     rules:
-    if [$] must be 2 or more
     if [>] there must be [<]
     if [<] there must be [>]
     if end is implicit; there must be single bonding units
@@ -117,7 +115,7 @@ def check_bonding_descriptors(bigsmiles: BigSMILES | StochasticObject | Branch):
 
 def _do_check_bonding_descriptors(stoch_obj: StochasticObject):
     for bd in stoch_obj.bonding_descriptors:
-        a = bd.bond_symbol  # runs bond order check
+        _ = bd.bond_symbol  # runs bond order check
 
         # if [$], [$0], [$1], ... must be 2 or more
         if bd.descriptor == "$":

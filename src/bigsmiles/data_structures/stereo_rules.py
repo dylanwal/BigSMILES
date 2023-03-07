@@ -53,7 +53,7 @@ def get_score(node: Atom | StochasticObject | BondDescriptorAtom | None) -> int:
     if node is None:
         return 0
     elif isinstance(node, Atom):
-        return chemical_data.symbol_to_atomic_number[node.element]
+        return chemical_data.symbol_to_atomic_number[node.symbol]
 
     return DEFAULT_SCORE
 
@@ -88,7 +88,7 @@ class TraversalPath:
             self.current_node = best_atom
 
         elif isinstance(self.current_node, StochasticObject):
-            if self.current_node.bond_left == self.prior_edge:
+            if self.current_node.bond_left is self.prior_edge:
                 bond = self.current_node.bond_right
                 if bond is None:
                     self.prior_edge = None

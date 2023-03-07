@@ -9,7 +9,7 @@ _conjugated_warning = True
 
 
 class Atom:
-    __slots__ = ["id_", "element", "isotope", "stereo", "hydrogens", "charge", "class_", "organic",
+    __slots__ = ["id_", "symbol", "isotope", "stereo", "hydrogens", "charge", "class_", "organic",
                  "aromatic", "valence", "possible_valence", "_default_valence", "_valene_warning_raised", "_bonds",
                  "parent", "__dict__"]
     _tree_print_repr = True
@@ -17,7 +17,7 @@ class Atom:
 
     def __init__(self,
                  id_: int,
-                 element: str,
+                 symbol: str,
                  isotope: int | None = None,
                  stereo: str = '',
                  hydrogens: int | None = None,
@@ -28,16 +28,16 @@ class Atom:
                  **kwargs
                  ):
         self.id_ = id_
-        self.element = element.capitalize()
+        self.symbol = symbol.capitalize()
         self.isotope = isotope
         self.stereo = stereo
         self.hydrogens = hydrogens
         self.charge = charge
         self.class_ = class_
-        self.organic = True if self.element in chemical_data.organic_elements else False
+        self.organic = True if self.symbol in chemical_data.organic_elements else False
         # TODO: calculate aromatic
-        self.aromatic = True if element in chemical_data.aromatic_elements else False
-        self.possible_valence: tuple[int] = chemical_data.atom_valences[self.element]
+        self.aromatic = True if symbol in chemical_data.aromatic_elements else False
+        self.possible_valence: tuple[int] = chemical_data.atom_valences[self.symbol]
         if valence is None:
             self._default_valence: bool = True
             self.valence = self.possible_valence[0]
@@ -162,7 +162,7 @@ class Atom:
         text = ""
         bracket_flag = False
 
-        if self.element == "H":
+        if self.symbol == "H":
             bracket_flag = True
 
         if self.isotope is not None:
@@ -170,9 +170,9 @@ class Atom:
             bracket_flag = True
 
         if self.aromatic:
-            text += self.element.lower()
+            text += self.symbol.lower()
         else:
-            text += self.element
+            text += self.symbol
 
         if self.stereo:
             text += self.stereo

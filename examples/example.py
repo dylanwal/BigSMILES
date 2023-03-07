@@ -5,12 +5,11 @@ import bigsmiles
 # bigsmiles.Config.color_output = True
 
 cases = [
-    # "F/C=C/F",  # E-difluoroethene
+    "F/C=C/F",  # E-difluoroethene
     "F\C=C\F",  # Z-difluoroethene
     "C(\F)=C/F",  # trans
     "F\C=C/F",  # cis
     "F/C=C\F",  # cis
-    "C(/F)=C/F",  # cis
     "F/C(CC)=C/F",
     "F/C=C=C=C/F",  # trans
     "F/C=C=C=C\F", # cis
@@ -44,7 +43,9 @@ def single():
     print("case: ", case)
     output = bigsmiles.BigSMILES(case)
     print("output: ", output)
-    output.print_tree(print_repr=False)
+    for bond in output.bonds:
+        print(bond, bond.bond_order, bond.double_bond_ez)
+    # output.print_tree(print_repr=False)
 
     # drawer = chemdraw.Drawer(str(output))
     # drawer.draw_html(auto_open=True)
@@ -56,11 +57,12 @@ def multiple():
         output = bigsmiles.BigSMILES(case)
         print(i, "  ", case, " --> ", output)
         results.append(str(output))
-
+        for bond in output.bonds:
+            print(bond, bond.bond_order, bond.double_bond_ez)
     # drawer = chemdraw.GridDrawer(results)
     # drawer.draw_html(auto_open=True)
 
 
 if __name__ == "__main__":
-    single()
-    # multiple()
+    # single()
+    multiple()

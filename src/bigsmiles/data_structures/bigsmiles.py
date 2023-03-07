@@ -5,7 +5,6 @@ import bigsmiles.errors as errors
 import bigsmiles.reference_data.chemical_data as chemical_data
 from bigsmiles.config import Config
 
-
 _conjugated_warning = True
 
 
@@ -363,6 +362,7 @@ class Bond:
         if left_stereo_bond == 0 and right_stereo_bond == 0:
             return None
         if left_stereo_bond == 1 and right_stereo_bond == 1:
+            from bigsmiles.data_structures.stereo_rules import get_double_bond_ez
             return get_double_bond_ez(self)
 
         raise errors.BigSMILESError("Only one double bond stereochemistry detected.")

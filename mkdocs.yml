@@ -1,0 +1,72 @@
+site_name: BigSMILES
+
+repo_url: https://github.com/dylanwal/BigSMILES
+repo_name: BigSMILES
+
+theme:
+  name: material
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - navigation.tabs
+    - toc.integrate
+
+
+plugins:
+  - search
+  - mermaid2
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [src]
+          selection:
+            docstring_style: numpy
+          options:
+            show_bases: false
+            show_source: false
+
+nav:
+  - Home: index.md
+  - Quickstart:
+      - Installation: quickstart/installation.md
+      - Lesson 1: quickstart/quickstart.md
+  - Tutorials: tutorials/tutorials.md
+  - Reference:
+      - Data Structures:
+          - Overview: reference/data_structure/overview.md
+          - BigSMILES: reference/data_structure/BigSMILES.md
+          - Atom: reference/data_structure/Atom.md
+          - Bond: reference/data_structure/Bond.md
+          - Branch: reference/data_structure/Branch.md
+          - Bond Descriptor: reference/data_structure/Bond_descriptor.md
+          - Bond Descriptor Atom: reference/data_structure/Bond_descriptor_atom.md
+          - Stochastic Fragment: reference/data_structure/Stochastic_fragment.md
+          - Stochastic Object: reference/data_structure/Stochastic_object.md
+      - Constructor: reference/constructor.md
+      - Configuration: reference/configuration.md
+  - BigSMILES: bigsmiles/main.md
+  - Developers: developers/developers.md
+
+markdown_extensions:
+  - toc:
+      baselevel: 1
+      toc_depth: 3
+      permalink: True
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.caret
+  - pymdownx.tilde
+  - pymdownx.superfences:
+      # make exceptions to highlighting of code:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:mermaid2.fence_mermaid
+
+extra_css:
+  - stylesheets/extra.css

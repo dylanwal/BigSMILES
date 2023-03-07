@@ -158,6 +158,26 @@ def add_atom(
         class_: int | None = None,
         **kwargs
 ) -> has_node_attr:
+    """
+    Add Atom
+
+    Parameters
+    ----------
+    parent:
+    element:
+    isotope:
+    stereo:
+    hydrogens:
+    charge:
+    valance:
+    class_:
+    kwargs:
+
+    Returns
+    -------
+    parent:
+
+    """
     atom = Atom(parent._get_id(Atom), element, isotope, stereo, hydrogens, charge, valance, class_,
                 parent=parent, **kwargs)
     parent.nodes.append(atom)
@@ -173,6 +193,21 @@ def add_bond(
         atom2: Atom | BondDescriptorAtom | StochasticObject | None,
         **kwargs
 ) -> has_node_attr:
+    """
+    Add bond
+
+    Parameters
+    ----------
+    parent
+    bond_symbol
+    atom1
+    atom2
+    kwargs
+
+    Returns
+    -------
+
+    """
     bond = Bond(bond_symbol, atom1, atom2, parent._get_id(Bond), parent=parent, **kwargs)
     parent.nodes.append(bond)
     parent.root.bonds.append(bond)
@@ -182,6 +217,19 @@ def add_bond(
 
 
 def add_ring(parent: has_node_attr, ring_id: int, bond_symbol: str | None, **kwargs) -> has_node_attr:
+    """
+
+    Parameters
+    ----------
+    parent
+    ring_id
+    bond_symbol
+    kwargs
+
+    Returns
+    -------
+
+    """
     # check if ring_id already exists
     ring_parent = get_ring_parent(parent)
     for ring in ring_parent.rings:

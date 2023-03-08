@@ -5,6 +5,7 @@ repo_name: BigSMILES
 
 theme:
   name: material
+  logo: img/poly_cloud.png
   icon:
     repo: fontawesome/brands/github
   features:

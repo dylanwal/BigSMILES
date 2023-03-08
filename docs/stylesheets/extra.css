@@ -34,3 +34,8 @@
   --md-code-hl-variable-color: #ffffff;
   --md-code-hl-keyword-color: #f29b46;
 }
+
+/* Maximum space for text block */
+.md-grid {
+  max-width: 90%;
+}

@@ -941,7 +941,7 @@ def contains_stochastic_object(nodes: list[Atom, Bond, Branch, StochasticObject]
 
 class BigSMILES:
     """
-    BigSMILES
+    BigSMILES hi
 
     Attributes
     ----------

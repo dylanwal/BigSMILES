@@ -66,3 +66,5 @@ def multiple():
 if __name__ == "__main__":
     # single()
     multiple()
+
+    a = bigsmiles.BigSMILES()

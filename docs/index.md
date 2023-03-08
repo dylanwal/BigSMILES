@@ -1,6 +1,12 @@
 # BigSMILES
 
-** Building In Progress **
+???+ warning 
+    The BigSMILES package and documentation is still being built. So things may change or be incomplete.
+
+    Please report bugs if you find them!
+
+
+
 
 This site contains the project documentation for the 'BigSMILES' project.
 
@@ -12,3 +18,4 @@ molecular structures, and support the representation of molecules that are chara
 distinct molecular structures instead of a single well-defined structure. This feature is designed specifically to 
 reflect the stochastic nature of polymer molecules. Since polymers are macromolecules that usually have large molecular
 weights, the line notation is termed BigSMILES.
+

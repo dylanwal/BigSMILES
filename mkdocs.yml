@@ -9,8 +9,19 @@ theme:
     repo: fontawesome/brands/github
   features:
     - navigation.tabs
+    - navigation.tabs.sticky
     - toc.integrate
-
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: light
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: dark
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
 
 plugins:
   - search
@@ -23,16 +34,22 @@ plugins:
           selection:
             docstring_style: numpy
           options:
+            heading_level: 3
+            show_root_heading: true
             show_bases: false
             show_source: false
+            docstring_section_style: spacy
+            merge_init_into_class: true
 
 nav:
   - Home: index.md
   - Quickstart:
+      - Overview: quickstart/overview.md
       - Installation: quickstart/installation.md
       - Lesson 1: quickstart/quickstart.md
   - Tutorials: tutorials/tutorials.md
   - Reference:
+      - Overview: reference/overview.md
       - Data Structures:
           - Overview: reference/data_structure/overview.md
           - BigSMILES: reference/data_structure/BigSMILES.md
@@ -43,10 +60,15 @@ nav:
           - Bond Descriptor Atom: reference/data_structure/Bond_descriptor_atom.md
           - Stochastic Fragment: reference/data_structure/Stochastic_fragment.md
           - Stochastic Object: reference/data_structure/Stochastic_object.md
+      - Methods:
+          - parse_tree: reference/methods/parse_tree.md
       - Constructor: reference/constructor.md
       - Configuration: reference/configuration.md
   - BigSMILES: bigsmiles/main.md
   - Developers: developers/developers.md
+  - Extras:
+      - Change Log: extras/change_log.md
+      - License: extras/license.md
 
 markdown_extensions:
   - toc:
@@ -70,3 +92,4 @@ markdown_extensions:
 
 extra_css:
   - stylesheets/extra.css
+  - stylesheets/mkdocstrings.css

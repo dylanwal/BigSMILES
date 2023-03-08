@@ -23,33 +23,6 @@ _conjugated_warning = True
 
 
 class Atom:
-    """
-    Atom
-
-    Attributes
-    ----------
-    id_: int
-        id of atom (id is limited to atoms)
-        range: [1, inf]
-    symbol: str
-        element symbol (e.g., H, C, O, Zn)
-    isotope: int | None
-        isotope
-    hydrogens: int | None
-        number of explict hydrogens
-    charge: int
-        element charge
-    valence: int
-        Number of valance spot open
-    class_: int | None
-        index of class (e.g., [C:1] class_ = 1)
-    parent: BigSMILES | branch | stochastic_fragment
-        the owner of the atom
-    root: BigSMILES
-        the owner at the top of the parent tree
-    bonds: list[Bonds]
-
-    """
     __slots__ = ["id_", "symbol", "isotope", "stereo", "hydrogens", "charge", "class_", "organic",
                  "aromatic", "valence", "possible_valence", "_default_valence", "_valene_warning_raised", "_bonds",
                  "parent", "__dict__"]
@@ -68,6 +41,29 @@ class Atom:
                  parent: BigSMILES | Branch | StochasticFragment | None = None,
                  **kwargs
                  ):
+        """
+        This class represents an atom
+
+        Attributes
+        ----------
+        id_: int
+            id of atom (id is limited to atoms)
+            range: [1, inf]
+        symbol: str
+            element symbol (e.g., H, C, O, Zn)
+        isotope: int | None
+            isotope
+        hydrogens: int | None
+            number of explict hydrogens
+        charge: int
+            element charge
+        valence: int
+            Number of valance spot open
+        class_: int | None
+            index of class (e.g., [C:1] class_ = 1)
+        parent: BigSMILES | Branch | StochasticFragment | None
+            the owner of the atom
+        """
         self.id_ = id_
         self.symbol = symbol.capitalize()
         self.isotope = isotope
@@ -292,6 +288,7 @@ class Atom:
 
     @property
     def root(self) -> BigSMILES:
+        """ the owner at the top of the parent tree """
         return self.parent.root
 
 

@@ -1,5 +1,3 @@
-This part of the project documentation focuses on a **learning-oriented** approach. 
-- Help newcomers with getting started
 
 
 suggested shorting of `import bigsmiles` --> `import bigsmiles as bs`

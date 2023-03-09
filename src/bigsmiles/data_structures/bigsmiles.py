@@ -1,3 +1,17 @@
+"""
+
+The following contains the following data structures:
+* Atom
+* Bond
+* Branch
+* Bond descriptor
+* Bond descriptor atom
+* Stochastic fragment
+* Stochastic object
+* BigSMILES
+
+"""
+
 from __future__ import annotations
 import logging
 
@@ -27,6 +41,29 @@ class Atom:
                  parent: BigSMILES | Branch | StochasticFragment | None = None,
                  **kwargs
                  ):
+        """
+        This class represents an atom
+
+        Attributes
+        ----------
+        id_: int
+            id of atom (id is limited to atoms)
+            range: [1, inf]
+        symbol: str
+            element symbol (e.g., H, C, O, Zn)
+        isotope: int | None
+            isotope
+        hydrogens: int | None
+            number of explict hydrogens
+        charge: int
+            element charge
+        valence: int
+            Number of valance spot open
+        class_: int | None
+            index of class (e.g., [C:1] class_ = 1)
+        parent: BigSMILES | Branch | StochasticFragment | None
+            the owner of the atom
+        """
         self.id_ = id_
         self.symbol = symbol.capitalize()
         self.isotope = isotope
@@ -251,10 +288,22 @@ class Atom:
 
     @property
     def root(self) -> BigSMILES:
+        """ the owner at the top of the parent tree """
         return self.parent.root
 
 
 class Bond:
+    """
+    Bond
+
+    Attributes
+    ----------
+        id_: int
+        id of bond (id is limited to bonds)
+        range: [1, inf]
+
+
+    """
     __slots__ = ["id_", "symbol", "atom1", "atom2", "ring_id", "parent", "__dict__", "double_bond_stereo"]
     _tree_print_repr = True
     _eq_attr = ("id_", "symbol", "ring_id")
@@ -407,6 +456,17 @@ class Bond:
 
 
 class BondDescriptor:
+    """
+    Bond
+
+    Attributes
+    ----------
+        id_: int
+        id of bond (id is limited to bonds)
+        range: [1, inf]
+
+
+    """
     __slots__ = ["parent", "descriptor", "index_", "_instances", "_instances_up_to_date", "bond_symbol", "__dict__"]
     _eq_attr = ("descriptor", "index_", "bond_symbol")
 
@@ -506,6 +566,17 @@ class BondDescriptor:
 
 
 class BondDescriptorAtom:
+    """
+    Bond
+
+    Attributes
+    ----------
+        id_: int
+        id of bond (id is limited to bonds)
+        range: [1, inf]
+
+
+    """
     _tree_print_repr = True
     __slots__ = ["descriptor", "id_", "_bond", "__dict__", "parent"]
 
@@ -583,6 +654,17 @@ class BondDescriptorAtom:
 
 
 class Branch:
+    """
+    Bond
+
+    Attributes
+    ----------
+        id_: int
+        id of bond (id is limited to bonds)
+        range: [1, inf]
+
+
+    """
     _tree_print_repr = False
     __slots__ = ["nodes", "id_", "parent", "__dict__"]
 
@@ -640,6 +722,17 @@ class Branch:
 
 
 class StochasticFragment:
+    """
+    Bond
+
+    Attributes
+    ----------
+        id_: int
+        id of bond (id is limited to bonds)
+        range: [1, inf]
+
+
+    """
     _tree_print_repr = False
     __slots__ = ["nodes", "id_", "parent", "bonding_descriptors", "rings", "__dict__"]
 
@@ -698,6 +791,17 @@ class StochasticFragment:
 
 
 class StochasticObject:
+    """
+    Bond
+
+    Attributes
+    ----------
+        id_: int
+        id of bond (id is limited to bonds)
+        range: [1, inf]
+
+
+    """
     _tree_print_repr = False
     __slots__ = ["nodes", "bonding_descriptors", "id_", "parent", "bd_left", "bd_right",
                  "_bond_left", "_bond_right", "__dict__"]
@@ -836,6 +940,16 @@ def contains_stochastic_object(nodes: list[Atom, Bond, Branch, StochasticObject]
 
 
 class BigSMILES:
+    """
+    BigSMILES hi
+
+    Attributes
+    ----------
+    nodes: list[Atom | Bond | StochasticObject | Branch]
+        list of nodes
+
+
+    """
     _tree_print_repr = False
     __slots__ = ["nodes", "atoms", "bonds", "rings", "__dict__"]
 
@@ -936,7 +1050,7 @@ class BigSMILES:
             use repr() instead of str()
 
         """
-        from bigsmiles.tree_to_string import tree_to_string  # here to avoid circular imports
+        from bigsmiles.methods.tree_to_string import tree_to_string  # here to avoid circular imports
         print(tree_to_string(self, show_object_label, print_repr))
 
 

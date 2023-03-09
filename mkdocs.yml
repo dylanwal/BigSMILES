@@ -46,7 +46,6 @@ nav:
   - Home: index.md
   - Quickstart:
       - Overview: quickstart/overview.md
-      - Installation: quickstart/installation.md
       - Lesson 1: quickstart/quickstart.md
   - Tutorials: tutorials/tutorials.md
   - Reference:
@@ -63,9 +62,18 @@ nav:
           - Stochastic Object: reference/data_structure/Stochastic_object.md
       - Methods:
           - parse_tree: reference/methods/parse_tree.md
-      - Constructor: reference/constructor.md
+      - Constructor:
+          - Overview: reference/constructor/overview.md
+          - Constructor: reference/constructor/constructor.md
+          - Constructor: reference/constructor/constructor_str.md
+          - Tokenizer: reference/constructor/tokenizer.md
       - Configuration: reference/configuration.md
-  - BigSMILES: bigsmiles/main.md
+      - Errors: reference/errors.md
+  - BigSMILES:
+      - Overview: bigsmiles/overview.md
+      - Specification: bigsmiles/specification.md
+      - Examples: bigsmiles/examples.md
+      - References: bigsmiles/references.md
   - Developers: developers/developers.md
   - Extras:
       - Change Log: extras/change_log.md

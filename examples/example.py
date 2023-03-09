@@ -5,6 +5,7 @@ import bigsmiles
 # bigsmiles.Config.color_output = True
 
 cases = [
+    "C1CCCCC1",
     "F/C=C/F",  # E-difluoroethene
     "F\C=C\F",  # Z-difluoroethene
     "C(\F)=C/F",  # trans
@@ -64,7 +65,7 @@ def multiple():
 
 
 if __name__ == "__main__":
-    # single()
-    multiple()
+    single()
+    # multiple()
 
-    a = bigsmiles.BigSMILES()
+    # a = bigsmiles.Atom()

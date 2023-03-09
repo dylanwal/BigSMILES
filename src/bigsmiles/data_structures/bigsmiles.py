@@ -23,11 +23,13 @@ _conjugated_warning = True
 
 
 class Atom:
+    """
+    this class represents an atom
+    """
     __slots__ = ["id_", "symbol", "isotope", "stereo", "hydrogens", "charge", "class_", "organic",
                  "aromatic", "valence", "possible_valence", "_default_valence", "_valene_warning_raised", "_bonds",
                  "parent", "__dict__"]
-    _tree_print_repr = True
-    _eq_attr = ("id_", "element", "isotope", "stereo", "hydrogens", "charge", "valence", "aromatic")
+    _eq_attr = ("id_", "symbol", "isotope", "stereo", "hydrogens", "charge", "valence", "aromatic")
 
     def __init__(self,
                  id_: int,
@@ -42,27 +44,26 @@ class Atom:
                  **kwargs
                  ):
         """
-        This class represents an atom
-
         Attributes
         ----------
         id_: int
-            id of atom (id is limited to atoms)
-            range: [1, inf]
+            id of atom (id is limited to atoms). Range: [1, inf]
         symbol: str
             element symbol (e.g., H, C, O, Zn)
         isotope: int | None
-            isotope
+            isotope (e.g., [13C])
         hydrogens: int | None
-            number of explict hydrogens
+            number of explict hydrogens  (e.g., [CH2])
         charge: int
-            element charge
+            element charge  (e.g., [Fe+3])
         valence: int
-            Number of valance spot open
+            The capacity to form bonds with other atoms
         class_: int | None
             index of class (e.g., [C:1] class_ = 1)
         parent: BigSMILES | Branch | StochasticFragment | None
             the owner of the atom
+        kwargs:
+            any additional keyword arguments are accepted and set as additional attributes
         """
         self.id_ = id_
         self.symbol = symbol.capitalize()
@@ -98,6 +99,19 @@ class Atom:
         return str(self) + "{" + str(self.id_) + "}"
 
     def __eq__(self, other: Atom):
+        """
+        equality is based on the following parameters:
+
+        * id_
+        * element
+        * isotope
+        * stereo
+        * hydrogens
+        * charge
+        * valence
+        * aromatic
+        * bonds ~ bond.id_
+        """
         if not isinstance(other, Atom):
             return False
 
@@ -115,6 +129,7 @@ class Atom:
 
     @property
     def bonds(self) -> list[Bond]:
+        """ list of bonds (excludes implicit hydrogens) """
         return self._bonds
 
     @bonds.setter
@@ -125,26 +140,38 @@ class Atom:
             if not self._increase_valence(self.number_of_bonds - self.bond_capacity):
                 logging.error(f"Too many bonds trying to be made. {str(self)}")
 
-    def delete_bond(self, delete_bond: Bond):
-        try:
-            self.bonds.remove(delete_bond)
-        except ValueError:
-            raise ValueError("Bond not connect to atom so it can't be deleted."
-                             f"\n Atom:{self.details}\nBond attempting to remove: {delete_bond.details}")
+    def delete_bond(self, delete_bond: Bond | list[Bond]):
+        """
+        delete bond or bonds
+
+        Parameters
+        ----------
+        delete_bond: Bond | list[Bond]
+
+        """
+        if not isinstance(delete_bond, list):
+            delete_bond = list(delete_bond)
+
+        for bond in delete_bond:
+            try:
+                self.bonds.remove(bond)
+            except ValueError:
+                raise ValueError("Bond not connect to atom so it can't be deleted."
+                                 f"\n Atom:{self.details}\nBond attempting to remove: {bond.details}")
 
     @property
     def implicit_hydrogens(self) -> float:
-        """ Number of implicit hydrogens. zero if explict hydrogens specified. """
+        """ number of implicit hydrogens. (zero if explict hydrogens have been specified) """
         return self.bonds_available if self.hydrogens is None else 0
 
     @property
     def bond_capacity(self) -> float:
-        """ Total capacity of the atom. """
+        """ total capacity of the atom account for charge """
         return self.valence + self.charge
 
     @property
     def number_of_bonds(self) -> float:
-        """ Number of bonds already formed. Not including implicit hydrogens. """
+        """ number of bonds already formed (not including implicit hydrogens; but including explicit hydrogens) """
         num_bonds = sum((bond.bond_order for bond in self.bonds))
         if self.hydrogens is not None:
             num_bonds += self.hydrogens
@@ -152,7 +179,7 @@ class Atom:
 
     @property
     def bonds_available(self) -> float:
-        """ Number bonds that remain open for bonding. Will reduce implicit hydrogen count. """
+        """ number bonds that remain open for bonding """
         bonds_available = self.bond_capacity - self.number_of_bonds
         if bonds_available < 0:
             return 0
@@ -160,7 +187,7 @@ class Atom:
 
     @property
     def full_valence(self) -> bool:
-        """ Returns true if the atom valence is full"""
+        """ returns true if the atom valence is full """
         if self.valence - self.number_of_bonds - self.implicit_hydrogens - abs(self.charge) == 0:
             return True
 
@@ -168,6 +195,7 @@ class Atom:
 
     @property
     def ring_indexes(self) -> list[int]:
+        """ list of ring index """
         ring_index = []
         for bond in self.bonds:
             if bond.ring_id is not None:
@@ -177,6 +205,7 @@ class Atom:
 
     @property
     def details(self) -> str:
+        """ long string representation """
         text = str(self) + "  {"
         for attr in self._eq_attr:
             text += f"{attr}: {getattr(self, attr)}, "
@@ -294,29 +323,39 @@ class Atom:
 
 class Bond:
     """
-    Bond
-
-    Attributes
-    ----------
-        id_: int
-        id of bond (id is limited to bonds)
-        range: [1, inf]
-
-
+    this class represents a bond
     """
     __slots__ = ["id_", "symbol", "atom1", "atom2", "ring_id", "parent", "__dict__", "double_bond_stereo"]
-    _tree_print_repr = True
     _eq_attr = ("id_", "symbol", "ring_id")
 
     def __init__(self,
+                 id_: int,
                  symbol: str,
                  atom1: Atom | BondDescriptorAtom | StochasticObject,
                  atom2: Atom | BondDescriptorAtom | StochasticObject | None = None,
-                 id_: int | None = None,
                  ring_id: int | None = None,
                  parent: BigSMILES | Branch | StochasticFragment | None = None,
                  **kwargs
                  ):
+        """
+
+        Parameters
+        ----------
+        id_: int
+            id of bond (id is limited to bonds). Range: [1, inf]
+        symbol: str
+            bond symbol (e.g. '', '=', '#')
+        atom1: Atom | BondDescriptorAtom | StochasticObject
+            atom that the bond starts at
+        atom2: Atom | BondDescriptorAtom | StochasticObject | None
+            atom that the bond ends at
+        ring_id: int | None
+            if the bond is closing a ring, this is the index for that ring
+        parent: BigSMILES | Branch | StochasticFragment | None
+            the owner of the bond
+        kwargs:
+            any additional keyword arguments are accepted and set as additional attributes
+        """
         self.id_ = id_
         self.symbol = symbol
         self.atom1 = atom1
@@ -345,12 +384,22 @@ class Bond:
         return Config.add_color(self.symbol, 'Blue', skip_color)
 
     def __iter__(self):
+        """ iterates over Atoms """
         return iter((self.atom1, self.atom2))
 
     def __reversed__(self):
         return iter((self.atom2, self.atom1))
 
     def __eq__(self, other: Bond):
+        """
+        equality is based on the following parameters:
+
+        * id_
+        * symbol
+        * ring_id
+        * atom1.id_
+        * atom2.id_
+         """
         if not isinstance(other, Bond):
             return False
 
@@ -366,6 +415,7 @@ class Bond:
         return True
 
     def delete(self):
+        """ deletes bond and removes it from atoms and root """
         self.atom1.delete_bond(self)
         self.atom2.delete_bond(self)
         self.parent.nodes.remove(self)
@@ -375,15 +425,17 @@ class Bond:
 
     @property
     def details(self) -> str:
+        """ long string representation """
         text = str(self) + "  {"
         for attr in self._eq_attr:
             text += f"{attr}: {getattr(self, attr)}, "
         text += f"bond_order: {self.bond_order}, "
-        text += "atoms: " + str(self.atom1) + " <--> " + str(self.atom2)
+        text += "atoms: " + repr(self.atom1) + " <--> " + repr(self.atom2)
         return text + "}"
 
     @property
     def bond_order(self) -> int:
+        """  number of covalent bonds represented """
         return chemical_data.bond_mapping[self.symbol]
 
     @bond_order.setter
@@ -397,10 +449,13 @@ class Bond:
 
     @property
     def root(self) -> BigSMILES:
+        """ the owner at the top of the parent tree """
         return self.parent.root
 
     @property
     def double_bond_ez(self) -> str | None:
+        """ returns labels for geometric isomers of alkenes ["E", "Z", None] """
+        return None
         if self.symbol != "=":
             return None
 
@@ -457,15 +512,7 @@ class Bond:
 
 class BondDescriptor:
     """
-    Bond
-
-    Attributes
-    ----------
-        id_: int
-        id of bond (id is limited to bonds)
-        range: [1, inf]
-
-
+    this class represents a bonding descriptor
     """
     __slots__ = ["parent", "descriptor", "index_", "_instances", "_instances_up_to_date", "bond_symbol", "__dict__"]
     _eq_attr = ("descriptor", "index_", "bond_symbol")
@@ -477,6 +524,21 @@ class BondDescriptor:
                  bond_symbol: str | None,
                  **kwargs
                  ):
+        """
+
+        Parameters
+        ----------
+        parent: StochasticObject
+            the owner of the bonding descriptor
+        descriptor: str
+            descriptor symbol [$, >, <]
+        index_: int
+            descriptor index [1, inf]
+        bond_symbol: str | None
+            bond symbol
+        kwargs:
+            any additional keyword arguments are accepted and set as additional attributes
+        """
         self.parent = parent
         self.descriptor = descriptor
         self.index_ = index_
@@ -496,6 +558,13 @@ class BondDescriptor:
         return self.to_string(print_repr=True, skip_color=True)
 
     def __eq__(self, other: BondDescriptor):
+        """
+        equality is based on the following parameters:
+
+        * descriptor
+        * index_
+        * bond_symbol
+        """
         if not isinstance(other, BondDescriptor):
             return False
 
@@ -519,6 +588,7 @@ class BondDescriptor:
 
     @property
     def details(self) -> str:
+        """ long string representation """
         text = str(self) + "  {"
         for attr in self._eq_attr:
             text += f"{attr}: {getattr(self, attr)}, "
@@ -526,6 +596,7 @@ class BondDescriptor:
 
     @property
     def symbol(self) -> str:
+        """ descriptor + index """
         return self.descriptor + str(self.index_)
 
     def is_pair(self, bd: BondDescriptor) -> bool:
@@ -539,10 +610,12 @@ class BondDescriptor:
 
     @property
     def root(self) -> BigSMILES:
+        """ the owner at the top of the parent tree """
         return self.parent.root
 
     @property
     def instances(self) -> list[BondDescriptorAtom]:
+        """ list of BondDescriptorAtom that are based on this bonding descriptor """
         return self._instances
 
     @instances.setter
@@ -552,39 +625,47 @@ class BondDescriptor:
 
     @property
     def bond_order(self) -> int | None:
+        """ number of covalent bonds represented """
         return chemical_data.bond_mapping[self.bond_symbol]
 
     @property
     def implicit(self) -> bool:
+        """ returns true is it is an implicit bonding descriptor """
         if self.descriptor == "":
             return True
         return False
 
     @property
     def aromatic(self) -> bool:
+        """ limited accuracy """
         return self.bond_symbol == ":"
 
 
 class BondDescriptorAtom:
     """
-    Bond
-
-    Attributes
-    ----------
-        id_: int
-        id of bond (id is limited to bonds)
-        range: [1, inf]
-
-
+    this class represents a bonding descriptor and has the ability to bond
+    it should be thought of as an atom with only on bonding site that can be any bond (single, double triple)
     """
-    _tree_print_repr = True
     __slots__ = ["descriptor", "id_", "_bond", "__dict__", "parent"]
 
     def __init__(self,
+                 id_: int,
                  bond_descriptor: BondDescriptor,
-                 id_: int = None,
                  parent: BigSMILES | Branch | StochasticFragment | None = None,
-                 **kwargs):
+                 **kwargs
+                 ):
+        """
+        Parameters
+        ----------
+        id_: int
+            id of bonding descriptor atom (id is limited to bonding descriptor atoms). Range: [1, inf]
+        bond_descriptor: BondDescriptor
+            bonding descriptor that this atom represents
+        parent: BigSMILES | Branch | StochasticFragment | None
+            the owner of the bonding descriptor atom
+        kwargs:
+            any additional keyword arguments are accepted and set as additional attributes
+        """
         self.descriptor = bond_descriptor
         bond_descriptor.instances += [self]
         self.id_ = id_
@@ -602,13 +683,20 @@ class BondDescriptorAtom:
         return self.to_string(print_repr=True, skip_color=True)
 
     def __eq__(self, other: BondDescriptorAtom):
+        """
+        equality is based on the following parameters:
+
+        * id_
+        * descriptor
+        * bond.id_
+        """
         if not isinstance(other, BondDescriptorAtom):
             return False
 
-        if self.descriptor != other.descriptor:
+        if self.id_ != other.id_:
             return False
 
-        if self.id_ != other.id_:
+        if self.descriptor != other.descriptor:
             return False
 
         if self.bond is None:
@@ -630,12 +718,14 @@ class BondDescriptorAtom:
 
     @property
     def details(self) -> str:
+        """ long string representation """
         text = str(self) + "  {"
         text += f"id_: {self.id_}"
         return text + "}"
 
     @property
     def bond(self) -> Bond:
+        """ bond to bonding descriptor atom """
         return self._bond
 
     @bond.setter
@@ -646,29 +736,32 @@ class BondDescriptorAtom:
 
     @property
     def root(self) -> BigSMILES:
+        """ the owner at the top of the parent tree """
         return self.parent.root
 
     @property
     def aromatic(self) -> bool:
+        """ limited accuracy """
         return self.descriptor.aromatic
 
 
 class Branch:
     """
-    Bond
-
-    Attributes
-    ----------
-        id_: int
-        id of bond (id is limited to bonds)
-        range: [1, inf]
-
-
+    this class represents a branch
     """
-    _tree_print_repr = False
     __slots__ = ["nodes", "id_", "parent", "__dict__"]
 
-    def __init__(self, parent: BigSMILES | StochasticFragment | Branch, id_: int = None, **kwargs):
+    def __init__(self, id_: int, parent: BigSMILES | StochasticFragment | Branch, **kwargs):
+        """
+        Parameters
+        ----------
+        id_: int
+            id of bond (id is limited to bonds). Range: [1, inf]
+        parent: BigSMILES | StochasticFragment | Branch
+            owner of the branch
+        kwargs:
+            any additional keyword arguments are accepted and set as additional attributes
+        """
         self.nodes: list[Atom | Bond | Branch | StochasticObject | BondDescriptorAtom] = []
         self.id_ = id_
         self.parent = parent
@@ -684,6 +777,7 @@ class Branch:
         return self.to_string(print_repr=True, skip_color=True)
 
     def __eq__(self, other: Branch):
+        """ equality is determining all nodes and rings are equal """
         if not isinstance(other, Branch):
             return False
 
@@ -704,6 +798,7 @@ class Branch:
 
     @property
     def details(self) -> str:
+        """ long string representation """
         text = str(self) + "  {"
         text += f"id_: {self.id_}, "
         text += f"num_nodes: {len(self.nodes)}"
@@ -711,10 +806,12 @@ class Branch:
 
     @property
     def in_stochastic_object(self) -> bool:
+        """ returns that if on the tree up to the root there is a stochastic object parent """
         return self.parent.in_stochastic_object
 
     @property
     def root(self) -> BigSMILES:
+        """ the owner at the top of the parent tree """
         return self.parent.root
 
     def _get_id(self, node_type) -> int:
@@ -723,25 +820,31 @@ class Branch:
 
 class StochasticFragment:
     """
-    Bond
+    this class represents a stochastic fragment.
 
-    Attributes
-    ----------
-        id_: int
-        id of bond (id is limited to bonds)
-        range: [1, inf]
-
-
+    stochastic fragments are only found within stochastic objects
     """
-    _tree_print_repr = False
     __slots__ = ["nodes", "id_", "parent", "bonding_descriptors", "rings", "__dict__"]
 
-    def __init__(self, parent: StochasticObject, id_: int = None):
+    def __init__(self, id_: int, parent: StochasticObject, **kwargs):
+        """
+        Parameters
+        ----------
+        id_: int
+            id of bond (id is limited to bonds). Range: [1, inf]
+        parent
+        kwargs:
+            any additional keyword arguments are accepted and set as additional attributes
+        """
+        self.id_ = id_
+        self.parent = parent
         self.nodes: list[Atom | Bond | BondDescriptorAtom | Branch | StochasticObject] = []
         self.rings: list[Bond] = []
         self.bonding_descriptors: list[BondDescriptor] = []
-        self.id_ = id_
-        self.parent = parent
+
+        if kwargs:
+            for k, v in kwargs.items():
+                setattr(self, k, v)
 
     def __str__(self):
         return self.to_string()
@@ -750,6 +853,7 @@ class StochasticFragment:
         return self.to_string(print_repr=True, skip_color=True)
 
     def __eq__(self, other: StochasticFragment):
+        """ equality is determining all nodes and rings are equal """
         if not isinstance(other, StochasticFragment):
             return False
 
@@ -773,6 +877,7 @@ class StochasticFragment:
 
     @property
     def details(self) -> str:
+        """ long string representation """
         text = str(self) + "  {"
         text += f"id_: {self.id_}, "
         text += f"num_nodes: {len(self.nodes)}"
@@ -780,10 +885,12 @@ class StochasticFragment:
 
     @property
     def in_stochastic_object(self) -> bool:
+        """ returns that if on the tree up to the root there is a stochastic object parent """
         return self.parent.in_stochastic_object
 
     @property
     def root(self) -> BigSMILES:
+        """ the owner at the top of the parent tree """
         return self.parent.root
 
     def _get_id(self, node_type) -> int:
@@ -792,21 +899,22 @@ class StochasticFragment:
 
 class StochasticObject:
     """
-    Bond
-
-    Attributes
-    ----------
-        id_: int
-        id of bond (id is limited to bonds)
-        range: [1, inf]
-
-
+    this class is represents a stochastic object
     """
-    _tree_print_repr = False
     __slots__ = ["nodes", "bonding_descriptors", "id_", "parent", "bd_left", "bd_right",
                  "_bond_left", "_bond_right", "__dict__"]
 
-    def __init__(self, parent: BigSMILES | StochasticFragment | Branch, id_: int = None, **kwargs):
+    def __init__(self, id_: int, parent: BigSMILES | StochasticFragment | Branch, **kwargs):
+        """
+        Parameters
+        ----------
+        id_: int
+            id of bond (id is limited to bonds). Range: [1, inf]
+        parent: BigSMILES | StochasticFragment | Branch
+            the owner of the atom
+        kwargs:
+            any additional keyword arguments are accepted and set as additional attributes
+        """
         self.nodes: list[StochasticFragment] = []
         self.bonding_descriptors: list[BondDescriptor] = []
         self.bd_left: BondDescriptor | None = None
@@ -827,6 +935,7 @@ class StochasticObject:
         return self.to_string(print_repr=True, skip_color=True)
 
     def __eq__(self, other: StochasticObject):
+        """ equality is determining all nodes and bonding descriptors are equal """
         if not isinstance(other, StochasticObject):
             return False
 
@@ -844,6 +953,7 @@ class StochasticObject:
 
     @property
     def details(self) -> str:
+        """ long string representation """
         text = str(self) + "  {"
         text += f"id_: {self.id_}, "
         text += f"num_nodes: {len(self.nodes)}"
@@ -851,6 +961,7 @@ class StochasticObject:
 
     @property
     def bond_left(self) -> Bond | None:
+        """ bond leaving the left of the stochastic object """
         return self._bond_left
 
     @bond_left.setter
@@ -861,6 +972,7 @@ class StochasticObject:
 
     @property
     def bond_right(self) -> Bond | None:
+        """ bond leaving the right of the stochastic object """
         return self._bond_right
 
     @bond_right.setter
@@ -871,6 +983,7 @@ class StochasticObject:
 
     @property
     def aromatic(self) -> bool:
+        """ limited accuracy """
         if self.bd_left.bond_order == 1.5:
             # not checking right bond descriptor, maybe we should? but during construction it is not defined
             return True
@@ -907,14 +1020,17 @@ class StochasticObject:
 
     @property
     def in_stochastic_object(self) -> bool:
+        """ returns True as it is the stochastic object """
         return True
 
     @property
     def root(self) -> BigSMILES:
+        """ the owner at the top of the parent tree """
         return self.parent.root
 
     @property
     def bonds(self) -> list[Bond]:
+        """ bonds entering the left and right """
         bonds = []
         if self.bond_left is not None:
             bonds.append(self.bond_left)
@@ -941,19 +1057,28 @@ def contains_stochastic_object(nodes: list[Atom, Bond, Branch, StochasticObject]
 
 class BigSMILES:
     """
-    BigSMILES hi
+    This class is used to represent a BigSMILES.
 
-    Attributes
-    ----------
-    nodes: list[Atom | Bond | StochasticObject | Branch]
-        list of nodes
+    BigSMILES is a superset of SMILES; so any this class handles SMILES as well
 
+    Examples
+    --------
+    bigsmiles("C1CCCCC1")
+
+    bigsmiles("CC(CC){[>][<]CC(c1ccccc1)[>][<]}[H]")
 
     """
-    _tree_print_repr = False
     __slots__ = ["nodes", "atoms", "bonds", "rings", "__dict__"]
 
-    def __init__(self, input_text: str = None):
+    def __init__(self, input_text: str | None = None, **kwargs):
+        """
+        Parameters
+        ----------
+        input_text: str | None
+            BigSMILES or SMILES string. String will be processed automatically. (pass 'None' if using 'constructor')
+        kwargs:
+            any additional keyword arguments are accepted and set as additional attributes
+        """
         self.nodes: list[Atom | Bond | StochasticObject | Branch] = []
         self.atoms: list[Atom | BondDescriptorAtom] = []  # includes atoms in sub-objects
         self.bonds: list[Bond] = []  # includes bonds in sub-objects
@@ -967,6 +1092,10 @@ class BigSMILES:
             from bigsmiles.constructors.construct_bigsmiles_from_tokens import parse_bigsmiles_str
             parse_bigsmiles_str(input_text, self)
 
+        if kwargs:
+            for k, v in kwargs.items():
+                setattr(self, k, v)
+
     def __str__(self):
         return self.to_string()
 
@@ -974,18 +1103,22 @@ class BigSMILES:
         return self.to_string(print_repr=True, skip_color=True)
 
     def __getitem__(self, obj: int | slice) -> Atom | list[Atom]:
-        return self.atoms[obj]
+        """ get items by node index or slice """
+        return self.nodes[obj]
 
     def __iter__(self):
-        return iter(self.atoms)
+        """ iterator over nodes """
+        return iter(self.nodes)
 
     def __bool__(self):
+        """ returns True if BigSMILES has nodes """
         if self.nodes:
             return True
         else:
             return False
 
     def __eq__(self, other: BigSMILES):
+        """ equality is determining all nodes and rings are equal """
         if not isinstance(other, BigSMILES):
             return False
 
@@ -1009,6 +1142,7 @@ class BigSMILES:
 
     @property
     def details(self) -> str:
+        """ long string representation """
         text = str(self) + "  {"
         text += f"num_nodes: {len(self.nodes)}, "
         text += f"num_atoms: {len(self.atoms)}, "
@@ -1017,41 +1151,30 @@ class BigSMILES:
 
     @property
     def in_stochastic_object(self) -> bool:
+        """ returns False as BigSMILES is always a root node and can't be contained in anything """
         return False
 
     @property
     def contains_stochastic_object(self) -> bool:
+        """ returns True if a stochastic object is present in the BigSMILES (anywhere) """
         return contains_stochastic_object(self.nodes)
 
     @property
     def has_disconnect(self) -> bool:
+        """ returns True if '.' (disconnect symbol) is present in the BigSMILES (anywhere) """
         for bond in self.bonds:
-            if bond.symbol == ":":
+            if bond.symbol == ".":
                 return True
         return False
 
     @property
     def root(self) -> BigSMILES:
+        """ root will return itself as BigSMILES object is always the root node """
         return self
 
     def _get_id(self, node_type) -> int:
         self._ids_[node_type] += 1
         return self._ids_[node_type]
-
-    def print_tree(self, show_object_label: bool = True, print_repr: bool = False):
-        """
-        prints a tree representation of the parsed bigsmiles
-
-        Parameters
-        ----------
-        show_object_label: bool
-            show object labels
-        print_repr: bool
-            use repr() instead of str()
-
-        """
-        from bigsmiles.methods.tree_to_string import tree_to_string  # here to avoid circular imports
-        print(tree_to_string(self, show_object_label, print_repr))
 
 
 # types  (for python >3.10)
@@ -1063,6 +1186,7 @@ class BigSMILES:
 # types (for python <=3.9)
 import typing
 
+bigsmiles_obj = [Atom, Bond, Branch, BondDescriptorAtom, StochasticObject, StochasticFragment, BigSMILES]
 has_node_attr = typing.Union[BigSMILES, Branch, StochasticObject, StochasticFragment]
 has_ring_attr = typing.Union[BigSMILES, StochasticObject]
 has_parent_attr = typing.Union[Branch, StochasticObject, StochasticFragment, Bond, BondDescriptorAtom, Atom]

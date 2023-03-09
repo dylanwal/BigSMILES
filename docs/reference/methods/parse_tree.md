@@ -1,15 +1,23 @@
-### Print Tree
+---
+
+::: bigsmiles.methods.display_methods.tree_to_string.tree_to_string
+
+
+## Example
+
 #### Code:
 ```python
 import bigsmiles
+import bigsmiles.methods as bs_methods
 
 polymer_string = "CC{[>][<]CC(C)[>][<]}CC(C)=C"
 polymer = bigsmiles.BigSMILES(polymer_string)
-polymer.print_tree()
+text = bs_methods.print_tree(polymer)
+print(text)
 ```
 
 #### Output:
-```python
+```text
 BigSMILES: CC{[>][<]CC(C)[>][<]}CC(C)=C
 ├── Atom: C
 ├── Bond: 
@@ -37,3 +45,8 @@ BigSMILES: CC{[>][<]CC(C)[>][<]}CC(C)=C
 ├── Bond: =
 └── Atom: C
 ```
+
+
+## Configuration
+
+::: bigsmiles.methods.display_methods.tree_to_string.TreeConfig

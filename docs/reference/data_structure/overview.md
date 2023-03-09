@@ -1,78 +1,67 @@
 
-## Abstract Syntax Tree
+The BigSMILES will be parsed into an abstract syntax tree. There are 3 classes of nodes:
 
-root node: `BigSMILES` 
-
-intermediate nodes: `StochasticObject`, `StochasticFragment`, `Branch`
-
-leaf nodes: `BondDescriptorAtom`, `Atom`, `Bond`
+* root node: `BigSMILES`
+* intermediate nodes: `StochasticObject`, `StochasticFragment`, `Branch`
+* leaf nodes: `BondDescriptorAtom`, `Atom`, `Bond`
 
 
 BigSMILE objects (`Atom`, `Bond`, `BondingDescriptor`, `Branch`, `StochasticFragment`, `StochasticObject`, `BigSMILES`) 
-only holds data. Creation of these objects are handled by the `Constructor`.
+only holds data. 
+
+
+!!! info
+    Creation of these objects are handled by the 'Constructor' methods.
+
 
 ```mermaid
 classDiagram
 
     class BigSMILES {
-        list: nodes
+        nodes: [intermediate nodes, leaf nodes]
+        atoms: [Atom]
+        bonds: [Bond]
+        rings: [Bond]
     }
     
     
     class StochasticObject {
-        int: id_
-        list: nodes
-        BondingDescriptor: end_group_left
-        BondingDescriptor: end_group_right
+        nodes: [StochasticFragment]
+        bond_left: Bond
+        bond_right: Bond
+        bond_descriptors: BondDescriptor
     }
     
     
     class StochasticFragment {
-        int: id_
-        list: nodes
+        nodes: [intermediate nodes, leaf nodes]
+        rings: [Bond]
     }
     
     
     class Branch {
-        int: id_
-        list: nodes
+        nodes: [intermediate nodes, leaf nodes]
     }
     
     
     class BondDescriptorAtom {
-        int: id_
         BondDescriptor: descriptor
         Bond: bond
     }
     
     
     class BondDescriptor {
-        str: symbol
-        int: index_
-        Enum: type_
-        list[BondDescriptorAtom]: instances
+        instances: list[BondDescriptorAtom] 
     }
 
     
     class Bond {
-        int: id_
-        str: symbol
-        Enum: type_
-        Atom: atom1
-        Atom: atom2
-        int: ring_id
+        atom1: Atom
+        atom2 Atom
     }
     
     class Atom {
-        int: id_
-        str: symbol
-        Enum: type_
-        int: isotope
-        int: charge
-        Enum: chiral
-        int: valance
-        bool: orgainic
-        list[Bond]: bonds
+        bonds: list[Bond]: 
     }
 
     BigSMILES --|> Atom

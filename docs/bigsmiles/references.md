@@ -1,6 +1,4 @@
-# New BigSMILES documentation
-
-
+---
 
 ## Old BigSMILES documentation
 [Learn more about BigSMILES Notation](https://olsenlabmit.github.io/BigSMILES/docs/line_notation.html#the-bigsmiles-line-notation)

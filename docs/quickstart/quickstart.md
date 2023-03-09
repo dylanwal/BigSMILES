@@ -1,6 +1,6 @@
 
 
-suggested shorting of `import bigsmiles` --> `import bigsmiles as bs`
+suggested shortening of `import bigsmiles` --> `import bigsmiles as bs`
 
 
 ```python

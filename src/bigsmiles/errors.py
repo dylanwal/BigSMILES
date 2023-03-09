@@ -2,6 +2,8 @@ from __future__ import annotations
 
 
 class BigSMILESError(Exception):
+    """ base BigSMILES error """
+
     def __init__(self, text: str, error=None):
         if isinstance(error, BigSMILESError):
             text += '\n\t'

@@ -3,19 +3,15 @@
 ---
 ---
 
-
 **(still under development; but usable)**
 
 SMILES (simplified molecular-input line-entry system) representation is a line notation for molecules with 
-given deterministic molecular structures. **BigSMILES** is an extension to SMILES which provides support for molecules 
+given deterministic molecular structures. 
+
+**BigSMILES** is an extension to SMILES which provides support for molecules 
 that contain stochastic molecular structures. The code here parses the string into and abstract syntax tree.
 
-[Documention]()
-
-
-
-
-
+[**Documention**](https://dylanwal.github.io/BigSMILES/)
 
 
 ---
@@ -48,9 +44,16 @@ polymer = bs.BigSMILES(polymer_string)
 ```
 
 
+## Documentation
+
+For quickstart, tutorials, reference material, BigSMILES, everything...  see documentation: 
+
+[**Documention**](https://dylanwal.github.io/BigSMILES/)
+
+
 ## Features NOT implemented yet
 * ladder polymers
-* Validation
-  * Is not comprehensive
+* Validation is not comprehensive
 * Not all aromatic rings are processed correctly at the moment 
-
+... Lots more to come
+* 

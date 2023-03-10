@@ -5,28 +5,29 @@ import bigsmiles
 
 
 cases = [
-    ["F/C=C/F", {5: "E"}],  # E-difluoroethene
-    ["F\C=C\F", {5: "Z"}],  # Z-difluoroethene
-    ["C(\F)=C/F", {5: "Z"}],  # trans
-    ["F\C=C/F", {5: "Z"}],  # cis
-    ["F/C=C\F", {5: "Z"}],  # cis
-    ["F/C(CC)=C/F", {5: "Z"}],
-    ["F/C=C=C=C/F", {5: "Z"}],  # trans
-    ["F/C=C=C=C\F", {5: "Z"}], # cis
-    ["F/C=C/C/C=C\C", {5: "Z"}],
-    ["F/C=C/CC=CC", {5: "Z"}],  # partially specified
-    ["CC(F)/C=C/F", {5: "Z"}],
-    ["CCC(\F)=C/F", {5: "Z"}],  #
-    ["CCC(\F)=C(/F)CC", {5: "Z"}],
+    ["F/C=C/F", {2: "E"}],  # E-difluoroethene
+    ["F\C=C\F", {2: "E"}],  # E-difluoroethene
+    ["F\C=C/F", {2: "Z"}],  # Z-difluoroethene
+    ["F/C=C\F", {2: "Z"}],  # Z-difluoroethene
+    ["C(\F)=C/F", {2: "E"}],  #
+    ["F/C(CC)=C/F", {4: "E"}],
+
+    ["F/C=C=C=C/F", {2: "E"}],
+    ["F/C=C=C=C\F", {2: "Z"}],
+    ["F/C=C/C/C=C\C", {2: "Z"}],
+    ["F/C=C/CC=CC", {2: "Z"}],  # partially specified
+    ["CC(F)/C=C/F", {2: "Z"}],
+    ["CCC(\F)=C/F", {2: "Z"}],  #
+    ["CCC(\F)=C(/F)CC", {2: "Z"}],
 ]
 
 
 @pytest.mark.parametrize("case", cases)
-def test_whole_system_molecule(case: str):
+def test_ez_cases(case: str):
     input_, answer = case
-    result = bigsmiles.Reaction(input_)
-    for chem, ans in zip(result.reactants, answer[0]):
-        assert chem == ans
+    result = bigsmiles.BigSMILES(input_)
+    for k in answer:
+        assert result.bonds[k].double_bond_ez == answer[k]
 
 
 cases_errors = [

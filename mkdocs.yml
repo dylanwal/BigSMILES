@@ -60,12 +60,16 @@ nav:
           - Bond Descriptor Atom: reference/data_structure/Bond_descriptor_atom.md
           - Stochastic Fragment: reference/data_structure/Stochastic_fragment.md
           - Stochastic Object: reference/data_structure/Stochastic_object.md
+          - Reaction: reference/data_structure/Reaction.md
       - Methods:
+          - overview: reference/methods/overview.md
           - parse_tree: reference/methods/parse_tree.md
       - Constructor:
           - Overview: reference/constructor/overview.md
           - Constructor: reference/constructor/constructor.md
-          - Constructor: reference/constructor/constructor_str.md
+          - Constructor(strings): reference/constructor/constructor_str.md
+          - Constructor(tokens): reference/constructor/constructor_tokens.md
+          - Constructor(reaction): reference/constructor/constructor_reaction.md
           - Tokenizer: reference/constructor/tokenizer.md
       - Configuration: reference/configuration.md
       - Errors: reference/errors.md

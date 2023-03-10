@@ -35,7 +35,7 @@ class Atom:
                  id_: int,
                  symbol: str,
                  isotope: int | None = None,
-                 stereo: str = '',
+                 stereo: str | None = None,
                  hydrogens: int | None = None,
                  charge: int = 0,
                  valence: int | float | None = None,
@@ -49,13 +49,15 @@ class Atom:
         id_: int
             id of atom (id is limited to atoms). Range: [1, inf]
         symbol: str
-            element symbol (e.g., H, C, O, Zn)
+            symbol symbol (e.g., H, C, O, Zn)
         isotope: int | None
             isotope (e.g., [13C])
+        stereo: str | None
+            stereochemistry [None, "@", "@@"] (None means not defined)
         hydrogens: int | None
             number of explict hydrogens  (e.g., [CH2])
         charge: int
-            element charge  (e.g., [Fe+3])
+            symbol charge  (e.g., [Fe+3])
         valence: int
             The capacity to form bonds with other atoms
         class_: int | None
@@ -103,7 +105,7 @@ class Atom:
         equality is based on the following parameters:
 
         * id_
-        * element
+        * symbol
         * isotope
         * stereo
         * hydrogens
@@ -1057,7 +1059,7 @@ def contains_stochastic_object(nodes: list[Atom, Bond, Branch, StochasticObject]
 
 class BigSMILES:
     """
-    This class is used to represent a BigSMILES.
+    this class is used to represent a BigSMILES.
 
     BigSMILES is a superset of SMILES; so any this class handles SMILES as well
 
@@ -1070,11 +1072,11 @@ class BigSMILES:
     """
     __slots__ = ["nodes", "atoms", "bonds", "rings", "__dict__"]
 
-    def __init__(self, input_text: str | None = None, **kwargs):
+    def __init__(self, text: str | None = None, **kwargs):
         """
         Parameters
         ----------
-        input_text: str | None
+        text: str | None
             BigSMILES or SMILES string. String will be processed automatically. (pass 'None' if using 'constructor')
         kwargs:
             any additional keyword arguments are accepted and set as additional attributes
@@ -1087,10 +1089,10 @@ class BigSMILES:
         self._ids_ = {Atom: 0, Bond: 0, BondDescriptorAtom: 0, StochasticFragment: 0, StochasticObject: 0, Branch: 0}
 
         # parse input string
-        if input_text:
+        if text:
             # import here to avoid circular imports
             from bigsmiles.constructors.construct_bigsmiles_from_tokens import parse_bigsmiles_str
-            parse_bigsmiles_str(input_text, self)
+            parse_bigsmiles_str(text, self)
 
         if kwargs:
             for k, v in kwargs.items():

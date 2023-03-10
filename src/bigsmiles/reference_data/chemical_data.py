@@ -18,7 +18,7 @@ bond_mapping = {
 
 stereo_bonds = {"/", "\\"}
 
-# load element data from JSON
+# load symbol data from JSON
 file_path = os.path.dirname(os.path.realpath(__file__))
 path_to_data = os.path.join(file_path, "elements_data.json")
 with open(path_to_data, "r", encoding="UTF-8") as f:

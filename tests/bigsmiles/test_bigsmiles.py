@@ -393,7 +393,7 @@ def test_incomplete_valance(caplog, case: list):
 
 
 validation_cases = [
-    ["DJW"],  # not an element
+    ["DJW"],  # not an symbol
     ["[C"],
     ["[C]]"],
     ["[]"],

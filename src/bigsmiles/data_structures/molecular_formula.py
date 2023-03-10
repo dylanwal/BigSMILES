@@ -63,7 +63,7 @@ class MolecularFormula:
         """
         Given a split chemical formula return a dictionary of element_symbols.
         :param split_formula:
-        :return: {"element symbol": "count"} -> {"C": 1, "O": 2}
+        :return: {"symbol symbol": "count"} -> {"C": 1, "O": 2}
         """
         # put data into dictionary
         elements = {}
@@ -95,7 +95,7 @@ class MolecularFormula:
 
     def _element_to_formula(self, elements: dict, order: list[str] = None) -> str:
         """
-        Converts element dictionary into a reduced string.
+        Converts symbol dictionary into a reduced string.
         """
         # Set order
         if order is None:

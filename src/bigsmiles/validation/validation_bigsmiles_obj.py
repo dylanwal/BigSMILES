@@ -4,7 +4,7 @@ Remaining validation done on the BigSMILES object
 
 Note:
 * tokenization should take care of symbol validation
-* Bigsmiles_constructor should take care of most bond and valance issues
+* Bigsmiles_constructor should take care of most bond and valence issues
 
 This is mainly to catch additional leftover validation.
 

@@ -1,32 +1,48 @@
-"""
-
-Data structure for BigSMILE reaction notation.
-
-reactant '>' agent '>' product
-reactant '>>' product
-
-reactant.reactant>>product.product
-reactant,reactant>>product,product (comma supported for easier parsing)
-
-agents: are not consumed during the reaction
-
-"""
 from __future__ import annotations
 from bigsmiles.data_structures.bigsmiles import BigSMILES
 
 
 class Reaction:
+    """
+
+    data structure for reaction BigSMILES
+
+    !!! info "Accepted patterns"
+
+        * reactant '>' agent '>' product
+        * reactant '>>' product
+        * reactant.reactant>>product.product
+        * reactant,reactant>>product,product (comma supported for easier parsing)
+
+    !!! info "Definitions"
+        **^^reactants:^^** materials that contributing one or more atoms to the product
+
+        **^^agents:^^** materials that don't contribute any atoms to the product or receive atoms from the reactant
+        (catalysts, solvents)
+
+        **^^product:^^** output of reactions. all atoms should have come from the reactants
+
+    """
     __slots__ = ["reactants", "agents", "products", "__dict__"]
 
-    def __init__(self, input_text: str = None, **kwargs):
+    def __init__(self, text: str | None = None, **kwargs):
+        """
+
+        Parameters
+        ----------
+        text: str
+            Reaction BigSMILES string
+        kwargs:
+            any additional keyword arguments are accepted and set as additional attributes
+        """
         self.reactants: list[BigSMILES] = []
         self.agents: list[BigSMILES] = []
         self.products: list[BigSMILES] = []
 
         # parse input string
-        if input_text:
-            from bigsmiles.constructors.parse_reaction import parse_reaction
-            self.reactants, self.agents, self.products = parse_reaction(input_text)
+        if text:
+            from bigsmiles.constructors.constructor_reaction import parse_reaction
+            self.reactants, self.agents, self.products = parse_reaction(text)
 
         if kwargs:
             for k, v in kwargs.items():

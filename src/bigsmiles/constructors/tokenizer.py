@@ -12,6 +12,32 @@ import bigsmiles.reference_data.chemical_data as chemical_data
 
 
 class TokenKind(enum.Enum):
+    """
+    **Enum**
+
+    the kind of tokens that will be extracted from BigSMILES string
+
+    Attributes
+    ----------
+    Bond
+    Atom
+    Aromatic
+    AtomExtend
+    BranchStart
+    BranchEnd
+    Ring
+    Ring2
+    BondEZ
+    Disconnected
+    Rxn
+    BondDescriptor
+    StochasticSeperator
+    StochasticStart
+    StochasticEnd
+    ImplictEndGroup
+    BondDescriptorLadder
+
+    """
     Bond = 0
     Atom = 1
     Aromatic = 2
@@ -32,7 +58,7 @@ class TokenKind(enum.Enum):
 
 
 _isotope_pattern = r'(?P<isotope>[\d]{1,3})?'
-_element_pattern = r'(?P<element>' + "|".join(chemical_data.aromatic_elements) + "|" \
+_element_pattern = r'(?P<symbol>' + "|".join(chemical_data.aromatic_elements) + "|" \
                    + "|".join(chemical_data.elements_ordered) + ')'
 _stereo_pattern = r'(?P<stereo>@{1,2})?'
 _hydrogen_pattern = r'(?P<hydrogens>H[\d]?)?'
@@ -73,9 +99,25 @@ tok_regex = re.compile(tok_regex)
 
 
 class Token:
+    """
+    token; what a BigSMILES string gets broken up into
+    """
     __slots__ = ("kind", "value")
 
     def __init__(self, kind: TokenKind, value: str):
+        """
+        Parameters
+        ----------
+        kind: TokenKind
+            token kind
+        value: str
+            token text
+
+        Examples
+        --------
+        >>> Token(TokenKind.AtomExtend, "[13CH2]")
+
+        """
         self.kind = kind
         self.value = value
 
@@ -96,7 +138,7 @@ class Token:
 def tokenize(text: str) -> list[Token]:
     """
 
-    Tokenizes a bigSMILES string.
+    tokenizes a bigSMILES string
 
     Parameters
     ----------
@@ -108,6 +150,17 @@ def tokenize(text: str) -> list[Token]:
     result: list[Token]
         BigSMILES as a token list
 
+    Raises
+    ------
+    TokenizeError
+        invalid symbol detected
+
+    Examples
+    --------
+    >>> tokenize("C(C)C")
+    [Token(TokenKind.Atom, "C"), Token(TokenKind.BranchStart, "("), Token(TokenKind.Atom, "C"),
+    Token(TokenKind.BranchEnd, ")"), Token(TokenKind.Atom, "C")]
+
     """
     result = []
     for match in re.finditer(tok_regex, text.replace(" ", "")):
@@ -118,7 +171,7 @@ def tokenize(text: str) -> list[Token]:
             continue
         elif kind == 'MISMATCH':
             if text[:2] in chemical_data.element_symbols:
-                raise TokenizeError(f"Invalid symbol. If the element is not in the list below it must be in []."
+                raise TokenizeError(f"Invalid symbol. If the symbol is not in the list below it must be in []."
                                     f"\nNon-bracket elements: {chemical_data.organic_elements}"
                                     f"\n(starting with {value!r}; index: {match.span()[0]})"
                                 f'\n{text}' + "\n" + " " * match.span()[0] + "^(and forward)")
@@ -138,8 +191,34 @@ ATOM_PATTERN = re.compile(atom_pattern)
 
 
 def tokenize_atom_symbol(symbol: str) -> dict:
+    """
+    convert atom symbol into a dictionary of the following values:
+
+    * symbol
+    * isotope (default: None)
+    * stereo  (default: None)
+    * hydrogens  (default: None)
+    * charge  (default: 0)
+    * class_  (default: None)
+
+    Parameters
+    ----------
+    symbol: str
+        atom string
+
+    Returns
+    -------
+    result: dict[str: str | int]
+        {"symbol": str, "isotope": int, "stereo": str, "hydrogens": int, "charge": int, "class_": int}
+
+    Examples
+    --------
+    >>> tokenize_atom_symbol("[13C@H+:1]")
+    {"symbol": "C", "isotope": 13, "stereo": "@", "hydrogens": 1, "charge": 1, "class_": 1}
+
+    """
     if symbol in chemical_data.elements_aromatic:
-        return {"element": symbol, "isotope": None, "stereo": None, "hydrogens": None, "charge": 0, "class_": None}
+        return {"symbol": symbol, "isotope": None, "stereo": None, "hydrogens": None, "charge": 0, "class_": None}
 
     try:
         results = ATOM_PATTERN.match(symbol).groupdict()
@@ -180,6 +259,32 @@ DEFAULT_BONDING_DESCRIPTOR_INDEX = 1
 
 
 def tokenize_bonding_descriptor(symbol: str) -> tuple[str, int]:
+    """
+    convert bonding descriptor symbol into the following values:
+
+    * symbol
+    * index
+
+    Parameters
+    ----------
+    symbol: str
+        bonding_descriptor string
+
+    Returns
+    -------
+    result: tuple[str, int]
+        [symbol, index]
+
+    Examples
+    --------
+    >>> tokenize_atom_symbol("[$1]")
+    ["$", 1]
+
+    Notes
+    -----
+    * default bonding descriptor index = 1
+
+    """
     symbol = symbol.replace("[", "").replace("]", "")
     if not symbol:
         return symbol, DEFAULT_BONDING_DESCRIPTOR_INDEX

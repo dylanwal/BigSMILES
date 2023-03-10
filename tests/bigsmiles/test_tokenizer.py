@@ -7,38 +7,38 @@ from bigsmiles.constructors.tokenizer import TokenKind, tokenize, Token, tokeniz
     tokenize_atom_symbol
 
 cases_for_atom_pattern = [
-    ["C", {"element": "C", "isotope": None, "stereo": None, "hydrogens": None, "charge": 0, "class_": None}],
-    ["Zn", {"element": "Zn", "isotope": None, "stereo": None, "hydrogens": None, "charge": 0, "class_": None}],
-    ["c", {"element": "c", "isotope": None, "stereo": None, "hydrogens": None, "charge": 0, "class_": None}],
+    ["C", {"symbol": "C", "isotope": None, "stereo": None, "hydrogens": None, "charge": 0, "class_": None}],
+    ["Zn", {"symbol": "Zn", "isotope": None, "stereo": None, "hydrogens": None, "charge": 0, "class_": None}],
+    ["c", {"symbol": "c", "isotope": None, "stereo": None, "hydrogens": None, "charge": 0, "class_": None}],
 
     # isotope
-    ["[13C]", {"element": "C", "isotope": 13, "stereo": None, "hydrogens": 0, "charge": 0, "class_": None}],
-    ["[238U]", {"element": "U", "isotope": 238, "stereo": None, "hydrogens": 0, "charge": 0, "class_": None}],
+    ["[13C]", {"symbol": "C", "isotope": 13, "stereo": None, "hydrogens": 0, "charge": 0, "class_": None}],
+    ["[238U]", {"symbol": "U", "isotope": 238, "stereo": None, "hydrogens": 0, "charge": 0, "class_": None}],
 
     # stereo
-    ["[C@]", {"element": "C", "isotope": None, "stereo": "@", "hydrogens": 0, "charge": 0, "class_": None}],
-    ["[C@@]", {"element": "C", "isotope": None, "stereo": "@@", "hydrogens": 0, "charge": 0, "class_": None}],
+    ["[C@]", {"symbol": "C", "isotope": None, "stereo": "@", "hydrogens": 0, "charge": 0, "class_": None}],
+    ["[C@@]", {"symbol": "C", "isotope": None, "stereo": "@@", "hydrogens": 0, "charge": 0, "class_": None}],
 
     # hydrogens
-    ["[H]", {"element": "H", "isotope": None, "stereo": None, "hydrogens": 0, "charge": 0, "class_": None}],
-    ["[C]", {"element": "C", "isotope": None, "stereo": None, "hydrogens": 0, "charge": 0, "class_": None}],
-    ["[CH]", {"element": "C", "isotope": None, "stereo": None, "hydrogens": 1, "charge": 0, "class_": None}],
-    ["[CH2]", {"element": "C", "isotope": None, "stereo": None, "hydrogens": 2, "charge": 0, "class_": None}],
-    ["[CH3]", {"element": "C", "isotope": None, "stereo": None, "hydrogens": 3, "charge": 0, "class_": None}],
-    ["[ZnH3]", {"element": "Zn", "isotope": None, "stereo": None, "hydrogens": 3, "charge": 0, "class_": None}],
+    ["[H]", {"symbol": "H", "isotope": None, "stereo": None, "hydrogens": 0, "charge": 0, "class_": None}],
+    ["[C]", {"symbol": "C", "isotope": None, "stereo": None, "hydrogens": 0, "charge": 0, "class_": None}],
+    ["[CH]", {"symbol": "C", "isotope": None, "stereo": None, "hydrogens": 1, "charge": 0, "class_": None}],
+    ["[CH2]", {"symbol": "C", "isotope": None, "stereo": None, "hydrogens": 2, "charge": 0, "class_": None}],
+    ["[CH3]", {"symbol": "C", "isotope": None, "stereo": None, "hydrogens": 3, "charge": 0, "class_": None}],
+    ["[ZnH3]", {"symbol": "Zn", "isotope": None, "stereo": None, "hydrogens": 3, "charge": 0, "class_": None}],
 
     # charge
-    ["[Fe+]", {"element": "Fe", "isotope": None, "stereo": None, "hydrogens": 0, "charge": 1, "class_": None}],
-    ["[Fe-]", {"element": "Fe", "isotope": None, "stereo": None, "hydrogens": 0, "charge": -1, "class_": None}],
-    ["[Fe+2]", {"element": "Fe", "isotope": None, "stereo": None, "hydrogens": 0, "charge": 2, "class_": None}],
-    ["[Fe+++]", {"element": "Fe", "isotope": None, "stereo": None, "hydrogens": 0, "charge": 3, "class_": None}],
+    ["[Fe+]", {"symbol": "Fe", "isotope": None, "stereo": None, "hydrogens": 0, "charge": 1, "class_": None}],
+    ["[Fe-]", {"symbol": "Fe", "isotope": None, "stereo": None, "hydrogens": 0, "charge": -1, "class_": None}],
+    ["[Fe+2]", {"symbol": "Fe", "isotope": None, "stereo": None, "hydrogens": 0, "charge": 2, "class_": None}],
+    ["[Fe+++]", {"symbol": "Fe", "isotope": None, "stereo": None, "hydrogens": 0, "charge": 3, "class_": None}],
 
     # atom class_
-    ["[CH3:1]", {"element": "C", "isotope": None, "stereo": None, "hydrogens": 3, "charge": 0, "class_": 1}],
-    ["[Zn:53]", {"element": "Zn", "isotope": None, "stereo": None, "hydrogens": 0, "charge": 0, "class_": 53}],
+    ["[CH3:1]", {"symbol": "C", "isotope": None, "stereo": None, "hydrogens": 3, "charge": 0, "class_": 1}],
+    ["[Zn:53]", {"symbol": "Zn", "isotope": None, "stereo": None, "hydrogens": 0, "charge": 0, "class_": 53}],
 
     # aromatic_elements
-    ["[13cH:1]", {"element": "c", "isotope": 13, "stereo": None, "hydrogens": 1, "charge": 0, "class_": 1}],
+    ["[13cH:1]", {"symbol": "c", "isotope": 13, "stereo": None, "hydrogens": 1, "charge": 0, "class_": 1}],
 
 ]
 
@@ -211,7 +211,7 @@ def test_tokenizer(case: list):
 
 negative_token_tests = [
     "Zn",  # not in brackets
-    "E",  # not an element
+    "E",  # not an symbol
     "%",  # not valid on its own
     "[C<]",  # not valid
     "[CH2:]",

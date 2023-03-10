@@ -9,7 +9,27 @@ rxn_split_pattern = re.compile(r"(?<!\[)(>>|>)")
 
 
 def parse_reaction(text: str) -> tuple[list[BigSMILES], list[BigSMILES], list[BigSMILES]]:
-    """ Main entry point to parsing reaction SMILES. """
+    """
+    Main entry point to parsing reaction SMILES.
+
+    !!! info "Regular Expression Pattern"
+
+        pattern: r"(?<!\[)(>>|>)"
+
+    Parameters
+    ----------
+    text: str
+        reaction BigSMILES string
+
+    Returns
+    -------
+    reactants: list[BigSMILES]
+        reactants
+    agents: list[BigSMILES]
+        agents
+    products: list[BigSMILES]
+        products
+    """
     result = re.split(rxn_split_pattern, text.replace(" ", ""))
 
     try:
@@ -66,6 +86,7 @@ def process_chemical_block(text: str) -> list[BigSMILES]:
 
 
 def comma_split(text: str) -> list[str]:
+    """ splits on commas only at the top level (don't hit on commas in stochastic objects) """
     flag = 0
     buffer = ""
     result = []
@@ -90,7 +111,22 @@ def comma_split(text: str) -> list[str]:
 ## Split chemicals with '.' disconnect notation ## noqa
 #######################################################################################################################
 def split_chemical(bigsmiles_: BigSMILES) -> list[BigSMILES]:
-    """ Only look at first level. """
+    """
+    Tries to split a BigSMILES at disconnects '.' if it thinks they are different molecules/polymers.
+
+    If it can't determine, it won't do anything.
+
+    Parameters
+    ----------
+    bigsmiles_: BigSMILES
+        bigsmiles which may or may not be made of multiple molecules/polymers seperated by disconnect notation '.'
+
+    Returns
+    -------
+    results: list[BigSMILES]
+        list of BigSMILES of individual molecules/polymers
+
+    """
     if not bigsmiles_.has_disconnect:
         return [bigsmiles_]
 

@@ -86,7 +86,7 @@ def map_bond_descriptor(parent: has_node_attr, tokens: list[Token], token: Token
             raise errors.BigSMILESError(f"Invalid Symbol following stochastic object close.")
         tokens.insert(0, next_token)
 
-        return constructor.add_bonding_descriptor_str(parent, token.value, bond)
+        return constructor.add_bonding_descriptor_atom_str(parent, token.value, bond)
 
     tokens.insert(0, next_token)
     if constructor.get_prior(parent, (Atom, StochasticObject, BondDescriptorAtom)).aromatic:
@@ -135,7 +135,7 @@ def map_stochastic_object_start(parent: has_node_attr, tokens: list[Token], toke
     else:
         bond = bond_token.value
 
-    return constructor.open_stochastic_object_with_bond_str(parent, bond, next_token.value)
+    return constructor.open_stochastic_object_fragment_with_bond_str(parent, bond, next_token.value)
 
 
 def map_stochastic_object_end(parent: has_node_attr, tokens: list[Token], token: Token) -> has_node_attr:
@@ -170,7 +170,7 @@ def map_disconnect(parent: has_node_attr, tokens: list[Token], token: Token):
         return constructor.add_bond_atom_pair_str(parent, ".", next_token.value)
 
     if next_token.kind is TokenKind.StochasticStart:
-        return constructor.open_stochastic_object_with_bond_str(parent, ".", next_token.value)
+        return constructor.open_stochastic_object_fragment_with_bond_str(parent, ".", next_token.value)
 
     if next_token.kind is TokenKind.BondDescriptor:
         return constructor.add_bond_bonding_descriptor_pair_str(parent, ".", next_token.value)

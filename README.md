@@ -3,9 +3,13 @@
 ---
 ---
 
+![PyPI](https://img.shields.io/pypi/v/bigsmiles)
+![downloads](https://static.pepy.tech/badge/bigsmiles)
+![license](https://img.shields.io/github/license/dylanwal/bigsmiles)
+
 **(still under development; but usable)**
 
-SMILES (simplified molecular-input line-entry system) representation is a line notation for molecules with 
+**SMILES** (simplified molecular-input line-entry system) representation is a line notation for molecules with 
 given deterministic molecular structures. 
 
 **BigSMILES** is an extension to SMILES which provides support for molecules 

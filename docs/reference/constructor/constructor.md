@@ -15,7 +15,9 @@
 
 ::: bigsmiles.constructors.constructor.add_bond
 
-::: bigsmiles.constructors.constructor.add_ring
+::: bigsmiles.constructors.constructor.add_ring_by_index
+
+::: bigsmiles.constructors.constructor.add_ring_from_atoms
 
 ::: bigsmiles.constructors.constructor.add_bonding_descriptor_atom
 
@@ -46,8 +48,6 @@
 ## build it in chunks
 
 
-
-::: bigsmiles.constructors.constructor.add_ring_from_atoms
 
 ::: bigsmiles.constructors.constructor.append_bigsmiles_fragment
 

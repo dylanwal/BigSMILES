@@ -58,7 +58,7 @@ def map_bond(parent: has_node_attr, tokens: list[Token], token: Token):
         return map_stochastic_object_start(parent, tokens, next_token, token)
 
     if next_token.kind is TokenKind.Ring or next_token.kind is TokenKind.Ring2:
-        return constructor.add_ring(parent, int(next_token.value.replace('%', '')), token.value)
+        return constructor.add_ring_by_index(parent, int(next_token.value.replace('%', '')), token.value)
 
     raise errors.BigSMILESError(f"Bond can't be followed by: {next_token.kind}")
 
@@ -113,7 +113,7 @@ def map_ring(parent: has_node_attr, tokens: list[Token], token: Token):
     else:
         bond = ""
 
-    return constructor.add_ring(parent, int(token.value.replace('%', '')), bond)
+    return constructor.add_ring_by_index(parent, int(token.value.replace('%', '')), bond)
 
 
 def map_stochastic_object_start(parent: has_node_attr, tokens: list[Token], token: Token, bond_token: Token = None):
@@ -218,6 +218,13 @@ valid_first_symbols = {TokenKind.Atom, TokenKind.AtomExtend, TokenKind.Aromatic,
 def tokens_to_bigsmiles(parent: has_node_attr, tokens: list[Token]):
     """
     Main loop for converting tokens into BigSMILES objects.
+
+    Parameters
+    ----------
+    parent:
+    tokens:
+        BigSMILES tokens
+
     """
     num_tokens = len(tokens)
 
@@ -241,6 +248,14 @@ def tokens_to_bigsmiles(parent: has_node_attr, tokens: list[Token]):
 def parse_bigsmiles_str(input_text: str, bigsmiles: BigSMILES):
     """
     Main function that turns BigSMILES string tokens then into a BigSMILES object.
+
+    Parameters
+    ----------
+    input_text:
+        BigSMILES string
+    bigsmiles: BigSMILES
+        this BigSMILES will be built up
+
     """
     try:
         input_text = run_string_validation(input_text)

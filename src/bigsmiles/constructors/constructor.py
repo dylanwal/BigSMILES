@@ -138,16 +138,12 @@ def exit_construction(parent: BigSMILES, syntax_fix: bool = True, validation: bo
 
     Parameters
     ----------
-    parent: BigSMILES
+    parent:
         BigSMILES to be checked
-    syntax_fix: bool
+    syntax_fix:
         True to perform syntax fixes
     validation:
         True to run validation
-
-    Returns
-    -------
-
     """
     if not isinstance(parent, BigSMILES):
         raise errors.ConstructorError(f"{type(parent)} is missing closing symbol.")
@@ -179,28 +175,27 @@ def add_atom(
 
     Parameters
     ----------
-    parent: BigSMILES, Branch, StochasticObject, StochasticFragment
-        the owner of the atom
-    symbol: str
+    parent:
+    symbol:
         symbol symbol (e.g., H, C, O, Zn)
-    isotope: int | None
+    isotope:
         isotope (e.g., [13C])
-    stereo: str | None
+    stereo:
         stereochemistry [None, "@", "@@"] (None means not defined)
-    hydrogens: int | None
+    hydrogens:
         number of explict hydrogens  (e.g., [CH2])
-    charge: int
+    charge:
         symbol charge  (e.g., [Fe+3])
-    valence: int
+    valence:
         The capacity to form bonds with other atoms
-    class_: int | None
+    class_:
         index of class (e.g., [C:1] class_ = 1)
     kwargs:
-        any additional keyword arguments are accepted and set as additional attributes
+        any additional keyword arguments are accepted and set as additional attributes to the Atom
 
     Returns
     -------
-    parent: BigSMILES, Branch, StochasticObject, StochasticFragment
+    parent:
         returns the parent passed to it
     """
     atom = Atom(parent._get_id(Atom), symbol, isotope, stereo, hydrogens, charge, valence, class_,
@@ -219,19 +214,24 @@ def add_bond(
         **kwargs
 ) -> has_node_attr:
     """
-    Add bond
+    add 'Bond' between two 'Atoms' (typically not be used directly)
 
     Parameters
     ----------
-    parent
-    bond_symbol
-    atom1
-    atom2
-    kwargs
+    parent:
+    bond_symbol:
+        bond symbol ("", "=", "#", etc.)
+    atom1:
+        atom the bond starts at
+    atom2:
+        atom the bond ends at
+    kwargs:
+        any additional keyword arguments are accepted and set as additional attributes to the Bond
 
     Returns
     -------
-
+    parent:
+        returns the parent passed to it
     """
     bond = Bond(parent._get_id(Bond), bond_symbol, atom1, atom2, parent=parent, **kwargs)
     parent.nodes.append(bond)
@@ -241,19 +241,30 @@ def add_bond(
     return parent
 
 
-def add_ring(parent: has_node_attr, ring_id: int, bond_symbol: str | None, **kwargs) -> has_node_attr:
+def add_ring_by_index(parent: has_node_attr, ring_id: int, bond_symbol: str | None, **kwargs) -> has_node_attr:
     """
+    add ring by index; rings are just 'Bond'
+
+    !!! warning
+
+        This function needs to be called twice to work; once at each time the parsing hits a ring index.
+
+        'exit_construction()' will check to confirm that there is no uncompleted rings
 
     Parameters
     ----------
-    parent
-    ring_id
-    bond_symbol
-    kwargs
+    parent:
+    ring_id:
+        index of ring
+    bond_symbol:
+        bond symbol ("", "=", "#", etc.)
+    kwargs:
+        any additional keyword arguments are accepted and set as additional attributes to the Bond
 
     Returns
     -------
-
+    parent:
+        returns the parent passed to it
     """
     # check if ring_id already exists
     ring_parent = get_ring_parent(parent)
@@ -295,6 +306,44 @@ def add_ring(parent: has_node_attr, ring_id: int, bond_symbol: str | None, **kwa
     return parent
 
 
+def add_ring_from_atoms(parent: has_node_attr, atom1: Atom, atom2: Atom, bond_symbol: str | None = "", **kwargs) \
+        -> has_node_attr:
+    """
+    add ring from with both 'Atoms'; rings are just 'Bond'
+
+    Parameters
+    ----------
+    parent:
+    atom1:
+        atom the ring starts at
+    atom2:
+        atom the ring ends at
+    bond_symbol:
+        bond symbol ("", "=", "#", etc.)
+    kwargs
+        any additional keyword arguments are accepted and set as additional attributes to the Bond
+
+    Returns
+    -------
+    parent:
+        returns the parent passed to it
+    """
+    ring_parent = get_ring_parent(parent)
+    bond = get_common_bond(atom1, atom2)  # Check if ring already between two atoms
+    if bond is None:
+        # Make new ring_id
+        bond = Bond(parent._get_id(Bond), bond_symbol, atom1, atom2, len(parent.root.rings) + 1,
+                    parent=parent, **kwargs)
+        parent.root.bonds.append(bond)
+        ring_parent.rings.append(bond)
+        add_bond_to_connected_objects(bond)
+    else:
+        # increase bond order of existing bond
+        bond.bond_order += 1
+
+    return parent
+
+
 def _get_bonding_descriptor_atom(parent, descriptor: str, index_: int, bond_symbol: str | None, **kwargs) \
         -> BondDescriptorAtom:
     stoch_obj = _get_current_stochastic_object(parent)
@@ -331,7 +380,26 @@ def _get_current_stochastic_object(parent) -> StochasticObject:
 
 def add_bonding_descriptor_atom(parent, descriptor: str, index_: int, bond_symbol: str | None = None, **kwargs) \
         -> has_node_attr:
-    """ [<], [>], [$], [$1], [>2], ... """
+    """
+    appends 'BondDescriptorAtom' to the end of the `parent`
+
+    Parameters
+    ----------
+    parent:
+    bond_symbol:
+        bond symbol ("", "=", "#", etc.)
+    descriptor:
+        bonding descriptor symbol [<, >, $]
+    index_:
+        bonding descriptor index [1, inf]
+    kwargs
+        any additional keyword arguments are accepted and set as additional attributes to the BondDescriptorAtom
+
+    Returns
+    -------
+    parent:
+        returns the parent passed to it
+    """
     bd_atom = _get_bonding_descriptor_atom(parent, descriptor, index_, bond_symbol, **kwargs)
     parent.nodes.append(bd_atom)
     parent.root.atoms.append(bd_atom)
@@ -346,15 +414,48 @@ def add_bond_atom_pair(
         stereo: str | None = None,
         hydrogens: int | None = None,
         charge: int = 0,
-        valance: int = None,
+        valence: int = None,
         class_: int | None = None,
         kwargs_atom: dict = None,
         kwargs_bond: dict = None
 ) -> has_node_attr:
+    """
+    appends a `Bond` followed by an `Atom`
+
+    Parameters
+    ----------
+    parent:
+        parent
+    bond_symbol:
+        bond symbol ("", "=", "#", etc.)
+    symbol:
+        symbol symbol (e.g., H, C, O, Zn)
+    isotope:
+        isotope (e.g., [13C])
+    stereo:
+        stereochemistry [None, "@", "@@"] (None means not defined)
+    hydrogens:
+        number of explict hydrogens  (e.g., [CH2])
+    charge:
+        symbol charge  (e.g., [Fe+3])
+    valence:
+        The capacity to form bonds with other atoms
+    class_:
+        index of class (e.g., [C:1] class_ = 1)
+    kwargs_atom:
+        any additional keyword arguments are accepted and set as additional attributes to the Atom
+    kwargs_bond
+        any additional keyword arguments are accepted and set as additional attributes to the Bond
+
+    Returns
+    -------
+    parent:
+        returns the parent passed to it
+    """
     kwargs_atom = kwargs_atom if kwargs_atom is not None else {}
     kwargs_bond = kwargs_bond if kwargs_bond is not None else {}
 
-    atom = Atom(parent._get_id(Atom), symbol, isotope, stereo, hydrogens, charge, valance, class_,
+    atom = Atom(parent._get_id(Atom), symbol, isotope, stereo, hydrogens, charge, valence, class_,
                 parent=parent, **kwargs_atom)
     prior_atom = get_prior(parent, (Atom, BondDescriptorAtom, StochasticObject))
     add_bond(parent, bond_symbol, prior_atom, atom, **kwargs_bond)
@@ -372,6 +473,28 @@ def add_bond_bonding_descriptor_pair(
         kwargs_bond_descriptor: dict = None,
         kwargs_bond: dict = None
 ) -> StochasticFragment | Branch:
+    """
+    appends a `Bond` followed by an `BondingDescriptorAtom`
+
+    Parameters
+    ----------
+    parent:
+    bond_symbol:
+        bond symbol ("", "=", "#", etc.)
+    descriptor:
+        bonding descriptor symbol [<, >, $]
+    index_:
+        bonding descriptor index [1, inf]
+    kwargs_bond_descriptor:
+        any additional keyword arguments are accepted and set as additional attributes to the BondDescriptorAtom
+    kwargs_bond:
+        any additional keyword arguments are accepted and set as additional attributes to the Bond
+
+    Returns
+    -------
+    parent:
+        returns the parent passed to it
+    """
     kwargs_bond_descriptor = kwargs_bond_descriptor if kwargs_bond_descriptor is not None else {}
     kwargs_bond = kwargs_bond if kwargs_bond is not None else {}
 
@@ -383,7 +506,25 @@ def add_bond_bonding_descriptor_pair(
     return parent
 
 
-def open_branch(parent, **kwargs):
+def open_branch(parent: has_node_attr, **kwargs) -> Branch:
+    """
+    open branch
+
+    !!! warning
+
+        close_branch() must be called at some later point
+
+    Parameters
+    ----------
+    parent:
+    kwargs:
+        any additional keyword arguments are accepted and set as additional attributes to the Branch
+
+    Returns
+    -------
+    parent:
+        returns Branch
+    """
     if len(parent.nodes) == 0 and hasattr(parent, 'parent') and isinstance(parent.parent, Branch):
         raise errors.ConstructorError("BigSMILES string or branch can't start with branch")
 
@@ -393,7 +534,20 @@ def open_branch(parent, **kwargs):
     return branch
 
 
-def close_branch(parent):
+def close_branch(parent: Branch) -> has_node_attr:
+    """
+    closes branch and appends it to `parent.parent`
+
+    Parameters
+    ----------
+    parent:
+
+    Returns
+    -------
+    parent:
+        returns parent.parent
+
+    """
     if not isinstance(parent, Branch):
         raise errors.ConstructorError("Error closing branch. Possible issues: "
                                       "\n\tClosing a branch with another intermediate node started."
@@ -407,6 +561,28 @@ def close_branch(parent):
 
 
 def open_stochastic_object(parent: has_node_attr, descriptor: str, index_: int, **kwargs) -> StochasticObject:
+    """
+    open `StochasticObject`
+
+    !!! warning
+
+        close_stochastic_object() must be called at a later point
+
+    Parameters
+    ----------
+    parent:
+    descriptor:
+        bonding descriptor symbol [<, >, $]
+    index_:
+        bonding descriptor index [1, inf]
+    kwargs
+        any additional keyword arguments are accepted and set as additional attributes to the BondDescriptorAtom
+
+    Returns
+    -------
+    parent:
+        returns StochasticObject
+    """
     stoch_obj = StochasticObject(parent._get_id(StochasticObject), parent, **kwargs)
     stoch_obj.bd_left = _get_bonding_descriptor(stoch_obj, descriptor, index_, None)
     parent.nodes.append(stoch_obj)
@@ -416,15 +592,63 @@ def open_stochastic_object(parent: has_node_attr, descriptor: str, index_: int, 
 
 def open_stochastic_object_fragment(parent: has_node_attr, descriptor: str, index_: int, **kwargs) \
         -> StochasticFragment:
+    """
+    opens `StochasticObject` and `StochasticFragment`
+
+    !!! warning
+
+        close_stochastic_fragment() must be called at a later point
+
+        close_stochastic_object() must be called at a later point
+
+    Parameters
+    ----------
+    parent:
+    descriptor:
+        bonding descriptor symbol [<, >, $]
+    index_:
+        bonding descriptor index [1, inf]
+    kwargs
+        any additional keyword arguments are accepted and set as additional attributes to the BondDescriptorAtom
+
+    Returns
+    -------
+    parent:
+        returns StochasticFragment
+    """
     stoch_obj = open_stochastic_object(parent, descriptor, index_, **kwargs)
-    fragment = StochasticFragment(stoch_obj._get_id(StochasticFragment), stoch_obj)
-    stoch_obj.nodes.append(fragment)
 
-    return fragment
+    return open_stochastic_fragment(stoch_obj)
 
 
-def open_stochastic_object_fragment_with_bond(parent, bond_symbol: str | None, descriptor: str, index_: int, **kwargs) \
-        -> StochasticFragment:
+def open_stochastic_object_fragment_with_bond(parent: has_node_attr, bond_symbol: str | None, descriptor: str,
+                                              index_: int, **kwargs) -> StochasticFragment:
+    """
+    opens `StochasticObject` and `StochasticFragment`
+
+    !!! warning
+
+        close_stochastic_fragment() must be called at a later point
+
+        close_stochastic_object() must be called at a later point
+
+    Parameters
+    ----------
+    parent:
+    bond_symbol:
+        bond symbol ("", "=", "#", etc.)
+    descriptor:
+        bonding descriptor symbol [<, >, $]
+    index_:
+        bonding descriptor index [1, inf]
+    kwargs
+        any additional keyword arguments are accepted and set as additional attributes to the BondDescriptorAtom
+
+    Returns
+    -------
+    parent:
+        returns StochasticFragment
+    """
     stoch_obj = StochasticObject(parent._get_id(StochasticObject), parent, **kwargs)
     stoch_obj.bd_left = _get_bonding_descriptor(stoch_obj, descriptor, index_, bond_symbol)
 
@@ -439,7 +663,34 @@ def open_stochastic_object_fragment_with_bond(parent, bond_symbol: str | None, d
     return open_stochastic_fragment(stoch_obj)
 
 
-def close_stochastic_object(parent, descriptor: str, index_: int, bond_symbol: str | None):
+def close_stochastic_object(parent: StochasticObject, descriptor: str, index_: int, bond_symbol: str | None) \
+        -> has_node_attr:
+    """
+    closes `StochasticObject`
+
+    Parameters
+    ----------
+    parent:
+    descriptor:
+        bonding descriptor symbol [<, >, $]
+    index_:
+        bonding descriptor index [1, inf]
+    bond_symbol:
+        bond symbol ("", "=", "#", etc.)
+
+    Returns
+    -------
+    parent:
+        returns parent.parent
+
+    Raises
+    ------
+    ConstructorError
+        Error closing StochasticObject. Possible issues:
+
+        * Closing a StochasticObject with another intermediate node started.
+        * No starting StochasticObject symbol.
+    """
     if not isinstance(parent, StochasticObject):
         raise errors.ConstructorError("Error closing StochasticObject. Possible issues: "
                                       "\n\tClosing a StochasticObject with another intermediate node started."
@@ -449,13 +700,43 @@ def close_stochastic_object(parent, descriptor: str, index_: int, bond_symbol: s
     return parent.parent
 
 
-def open_stochastic_fragment(parent) -> StochasticFragment:
+def open_stochastic_fragment(parent: StochasticObject) -> StochasticFragment:
+    """
+    open `StochasticFragment`
+
+    !!! warning
+
+        close_stochastic_fragment() must be called at a later point
+
+
+    Parameters
+    ----------
+    parent:
+
+    Returns
+    -------
+    parent:
+        returns StochasticFragment
+    """
     stoch_frag = StochasticFragment(parent._get_id(StochasticFragment), parent)
     parent.nodes.append(stoch_frag)
     return stoch_frag
 
 
-def close_open_stochastic_fragment(parent) -> StochasticFragment:
+def close_open_stochastic_fragment(parent: StochasticFragment) -> StochasticFragment:
+    """
+
+    closes `StochasticFragment` and opens a new `StochasticFragment`
+
+    Parameters
+    ----------
+    parent:
+
+    Returns
+    -------
+    parent:
+        returns a new StochasticFragment
+    """
     if not isinstance(parent, StochasticFragment):
         raise errors.ConstructorError("Stochastic seperator can only follow a stochastic fragments.")
 
@@ -463,7 +744,18 @@ def close_open_stochastic_fragment(parent) -> StochasticFragment:
     return open_stochastic_fragment(parent)
 
 
-def close_stochastic_fragment(parent):
+def close_stochastic_fragment(parent: StochasticFragment) -> StochasticObject:
+    """
+
+    Parameters
+    ----------
+    parent:
+
+    Returns
+    -------
+    parent:
+        returns parent.parent
+    """
     if not isinstance(parent, StochasticFragment):
         raise errors.ConstructorError("Error StochasticFragment branch. Possible issues: "
                                       "\n\tClosing a branch with another intermediate node started.")
@@ -479,25 +771,20 @@ def close_stochastic_fragment(parent):
 
 ## functions for building BigSMILES in chunks ## noqa
 ###################################################################################################################
-def add_ring_from_atoms(parent: has_node_attr, atom1: Atom, atom2: Atom, bond_symbol: str | None = "", **kwargs) \
-        -> has_node_attr:
-    ring_parent = get_ring_parent(parent)
-    bond = get_common_bond(atom1, atom2)  # Check if ring already between two atoms
-    if bond is None:
-        # Make new ring_id
-        bond = Bond(parent._get_id(Bond), bond_symbol, atom1, atom2, len(parent.root.rings) + 1,
-                    parent=parent, **kwargs)
-        parent.root.bonds.append(bond)
-        ring_parent.rings.append(bond)
-        add_bond_to_connected_objects(bond)
-    else:
-        # increase bond order of existing bond
-        bond.bond_order += 1
-
-    return parent
-
-
 def append_bigsmiles_fragment(parent, bigsmiles_: BigSMILES, bond_symbol: str | None, **kwargs) -> BigSMILES:
+    """
+
+    Parameters
+    ----------
+    parent
+    bigsmiles_
+    bond_symbol
+    kwargs
+
+    Returns
+    -------
+
+    """
     if not isinstance(bigsmiles_.nodes[0], (Atom, StochasticObject)):
         raise errors.ConstructorError("First node must be an 'Atom' or 'StochasticObject' to added fragment.")
     if not parent:
@@ -520,6 +807,21 @@ def append_bigsmiles_fragment(parent, bigsmiles_: BigSMILES, bond_symbol: str | 
 
 def attach_bigsmiles_branch(parent, bond_symbol: str | None | None, bigsmiles_: BigSMILES, index_: int,
                             kwargs_bond: dict = None, kwargs_branch: dict = None):
+    """
+
+    Parameters
+    ----------
+    parent
+    bond_symbol
+    bigsmiles_
+    index_
+    kwargs_bond
+    kwargs_branch
+
+    Returns
+    -------
+
+    """
     kwargs_bond = kwargs_bond if kwargs_bond is not None else {}
     kwargs_branch = kwargs_branch if kwargs_branch is not None else {}
 
@@ -562,6 +864,27 @@ def insert_atom_and_bond(
         kwargs_atom: dict = None,
         kwargs_bond: dict = None
 ) -> has_node_attr:
+    """
+
+    Parameters
+    ----------
+    parent
+    prior_atom
+    bond_symbol
+    element
+    isotope
+    stereo
+    hydrogens
+    charge
+    valance
+    class_
+    kwargs_atom
+    kwargs_bond
+
+    Returns
+    -------
+
+    """
     kwargs_atom = kwargs_atom if kwargs_atom is not None else {}
     kwargs_bond = kwargs_bond if kwargs_bond is not None else {}
 
@@ -601,6 +924,25 @@ def insert_atom_into_bond(
         class_: int | None = None,
         kwargs_atom: dict = None,
 ) -> has_node_attr:
+    """
+
+    Parameters
+    ----------
+    parent
+    bond_to_insert_into
+    element
+    isotope
+    stereo
+    hydrogens
+    charge
+    valance
+    class_
+    kwargs_atom
+
+    Returns
+    -------
+
+    """
     kwargs_atom = kwargs_atom if kwargs_atom is not None else {}
 
     # create atom
@@ -643,6 +985,21 @@ def add_bonding_descriptor_bond_via_index(
         prior_atom: Atom,
         kwargs_bond: dict = None,
 ):
+    """
+
+    Parameters
+    ----------
+    parent
+    bond_symbol
+    descriptor
+    index_
+    prior_atom
+    kwargs_bond
+
+    Returns
+    -------
+
+    """
     kwargs_bond = kwargs_bond if kwargs_bond is not None else {}
 
     bd_atom = _get_bonding_descriptor_atom(parent, descriptor, index_, bond_symbol)
@@ -670,6 +1027,17 @@ def add_bonding_descriptor_bond_via_index(
 
 
 def add_stochastic_fragment(stoch_object: StochasticObject, stoch_fragment: StochasticFragment) -> StochasticObject:
+    """
+
+    Parameters
+    ----------
+    stoch_object
+    stoch_fragment
+
+    Returns
+    -------
+
+    """
     stoch_object.nodes.append(stoch_fragment)
     stoch_fragment.parent = stoch_object
 
@@ -692,6 +1060,17 @@ def add_stochastic_fragment(stoch_object: StochasticObject, stoch_fragment: Stoc
 
 
 def add_bigsmiles_as_stochastic_fragment(stoch_obj: StochasticObject, bigsmiles_: BigSMILES):
+    """
+
+    Parameters
+    ----------
+    stoch_obj
+    bigsmiles_
+
+    Returns
+    -------
+
+    """
     stoch_fragment = StochasticFragment(stoch_obj.root._get_id(StochasticFragment), stoch_obj)
     stoch_fragment.nodes = bigsmiles_.nodes
     stoch_fragment.rings = bigsmiles_.rings
@@ -708,7 +1087,7 @@ def set_new_parent(new_parent, obj):
             node.parent = new_parent
 
 
-__all__ = ["has_node_attr", "add_atom", "add_bond", "add_ring", "add_ring_from_atoms", "add_bonding_descriptor_atom",
+__all__ = ["has_node_attr", "add_atom", "add_bond", "add_ring_by_index", "add_ring_from_atoms", "add_bonding_descriptor_atom",
            "add_bond_atom_pair", "add_bond_bonding_descriptor_pair", "open_branch", "close_branch",
            "open_stochastic_object", "open_stochastic_object_fragment", "open_stochastic_object_fragment_with_bond",
            "close_stochastic_object", "open_stochastic_fragment", "close_open_stochastic_fragment",

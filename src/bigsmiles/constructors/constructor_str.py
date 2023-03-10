@@ -33,9 +33,9 @@ def add_atom_str(parent: BigSMILES | Branch | StochasticObject | StochasticFragm
 
     Parameters
     ----------
-    parent: BigSMILES, Branch, StochasticFragment
+    parent:
         parent Atom will be added to
-    symbol: str
+    symbol:
         atom symbol - will be parsed into symbol, isotope, charge, etc.
 
     Returns
@@ -189,7 +189,7 @@ def close_stochastic_object_str(parent: BigSMILES | Branch | StochasticObject | 
                                 bond_symbol: str | None) \
         -> BigSMILES | Branch | StochasticObject | StochasticFragment:
     """
-    closes 'StochasticObject' and append it to parent
+    closes 'StochasticObject' and append it to `parent`
 
     Parameters
     ----------
@@ -230,7 +230,7 @@ def open_stochastic_fragment(parent) -> StochasticFragment:
 @in_stochastic_object
 def close_open_stochastic_fragment_str(parent) -> StochasticFragment:
     """
-    closes StochasticFragment and appends it to 'parent.parent' and opens a new StochasticFragment
+    closes `StochasticFragment` and appends it to 'parent.parent' and opens a new `StochasticFragment`
 
     Parameters
     ----------
@@ -250,7 +250,7 @@ def close_open_stochastic_fragment_str(parent) -> StochasticFragment:
 def close_stochastic_fragment_str(parent: StochasticFragment) \
         -> BigSMILES | Branch | StochasticObject | StochasticFragment:
     """
-    closes StochasticFragment and appends it to 'parent.parent'
+    closes `StochasticFragment` and appends it to 'parent.parent'
 
     Parameters
     ----------

@@ -1091,7 +1091,7 @@ class BigSMILES:
         # parse input string
         if text:
             # import here to avoid circular imports
-            from bigsmiles.constructors.construct_bigsmiles_from_tokens import parse_bigsmiles_str
+            from bigsmiles.constructors.constructor_tokens import parse_bigsmiles_str
             parse_bigsmiles_str(text, self)
 
         if kwargs:

@@ -40,7 +40,7 @@ ring_cases = [
 def test_ring_syntax_fixes(case):
     """
     mainly testing the following functions:
-    * bigsmiles.constructor.BigSMILESConstructor.add_ring() --> two rings goes to a double bond
+    * bigsmiles.constructor.BigSMILESConstructor.add_ring_by_index() --> two rings goes to a double bond
     * bigsmiles.constructor.BigSMILESConstructor.add_ring_from_atoms() --> two rings goes to a double bond
     """
     result = bigsmiles.BigSMILES(case[0])

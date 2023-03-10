@@ -13,12 +13,25 @@ only holds data.
 !!! info
     Creation of these objects are handled by the 'Constructor' methods.
 
+<b>
+The figure shows the data objects and links to other data objects. 
+The arrows point from 'parent' objects to 'child' objects. Meaning `Reaction` --> `BigSMILES` means that you will 
+find attributes in `Reaction` that are `BigSMILES` objects.
+
+</b>
+
 
 ```mermaid
 classDiagram
+    
+    class Reaction {
+        reactants: [BigSMILES]
+        agents: [BigSMILES]
+        products: [BigSMILES]
+    }
 
     class BigSMILES {
-        nodes: [intermediate nodes, leaf nodes]
+        nodes: [Atom, Bond, Branch, StochasticObject]
         atoms: [Atom]
         bonds: [Bond]
         rings: [Bond]
@@ -34,13 +47,13 @@ classDiagram
     
     
     class StochasticFragment {
-        nodes: [intermediate nodes, leaf nodes]
+        nodes: [Atom, Bond, Branch, StochasticObject]
         rings: [Bond]
     }
     
     
     class Branch {
-        nodes: [intermediate nodes, leaf nodes]
+        nodes: [Atom, Bond, Branch, StochasticObject]
     }
     
     
@@ -64,11 +77,13 @@ classDiagram
         bonds: list[Bond]: 
     }
 
+    Reaction --|> BigSMILES
     BigSMILES --|> Atom
     BigSMILES --|> Bond
     BigSMILES --|> Branch
     BigSMILES --|> StochasticObject
     StochasticObject --|> StochasticFragment
+    StochasticObject --|> BondDescriptor
     StochasticFragment --|> BondDescriptorAtom
     BondDescriptor --|> BondDescriptorAtom
     StochasticFragment --|> Atom
@@ -81,5 +96,6 @@ classDiagram
     Branch --|> Atom
     
 ```
+
 
 

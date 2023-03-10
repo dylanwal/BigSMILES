@@ -62,7 +62,7 @@ nav:
           - Stochastic Object: reference/data_structure/Stochastic_object.md
           - Reaction: reference/data_structure/Reaction.md
       - Methods:
-          - overview: reference/methods/overview.md
+          - Overview: reference/methods/overview.md
           - parse_tree: reference/methods/parse_tree.md
       - Constructor:
           - Overview: reference/constructor/overview.md

@@ -1,3 +1,5 @@
+import logging
+
 import bigsmiles
 
 # import chemdraw
@@ -5,7 +7,8 @@ import bigsmiles
 # bigsmiles.Config.color_output = True
 
 cases = [
-    "C1CCCCC1",
+    "CCCC(C)C(\\C(C)CCCF)=C(\\CCCCF)CCCC",
+
     "F/C=C/F",  # E-difluoroethene
     "F\C=C\F",  # Z-difluoroethene
     "C(\F)=C/F",  # trans
@@ -20,6 +23,8 @@ cases = [
     "CCC(\F)=C/F",  #
     "CCC(\F)=C(/F)CC",
     "CC/C(\F)=C/F",  # error
+    "C(/[Ru])=C\C",
+    "CC/C(F)=N\F",
 
     # "{[][<]OCCO[<],[>]C(=O)c1ccc(cc1)C(=O)[>],[>][H],[<]O[]}",
     # "C(={[>][<]=CC=[>][<]}=1)CCCCCC1",
@@ -40,12 +45,14 @@ cases = [
 
 
 def single():
+    logging.basicConfig(level=logging.DEBUG)
+
     case = cases[0]
     print("case: ", case)
     output = bigsmiles.BigSMILES(case)
     print("output: ", output)
-    for bond in output.bonds:
-        print(bond, bond.bond_order, bond.double_bond_ez)
+    for i, bond in enumerate(output.bonds):
+        print(i, "   ", bond, bond.bond_order, bond.double_bond_ez)
     # output.print_tree(print_repr=False)
 
     # drawer = chemdraw.Drawer(str(output))
@@ -68,4 +75,4 @@ if __name__ == "__main__":
     single()
     # multiple()
 
-    # a = bigsmiles.Atom()
+

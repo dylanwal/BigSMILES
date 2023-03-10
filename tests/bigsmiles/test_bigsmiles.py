@@ -136,6 +136,9 @@ test_molecules = [
     "CC[BrH3]",
     "CC[Fe+3]CCC",
 
+    "FC=[C@@]=CF",  # allenes are axial chiral (all even number of double bonds)
+    # Cumulene and all odd number of double bonds E/Z
+
 ]
 
 

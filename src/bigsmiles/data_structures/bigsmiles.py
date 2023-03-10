@@ -98,7 +98,7 @@ class Atom:
         return self.to_string()
 
     def __repr__(self):
-        return str(self) + "{" + str(self.id_) + "}"
+        return self.to_string(show_repr=(Atom,))
 
     def __eq__(self, other: Atom):
         """
@@ -128,6 +128,12 @@ class Atom:
                 return False
 
         return True
+
+    # def __hash__(self):
+    #     NotImplemented and shouldn't according to Python docs because bond is mutable. If the Atom is hashed, a bond
+    #     add; then the hash would be wrong. Instead, use '.id_' for this purpose.
+    #     Docs: https://docs.python.org/3/reference/datamodel.html#object.__hash__
+    #
 
     @property
     def bonds(self) -> list[Bond]:
@@ -216,17 +222,18 @@ class Atom:
     def to_string(self,
                   show_hydrogens: bool = False,
                   show_atom_index: bool = True,
-                  print_repr: bool = False,
+                  show_repr: tuple | None = None,
                   skip_color: bool = False
                   ) -> str:
-        text = self._to_string(show_hydrogens, show_atom_index)
+        text = self._to_string(show_hydrogens, show_atom_index, show_repr)
         if not self.full_valence and not self._valene_warning_raised:
             self._valene_warning_raised = True
             logging.warning(f"Incomplete valence detected on atom: {text}")
 
         return text
 
-    def _to_string(self, show_hydrogens: bool = False, show_atom_index: bool = True) -> str:
+    def _to_string(self, show_hydrogens: bool = False, show_atom_index: bool = True, show_repr: tuple | None = None)\
+            -> str:
         text = ""
         bracket_flag = False
 
@@ -297,6 +304,9 @@ class Atom:
 
                 text += ring_text + str(ring_id)
 
+        if show_repr is not None and Atom in show_repr:
+            text += "{" + str(self.id_) + "}"
+
         return text
 
     def _increase_valence(self, requested_valence_increase: float = 0) -> bool:
@@ -328,7 +338,7 @@ class Bond:
     this class represents a bond
     """
     __slots__ = ["id_", "symbol", "atom1", "atom2", "ring_id", "parent", "__dict__", "double_bond_stereo"]
-    _eq_attr = ("id_", "symbol", "ring_id")
+    _eq_attr = ("id_", "symbol", "ring_id", "double_bond_ez")
 
     def __init__(self,
                  id_: int,
@@ -373,17 +383,22 @@ class Bond:
         return self.to_string()
 
     def __repr__(self):
-        return self.to_string(print_repr=True, skip_color=True)
+        return self.to_string(show_repr=(Bond,), skip_color=True)
 
     def to_string(self,
                   show_hydrogens: bool = False,
                   show_atom_index: bool = True,
-                  print_repr: bool = False,
+                  show_repr: tuple | None = None,
                   skip_color: bool = False
                   ) -> str:
-        if self.symbol == ":" and not Config.show_aromatic_bond:
-            return ""
-        return Config.add_color(self.symbol, 'Blue', skip_color)
+        text = ""
+        if self.symbol != ":" or (self.symbol == ":" and Config.show_aromatic_bond):
+            text += Config.add_color(self.symbol, 'Blue', skip_color)
+
+        if show_repr is not None and Bond in show_repr:
+            text += "{" + str(self.id_) + "}"
+
+        return text
 
     def __iter__(self):
         """ iterates over Atoms """
@@ -456,22 +471,19 @@ class Bond:
 
     @property
     def double_bond_ez(self) -> str | None:
-        """ returns labels for geometric isomers of alkenes ["E", "Z", None] """
-        return None
+        """
+        returns labels for geometric isomers of alkenes ["E", "Z", None]
+
+        ??? info "E/Z more information"
+
+            ::: bigsmiles.data_structures.stereo_rules.get_double_bond_ez
+
+        """
         if self.symbol != "=":
             return None
 
-        # check if atoms have bonds with "/" or "\"
-        left_stereo_bond = len([True for bond in self.atom1.bonds if bond.symbol in chemical_data.stereo_bonds])
-        right_stereo_bond = len([True for bond in self.atom2.bonds if bond.symbol in chemical_data.stereo_bonds])
-
-        if left_stereo_bond == 0 and right_stereo_bond == 0:
-            return None
-        if left_stereo_bond == 1 and right_stereo_bond == 1:
-            from bigsmiles.data_structures.stereo_rules import get_double_bond_ez
-            return get_double_bond_ez(self)
-
-        raise errors.BigSMILESError("Only one double bond stereochemistry detected.")
+        from bigsmiles.data_structures.stereo_rules import get_double_bond_ez
+        return get_double_bond_ez(self)
 
     @property
     def aromatic(self) -> bool:
@@ -557,7 +569,7 @@ class BondDescriptor:
         return self.to_string()
 
     def __repr__(self):
-        return self.to_string(print_repr=True, skip_color=True)
+        return self.to_string(show_repr=(BondDescriptor,), skip_color=True)
 
     def __eq__(self, other: BondDescriptor):
         """
@@ -579,14 +591,17 @@ class BondDescriptor:
     def to_string(self,
                   show_hydrogens: bool = False,
                   show_atom_index: bool = True,
-                  print_repr: bool = False,
+                  show_repr: tuple | None = None,
                   skip_color: bool = False
                   ) -> str:
+        text = "[" + self.descriptor
         if self.index_ == 1 and not Config.show_bond_descriptor_one_index:
-            index = ""
+            text += ""
         else:
-            index = self.index_
-        return "[" + self.descriptor + str(index) + "]"
+            text += str(self.index_)
+        text += "]"
+
+        return text
 
     @property
     def details(self) -> str:
@@ -682,7 +697,7 @@ class BondDescriptorAtom:
         return self.to_string()
 
     def __repr__(self):
-        return self.to_string(print_repr=True, skip_color=True)
+        return self.to_string(show_repr=(BondDescriptorAtom,), skip_color=True)
 
     def __eq__(self, other: BondDescriptorAtom):
         """
@@ -713,10 +728,15 @@ class BondDescriptorAtom:
     def to_string(self,
                   show_hydrogens: bool = False,
                   show_atom_index: bool = True,
-                  print_repr: bool = False,
+                  show_repr: tuple | None = None,
                   skip_color: bool = False
                   ) -> str:
-        return Config.add_color(self.descriptor.to_string(show_hydrogens, print_repr), 'Green', skip_color)
+        text = Config.add_color(self.descriptor.to_string(show_hydrogens, show_repr), 'Green', skip_color)
+
+        if show_repr is not None and BondDescriptorAtom in show_repr:
+            text += "{" + str(self.id_) + "}"
+
+        return text
 
     @property
     def details(self) -> str:
@@ -776,7 +796,7 @@ class Branch:
         return self.to_string()
 
     def __repr__(self):
-        return self.to_string(print_repr=True, skip_color=True)
+        return self.to_string(show_repr=(Branch,), skip_color=True)
 
     def __eq__(self, other: Branch):
         """ equality is determining all nodes and rings are equal """
@@ -792,10 +812,14 @@ class Branch:
     def to_string(self,
                   show_hydrogens: bool = False,
                   show_atom_index: bool = True,
-                  print_repr: bool = False,
+                  show_repr: tuple | None = None,
                   skip_color: bool = False
                   ) -> str:
-        text = "".join(node.to_string(show_hydrogens, show_atom_index, print_repr, skip_color) for node in self.nodes)
+        text = "".join(node.to_string(show_hydrogens, show_atom_index, show_repr, skip_color) for node in self.nodes)
+
+        if show_repr is not None and Branch in show_repr:
+            text += "{" + str(self.id_) + "}"
+
         return "(" + text + ")"
 
     @property
@@ -852,7 +876,7 @@ class StochasticFragment:
         return self.to_string()
 
     def __repr__(self):
-        return self.to_string(print_repr=True, skip_color=True)
+        return self.to_string(show_repr=(StochasticFragment,), skip_color=True)
 
     def __eq__(self, other: StochasticFragment):
         """ equality is determining all nodes and rings are equal """
@@ -872,10 +896,15 @@ class StochasticFragment:
     def to_string(self,
                   show_hydrogens: bool = False,
                   show_atom_index: bool = True,
-                  print_repr: bool = False,
+                  show_repr: tuple | None = None,
                   skip_color: bool = False
                   ) -> str:
-        return "".join(node.to_string(show_hydrogens, show_atom_index, print_repr, skip_color) for node in self.nodes)
+        text = "".join(node.to_string(show_hydrogens, show_atom_index, show_repr, skip_color) for node in self.nodes)
+
+        if show_repr is not None and StochasticFragment in show_repr:
+            text += "{" + str(self.id_) + "}"
+
+        return text
 
     @property
     def details(self) -> str:
@@ -934,7 +963,7 @@ class StochasticObject:
         return self.to_string()
 
     def __repr__(self):
-        return self.to_string(print_repr=True, skip_color=True)
+        return self.to_string(show_repr=(StochasticObject,), skip_color=True)
 
     def __eq__(self, other: StochasticObject):
         """ equality is determining all nodes and bonding descriptors are equal """
@@ -994,21 +1023,25 @@ class StochasticObject:
     def to_string(self,
                   show_hydrogens: bool = False,
                   show_atom_index: bool = True,
-                  print_repr: bool = False,
+                  show_repr: tuple | None = None,
                   skip_color: bool = False
                   ) -> str:
         text = ""
         text += Config.add_color("{", "Red", skip_color)
         if self.bd_left is not None:
-            text += self.bd_left.to_string(show_hydrogens, show_atom_index, print_repr, skip_color)
-        text += ",".join(node.to_string(show_hydrogens, show_atom_index, print_repr, skip_color) for node in self.nodes)
+            text += self.bd_left.to_string(show_hydrogens, show_atom_index, show_repr, skip_color)
+        text += ",".join(node.to_string(show_hydrogens, show_atom_index, show_repr, skip_color) for node in self.nodes)
         if self.bd_right is not None:
-            text += self.bd_right.to_string(show_hydrogens, show_atom_index, print_repr, skip_color)
+            text += self.bd_right.to_string(show_hydrogens, show_atom_index, show_repr, skip_color)
         text += Config.add_color("}", "Red", skip_color)
         if self.bond_right is not None and self.bond_right.ring_id is not None:
             if self.bond_right.symbol != ":":
                 text += self.bond_right.symbol
             text += str(self.bond_right.ring_id)
+
+        if show_repr is not None and StochasticObject in show_repr:
+            text += "{" + str(self.id_) + "}"
+
         return text
 
     @property
@@ -1102,7 +1135,8 @@ class BigSMILES:
         return self.to_string()
 
     def __repr__(self):
-        return self.to_string(print_repr=True, skip_color=True)
+        return self.to_string(show_repr=(Atom, Bond, Branch, StochasticFragment, StochasticObject, BondDescriptorAtom),
+                              skip_color=True)
 
     def __getitem__(self, obj: int | slice) -> Atom | list[Atom]:
         """ get items by node index or slice """
@@ -1137,10 +1171,10 @@ class BigSMILES:
     def to_string(self,
                   show_hydrogens: bool = False,
                   show_atom_index: bool = True,
-                  print_repr: bool = False,
+                  show_repr: tuple | None = None,
                   skip_color: bool = False
                   ) -> str:
-        return "".join(node.to_string(show_hydrogens, show_atom_index, print_repr, skip_color) for node in self.nodes)
+        return "".join(node.to_string(show_hydrogens, show_atom_index, show_repr, skip_color) for node in self.nodes)
 
     @property
     def details(self) -> str:

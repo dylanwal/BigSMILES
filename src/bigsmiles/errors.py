@@ -1,8 +1,29 @@
+from __future__ import annotations
 
 
 class BigSMILESError(Exception):
-    def __init__(self, text: str, optional: str = None):
-        if optional is not None:
-            text += "(" + optional + ")"
-        super().__init__(text)
+    """ base BigSMILES error """
 
+    def __init__(self, text: str, error=None):
+        if isinstance(error, BigSMILESError):
+            text += '\n\t'
+            text += error.text.replace("\t", "\t\t")
+        self.text = text
+
+    def __str__(self):
+        return self.text
+
+
+class TokenizeError(BigSMILESError):
+    """ raised when an error occurs tokenizing a BigSMILES string. """
+
+
+class ConstructorError(BigSMILESError):
+    """ raised when an error occurs during the construction of a BigSMILES string. """
+
+
+class ValidationError(BigSMILESError):
+    """ raised when validating a SMILES/BigSMILES string is syntactically correct. """
+
+
+ERRORS = (BigSMILESError, TokenizeError)

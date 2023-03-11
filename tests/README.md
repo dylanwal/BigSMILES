@@ -6,6 +6,7 @@ Test function of code against known answers.
 
 Run `main.py`.
 
+Run with coverage report `pytest --cov --cov-report=html:coverage_re`
 
 
 ## performance

@@ -3,11 +3,28 @@
 Code for turing a python class into a terminal printable tree.
 
 """
+from __future__ import annotations
 
-from typing import Protocol
+from bigsmiles.data_structures.bigsmiles import Atom, Bond, BondDescriptorAtom, Branch, StochasticFragment, \
+    StochasticObject, BigSMILES
 
 
 class TreeConfig:
+    """
+    this class can be used to configure the tree parsing output
+
+    Parameters
+    ----------
+    tree_symbol_options: dict
+        symbols to build the tree. various ascii options are available
+    symbols: str
+        select from 'tree_symbol_options' what ascii symbols you want to use
+
+    Notes
+    -----
+    * color can be added to the output with through the main configuration class
+
+    """
     tree_symbol_options = {
         'ascii': ('|', '|-- ', '+-- '),
         'ascii-ex': ('\u2502', '\u251c\u2500\u2500', '\u2514\u2500\u2500'),
@@ -19,6 +36,15 @@ class TreeConfig:
     symbols = 'ascii-ex'  # some computers may need to show different symbols
     tab = "    "
     space = " "
+    printed_classes = {
+        Atom: True,
+        Bond: True,
+        BondDescriptorAtom: True,
+        Branch: False,
+        StochasticFragment: False,
+        StochasticObject: False,
+        BigSMILES: False
+    }
 
     @classmethod
     def vertical_line(cls) -> str:
@@ -33,14 +59,6 @@ class TreeConfig:
         return cls.tree_symbol_options[cls.symbols][2]
 
 
-class TreeNode(Protocol):
-    _tree_print_repr: bool
-
-
-class TreeIntermediateNode(TreeNode):
-    nodes: list
-
-
 def to_repr(obj) -> str:
     return repr(obj)
 
@@ -49,13 +67,13 @@ def to_str(obj) -> str:
     return str(obj)
 
 
-def tree_to_string(root_node: TreeIntermediateNode, show_object_labels: bool = True, print_repr: bool = False) -> str:
+def tree_to_string(bigsmiles_: BigSMILES, show_object_labels: bool = True, print_repr: bool = False) -> str:
     """
     Creates a string representation of a tree for printing.
 
     Parameters
     ----------
-    root_node: TreeIntermediateNode
+    bigsmiles_: BigSMILES
         Root node
     show_object_labels: bool
         show object labels
@@ -74,18 +92,18 @@ def tree_to_string(root_node: TreeIntermediateNode, show_object_labels: bool = T
 
     # add root node
     if show_object_labels:
-        text = type(root_node).__name__ + ": "
+        text = type(bigsmiles_).__name__ + ": "
 
-    text += str(root_node)
+    text += str(bigsmiles_)
 
     # add main part of tree
-    text += tree_to_string_loop(root_node.nodes, [], show_object_labels, to_repr if print_repr else to_str)
+    text += tree_to_string_loop(bigsmiles_.nodes, [], show_object_labels, to_repr if print_repr else to_str)
 
     return text
 
 
 def tree_to_string_loop(
-        nodes: list[TreeNode, TreeIntermediateNode],
+        nodes: list,
         spacers: list[bool],
         show_object_label: bool,
         func: callable
@@ -95,7 +113,7 @@ def tree_to_string_loop(
 
     Parameters
     ----------
-    nodes: list[TreeNode | TreeIntermediateNode]
+    nodes: list
         nodes
     spacers: list[bool]
         list records weather a continuation line (TreeConfig.vertical_line) is needed in the tree
@@ -129,7 +147,7 @@ def tree_to_string_loop(
 
 
 def create_row(
-        node: TreeNode | TreeIntermediateNode,
+        node,
         spacers: list[bool],
         show_object_label: bool,
         func: callable,
@@ -177,7 +195,7 @@ def create_row(
         line += type(node).__name__ + ": "
 
     # add node symbol
-    if node._tree_print_repr:
+    if TreeConfig.printed_classes[type(node)]:
         line += func(node)
     else:
         line += str(node)

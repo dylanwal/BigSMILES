@@ -1,21 +1,37 @@
-date/time (UTF), package version, time per parse (us), memory usage per bigsmiles (bytes), platform.processor, bigsmiles_graph_time, bigsmiles_graph_memory,notes
-2022-12-13 15:51:49.564455, 0.0.1, 0.33659, 6275, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel,
-2022-12-13 15:52:02.381073, 0.0.1, 0.31270, 6275, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel,
-2022-12-13 16:01:46.489528, 0.0.1, 0.28784, 6275, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel,
-2022-12-13 16:03:14.753212, 0.0.1, 0.27485, 6275, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel,
-2022-12-13 21:31:23.009523, 0.0.2, 0.31450, 5702, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel,
-2022-12-13 21:32:01.900715, 0.0.2, 0.30643, 5702, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel,
-2022-12-13 22:13:58.425217, 0.0.2, 0.33733, 5702, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel,
-2022-12-14 01:06:36.558137, 0.0.1, 0.18101, 5702, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel,
-2022-12-22 00:00:20.407052, 0.0.3, 0.19951, 6675, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel,
-2022-12-26 04:32:43.516168, 0.0.3, 0.20379, 7184, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 2.72176, 41182,
-2022-12-27 01:00:02.983882, 0.0.3, 0.20270, 7184, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 1.97956, 38293,
-2023-02-17 17:40:07.090952, 0.0.4, 0.37197, 7996, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, 0.00000,  0,
-2023-02-17 18:48:28.533035, 0.0.4, 0.37409, 7855, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, 0.00000,  0,
-2023-02-17 18:49:10.168724, 0.0.4, 0.37617, 7855, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, 0.00000,  0,
-2023-02-17 20:55:42.411496, 0.0.3, 0.40347, 7192, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, 0.00000,  0,
-2023-02-17 20:56:46.349123, 0.0.3, 0.30584, 7192, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, 0.00000,  0,
-2023-02-18 03:01:26.243019, 0.0.3, 0.18977, 7201, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0,
-2023-02-18 03:02:49.404505, 0.0.4, 0.18677, 7201, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0,
-2023-02-19 23:08:02.851348, 0.0.4, 0.19914, 12145, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0,adding __dict__ adds extra memory usage
-2023-02-19 23:12:55.757331, 0.0.4, 0.20133, 12145, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0,
+date/time (UTF), package version, time per parse (us), memory usage per bigsmiles (bytes), platform.processor, bigsmiles_graph_time, bigsmiles_graph_memory,python version,notes
+2022-12-13 15:51:49.564455, 0.0.1, 0.33659, 6275, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, null, null, 3.10.8, null
+2022-12-13 15:52:02.381073, 0.0.1, 0.31270, 6275, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, null, null, 3.10.8, null
+2022-12-13 16:01:46.489528, 0.0.1, 0.28784, 6275, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, null, null, 3.10.8, null
+2022-12-13 16:03:14.753212, 0.0.1, 0.27485, 6275, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, null, null, 3.10.8, null
+2022-12-13 21:31:23.009523, 0.0.2, 0.31450, 5702, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, null, null, 3.10.8, null
+2022-12-13 21:32:01.900715, 0.0.2, 0.30643, 5702, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, null, null, 3.10.8, null
+2022-12-13 22:13:58.425217, 0.0.2, 0.33733, 5702, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, null, null, 3.10.8, null
+2022-12-14 01:06:36.558137, 0.0.1, 0.18101, 5702, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, null, null, 3.10.8, null
+2022-12-22 00:00:20.407052, 0.0.3, 0.19951, 6675, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, null, null, 3.10.8, null
+2022-12-26 04:32:43.516168, 0.0.3, 0.20379, 7184, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 2.72176, 41182, 3.10.8, null
+2022-12-27 01:00:02.983882, 0.0.3, 0.20270, 7184, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 1.97956, 38293, 3.10.8, null
+2023-02-17 17:40:07.090952, 0.0.4, 0.37197, 7996, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8, null
+2023-02-17 18:48:28.533035, 0.0.4, 0.37409, 7855, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8, null
+2023-02-17 18:49:10.168724, 0.0.4, 0.37617, 7855, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8, null
+2023-02-17 20:55:42.411496, 0.0.3, 0.40347, 7192, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8, null
+2023-02-17 20:56:46.349123, 0.0.3, 0.30584, 7192, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8, null
+2023-02-18 03:01:26.243019, 0.0.3, 0.18977, 7201, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8, null
+2023-02-18 03:02:49.404505, 0.0.4, 0.18677, 7201, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8, null
+2023-02-19 23:08:02.851348, 0.0.4, 0.19914, 12145, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8,adding __dict__ adds extra memory usage
+2023-02-19 23:12:55.757331, 0.0.4, 0.20133, 12145, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8, null
+2023-02-23 17:40:36.201323, 0.0.5, 0.21353, 12448, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8,adding **kwargs and .parent to nodes
+2023-02-24 03:13:01.734571, 0.0.6, 0.15346, 10526, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8,constructor class --> functions
+2023-02-24 15:43:12.961899, 0.0.6, 0.25632, 10526, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8, null
+2023-02-24 20:44:35.205696, 0.0.6, 0.25858, 10526, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8, null
+2023-02-26 17:02:02.085862, 0.0.6, 0.16431, 10526, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8,additional validation added
+2023-02-27 01:04:25.477956, 0.0.6, 0.21264, 12606, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8,adding bond descriptor validation
+2023-02-27 01:04:56.775891, 0.0.6, 0.21267, 12606, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8,
+2023-02-27 13:52:15.778235, 0.0.6, 0.40802, 12596, Intel64 Family 6 Model 69 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8,
+2023-02-28 13:38:33.911445, 0.0.6, 0.21319, 12606, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8,
+2023-03-01 00:42:03.180376, 0.0.6, 0.24154, 12106, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8,"adding more validation on valence, rings, bonding"
+2023-03-04 16:53:36.505618, 0.0.7, 0.24646, 13132, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8,"adding rxn, disconnect, atom index"
+2023-03-05 17:13:10.536754, 0.0.7, 0.24699, 13243, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8
+2023-03-05 20:54:35.824811, 0.0.7, 0.24869, 13266, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8
+2023-03-06 01:40:43.910454, 0.0.7, 0.23849, 13404, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8
+2023-03-07 00:24:49.258795, 0.0.7, 0.22070, 14527, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0, 3.7.16, 
+2023-03-07 00:25:22.937738, 0.0.7, 0.24791, 13404, Intel64 Family 6 Model 141 Stepping 1 GenuineIntel, 0.00000,  0, 3.10.8, 

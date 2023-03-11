@@ -38,7 +38,7 @@ polymers = [
 def main():
 
     for i in range(3_000):
-        bigsmiles.BigSMILES(polymers[i % len(polymers)]).graph()
+        bigsmiles.BigSMILES(polymers[i % len(polymers)])
 
 
 if __name__ == "__main__":

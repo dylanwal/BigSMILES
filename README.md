@@ -32,7 +32,7 @@ Pip installable package available
 ---
 
 ## Requirements / Dependencies
-Python 3.7+
+Python 3.7 and up
 
 
 ---

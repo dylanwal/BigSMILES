@@ -4,6 +4,8 @@ import chemdraw
 
 
 cases = [
+    "C=Cc1ccccc1.C[CH-](.[Li+])CC>Cc1ccccc1>CC(CC){[>][<]CC(c1ccccc1)[>][<]}[H]",
+
     "C=CCBr >> C=CCI",
     "[I-].[Na+].C=CCBr>>[Na+].[Br-].C=CCI",
     "C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]",
@@ -17,7 +19,7 @@ cases = [
 
 
 def single():
-    case = cases[5]
+    case = cases[0]
     print("case: ", case)
     output = bigsmiles.Reaction(case)
     print("output: ", output)

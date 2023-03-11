@@ -1,5 +1,6 @@
 from __future__ import annotations
-from bigsmiles.data_structures.bigsmiles import BigSMILES
+from bigsmiles.data_structures.bigsmiles import BigSMILES, Atom, Bond, Branch, StochasticFragment, \
+    StochasticObject, BondDescriptorAtom
 
 
 class Reaction:
@@ -52,25 +53,26 @@ class Reaction:
         return self.to_string()
 
     def __repr__(self):
-        return self.to_string(print_repr=True, skip_color=True)
+        return self.to_string(show_repr=(Atom, Bond, Branch, StochasticFragment, StochasticObject, BondDescriptorAtom),
+                              skip_color=True)
 
     def to_string(self,
                   show_hydrogens: bool = False,
                   show_atom_index: bool = True,
-                  print_repr: bool = False,
+                  show_repr: tuple | None = None,
                   skip_color: bool = False
                   ) -> str:
         text = ""
-        text += ",".join(chem.to_string(show_hydrogens, show_atom_index, print_repr, skip_color)
+        text += ",".join(chem.to_string(show_hydrogens, show_atom_index, show_repr, skip_color)
                          for chem in self.reactants)
         if self.agents:
             text += ">"
-            text += ",".join(chem.to_string(show_hydrogens, show_atom_index, print_repr, skip_color)
+            text += ",".join(chem.to_string(show_hydrogens, show_atom_index, show_repr, skip_color)
                              for chem in self.agents)
             text += ">"
         else:
             text += ">>"
-        text += ",".join(chem.to_string(show_hydrogens, show_atom_index, print_repr, skip_color)
+        text += ",".join(chem.to_string(show_hydrogens, show_atom_index, show_repr, skip_color)
                          for chem in self.products)
 
         return text

@@ -158,7 +158,7 @@ class Atom:
 
         """
         if not isinstance(delete_bond, list):
-            delete_bond = list(delete_bond)
+            delete_bond = [delete_bond]
 
         for bond in delete_bond:
             try:
@@ -338,7 +338,7 @@ class Bond:
     this class represents a bond
     """
     __slots__ = ["id_", "symbol", "atom1", "atom2", "ring_id", "parent", "__dict__", "double_bond_stereo"]
-    _eq_attr = ("id_", "symbol", "ring_id", "double_bond_ez")
+    _eq_attr = ("id_", "symbol", "ring_id") # "double_bond_ez"
 
     def __init__(self,
                  id_: int,
@@ -469,21 +469,21 @@ class Bond:
         """ the owner at the top of the parent tree """
         return self.parent.root
 
-    @property
-    def double_bond_ez(self) -> str | None:
-        """
-        returns labels for geometric isomers of alkenes ["E", "Z", None]
-
-        ??? info "E/Z more information"
-
-            ::: bigsmiles.data_structures.stereo_rules.get_double_bond_ez
-
-        """
-        if self.symbol != "=":
-            return None
-
-        from bigsmiles.data_structures.stereo_rules import get_double_bond_ez
-        return get_double_bond_ez(self)
+    # @property
+    # def double_bond_ez(self) -> str | None:
+    #     """
+    #     returns labels for geometric isomers of alkenes ["E", "Z", None]
+    #
+    #     ??? info "E/Z more information"
+    #
+    #         ::: bigsmiles.data_structures.stereo_rules.get_double_bond_ez
+    #
+    #     """
+    #     if self.symbol != "=":
+    #         return None
+    #
+    #     from bigsmiles.data_structures.stereo_rules import get_double_bond_ez
+    #     return get_double_bond_ez(self)
 
     @property
     def aromatic(self) -> bool:

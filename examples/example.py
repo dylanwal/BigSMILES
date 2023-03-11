@@ -7,7 +7,7 @@ import bigsmiles
 # bigsmiles.Config.color_output = True
 
 cases = [
-    "CCCC(C)C(\\C(C)CCCF)=C(\\CCCCF)CCCC",
+    "F/C(C)=C(C(OC(NBr)C)C(C)(F)C)\C(OC(N)C)C(F)=C",
 
     "F/C=C/F",  # E-difluoroethene
     "F\C=C\F",  # Z-difluoroethene

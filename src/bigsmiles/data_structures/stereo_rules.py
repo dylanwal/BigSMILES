@@ -12,6 +12,8 @@ import logging
 import bigsmiles.reference_data.chemical_data as chemical_data
 from bigsmiles.data_structures.bigsmiles import Bond, Atom, StochasticObject, BondDescriptorAtom
 
+
+MAX_DEPTH = 100  # 100 is the max depth of traversal
 DEFAULT_SCORE = 150
 
 
@@ -46,65 +48,188 @@ def get_bond_with_ez_symbol(atom: Atom) -> Bond | None:
     return ez_bond
 
 
-def get_score(node: Atom | StochasticObject | BondDescriptorAtom | None) -> int:
-    if node is None:
-        return 0
-    elif isinstance(node, Atom):
+class PriorityScore:
+    __slots__ = ["atomic_number", "next_atom_highest_atomic_number", "number_bonds"]
+
+    def __init__(self, atomic_number: int, next_atom_highest_atomic_number: int, number_bonds: float | int):
+        self.atomic_number = atomic_number
+        self.next_atom_highest_atomic_number = next_atom_highest_atomic_number
+        self.number_bonds = number_bonds
+
+    def __str__(self):
+        return ",".join((str(getattr(self, name)) for name in self.__slots__))
+
+    def __eq__(self, other):
+        if self.atomic_number != other.atomic_number or self.number_bonds != other.number_bonds:
+            return False
+
+        return True
+
+    def __lt__(self, other):
+        if self.atomic_number < other.atomic_number:
+            return True
+
+        if self.atomic_number == other.atomic_number:
+            if self.next_atom_highest_atomic_number < other.next_atom_highest_atomic_number:
+                return True
+
+            if self.next_atom_highest_atomic_number == other.next_atom_highest_atomic_number:
+                if self.number_bonds < other.number_bonds:
+                    return True
+
+        return False
+
+
+bond_scores = {
+    ".": 0,
+    "": 1,
+    "-": 1,
+    "/": 1,
+    "\\": 1,
+    ":": 1.5,
+    "=": 2.1,  # little extra is to give them priority over two single bonds
+    "#": 3.2,  # little extra is to give them priority over two single bonds
+    "$": 4.1
+}
+
+
+def get_atom_score(node: Atom | StochasticObject | BondDescriptorAtom) -> int:
+    if isinstance(node, Atom) and node.symbol in chemical_data.symbol_to_atomic_number:
         return chemical_data.symbol_to_atomic_number[node.symbol]
 
     return DEFAULT_SCORE
 
 
+def get_score(node: Atom | StochasticObject | BondDescriptorAtom | None) -> PriorityScore:
+    if node is None:
+        return PriorityScore(0, 0, 0)
+
+    # atom score
+    atomic_number = get_atom_score(node)
+
+    # next atom score
+    next_atoms = (get_other_node(bond, node) for bond in node.bonds)
+    next_atom_highest_atomic_number = max(get_atom_score(atom) for atom in next_atoms)
+
+    # bond score
+    if isinstance(node, Atom):
+        number_bonds = sum(bond_scores[bond.symbol] for bond in node.bonds)
+    elif isinstance(node, StochasticObject):
+        number_bonds = node.bond_left.bond_order
+    elif isinstance(node, BondDescriptorAtom):
+        number_bonds = 0
+    else:
+        raise NotImplementedError("code bug")
+
+    return PriorityScore(atomic_number, next_atom_highest_atomic_number, number_bonds)
+
+
 class TraversalPath:
-    def __init__(self,
-                 current_node: Atom | StochasticObject | BondDescriptorAtom | None,
-                 prior_edge: Bond | None
-                 ):
-        self.current_node = current_node
-        self.prior_edge = prior_edge
 
-    def next_step(self):
-        if isinstance(self.current_node, BondDescriptorAtom):
-            self.current_node = None
+    def __init__(self, nodes: list = None, edges: list = None):
+        self.nodes = nodes if nodes is not None else []
+        self.edges = edges if edges is not None else []
 
-        elif isinstance(self.current_node, Atom):
-            best_atom = None
-            best_bond = None
-            best_score = 0
-            for bond in self.current_node.bonds:
-                if bond is self.prior_edge:
-                    continue
-                atom = get_other_node(bond, self.current_node)
-                score = get_score(atom)
-                if score > best_score:
-                    best_score = score
-                    best_atom = atom
-                    best_bond = bond
+    def __str__(self):
+        return "->".join(repr(node) for node in self.nodes)
 
-            self.prior_edge = best_bond
-            self.current_node = best_atom
+    def get_score(self) -> PriorityScore:
+        return get_score(self.nodes[-1])
 
-        elif isinstance(self.current_node, StochasticObject):
-            if self.current_node.bond_left is self.prior_edge:
-                bond = self.current_node.bond_right
-                if bond is None:
-                    self.prior_edge = None
-                    self.current_node = None
 
-                self.current_node = get_other_node(bond, self.current_node)
-                self.prior_edge = bond
-                return
+def next_step(path:  TraversalPath) -> list:
+    additional_paths = []
+    current_node = path.nodes[-1]
+
+    if current_node is None:
+        path.nodes.append(None)
+        return additional_paths
+
+    elif isinstance(current_node, Atom):
+        atoms = []
+        bonds = []
+        for bond in current_node.bonds:
+            if bond in path.edges:
+                continue
+            atoms.append(get_other_node(bond, current_node))
+            bonds.append(bond)
+
+        if len(atoms) == 0:
+            path.nodes.append(None)
+            return additional_paths
+
+        atoms, bonds = sort_atoms_by_score(atoms, bonds)
+        for i in range(len(atoms)):
+            if i == 0:
+                path.nodes.append(atoms[0])
+                path.edges.append(bonds[0])
             else:
-                bond = self.current_node.bond_left
-                if bond is None:
-                    self.prior_edge = None
-                    self.current_node = None
+                additional_paths.append(
+                    TraversalPath(path.nodes[:-1] + [atoms[i]], path.edges[:-1] + [bonds[i]])
+                )
 
-                self.current_node = get_other_node(bond, self.current_node)
-                self.prior_edge = bond
+    elif isinstance(current_node, BondDescriptorAtom):
+        path.nodes.append(None)
+
+    elif isinstance(current_node, StochasticObject):
+        if current_node.bond_left in path.edges:
+            if current_node.bond_right is None:
+                path.nodes.append(None)
+
+            path.nodes.append(get_other_node(current_node.bond_right, current_node))
+            path.edges.append(current_node.bond_right)
 
         else:
-            raise ValueError("coding bug")
+            if current_node.bond_left is None:
+                path.nodes.append(None)
+
+            path.nodes.append(get_other_node(current_node.bond_left, current_node))
+            path.edges.append(current_node.bond_left)
+
+    else:
+        raise NotImplementedError("coding bug")
+
+    return additional_paths
+
+
+def sort_atoms_by_score(atoms: list[Atom, ...], bonds: list[Bond, ...]) -> tuple[list[Atom, ...], list[Bond, ...]]:
+    score = []
+    for atom in atoms:
+        score.append(get_atom_score(atom))
+
+    return [x for _, x in sorted(zip(score, atoms))], [x for _, x in sorted(zip(score, bonds))],
+
+
+class TraversalDirection:
+
+    def __init__(self, start_atom: Atom, bond_prior: Bond):
+        self.start_atom = start_atom
+        self.bond_prior = bond_prior
+        self.paths: [TraversalPath] = [TraversalPath([start_atom], [bond_prior])]
+        self.best_path = self.paths[0]
+        self._scores = None
+        self._up_to_date = False
+
+    @property
+    def num_paths(self) -> int:
+        return len(self.paths)
+
+    def scores(self) -> list[PriorityScore]:
+        if not self._up_to_date:
+            self._scores = [path.get_score() for path in self.paths]
+            index_not_none = next(i for i, score in enumerate(self._scores) if score is not None)
+            self.best_path = self.paths[index_not_none]
+            self._up_to_date = True
+
+        return self._scores
+
+    def one_traverse_step(self):
+        self._up_to_date = False
+
+        # traverse the graph one step
+        for i in range(len(self.paths)):  # index used as size of self.up may change during loop
+            additional_paths = next_step(self.paths[i])
+            self.paths += additional_paths
 
 
 class TraversalOutcomes(enum.Enum):
@@ -116,31 +241,23 @@ class TraversalOutcomes(enum.Enum):
 class TraversalSide:
     def __init__(self, double_bond: Bond, side: bool):
         """
-
         Parameters
         ----------
-        double_bond
+        double_bond:
+
         side:
-            True: left, False: righ
+            True: left, False: right
         """
         self.double_bond = double_bond
         self.side = side
 
-        self.up: TraversalPath | None = None
-        self.down: TraversalPath | None = None
+        self.up: TraversalDirection | None = None
+        self.down: TraversalDirection | None = None
         self.winner: TraversalOutcomes | None = None
         self.number_of_double_bonds_in_series: int = 0  # in a row after the starting double bond
-        self._seen_bond: set[int] = {double_bond.id_}
-        self._seen_atom: set[int] = set()
         self.setup_successful: bool = True
 
         self.setup()
-
-    @property
-    def done(self) -> bool:
-        if self.winner is None:
-            return False
-        return True
 
     def setup(self):
         if self.side:
@@ -149,7 +266,6 @@ class TraversalSide:
             atom = self.double_bond.atom2
 
         # get starting atom
-        self._seen_atom.add(atom.id_)
         starting_atom = self.check_for_multiple_double_bonds(atom, self.double_bond)
         if starting_atom is None:
             return
@@ -184,8 +300,6 @@ class TraversalSide:
             return None  # double bond is terminated with implicit hydrogens or lone pairs
         if len(other_bonds) == 1 and other_bonds[0].symbol == "=":
             next_atom = get_other_node(other_bonds[0], atom)
-            self._seen_bond.add(other_bonds[0].id_)
-            self._seen_atom.add(next_atom.id_)
             self.number_of_double_bonds_in_series += 1
             return self.check_for_multiple_double_bonds(next_atom, other_bonds[0])
 
@@ -198,21 +312,19 @@ class TraversalSide:
             return  # no stereo bonds '/' or '\\'
 
         atom_ez = get_other_node(bond_ez, start_atom)
-        self._seen_bond.add(bond_ez.id_)
-        self._seen_atom.add(atom_ez.id_)
 
         # set up path
-        path = TraversalPath(atom_ez, bond_ez)
+        direction = TraversalDirection(atom_ez, bond_ez)
         if bond_ez.symbol == "/":
             if atom_ez.parent is start_atom.parent:
-                self.up = path  # main chain
+                self.up = direction  # main chain
             else:
-                self.down = path  # branch
+                self.down = direction  # branch
         else:  # "\\"
             if atom_ez.parent is start_atom.parent:
-                self.down = path  # main chain
+                self.down = direction  # main chain
             else:
-                self.up = path  # branch
+                self.up = direction  # branch
 
         self.figure_out_other_bond(start_atom, bond_ez)
 
@@ -223,15 +335,12 @@ class TraversalSide:
             return  # no stereo bonds '/' or '\\'
 
         atom_ez = get_other_node(bond_ez, start_atom)
-        self._seen_bond.add(bond_ez.id_)
-        self._seen_atom.add(atom_ez.id_)
 
         # set first atom that has stereo symbol
-        path = TraversalPath(atom_ez, bond_ez)
         if bond_ez.symbol == "/":
-            self.down = path
+            self.down = TraversalDirection(atom_ez, bond_ez)
         else:  # "\\"
-            self.up = path
+            self.up = TraversalDirection(atom_ez, bond_ez)
 
         self.figure_out_other_bond(start_atom, bond_ez)
 
@@ -241,11 +350,9 @@ class TraversalSide:
         if len(other_bond) == 1:
             other_atom = get_other_node(other_bond[0], start_atom)
             if self.down is None:
-                self.down = TraversalPath(other_atom, other_bond[0])
+                self.down = TraversalDirection(other_atom, other_bond[0])
             else:
-                self.up = TraversalPath(other_atom, other_bond[0])
-
-            self.check_for_winner()
+                self.up = TraversalDirection(other_atom, other_bond[0])
 
         elif len(other_bond) == 0:
             # other bond must be implicit hydrogens or terminal
@@ -257,57 +364,94 @@ class TraversalSide:
         else:
             raise NotImplementedError("more than 2 bonds coming off double bond atom")
 
-    def step(self):
-        # rule 1 higher atomic mass has higher priority
-        # rule 2 propagate down chain till there is a difference
-
-        # traverse the graph one step
-        self.up.next_step()
-        self.down.next_step()
-
-        # see if there is a winner
-        self.check_for_winner()
-
     def check_for_winner(self):
-        score_up = get_score(self.up.current_node)
-        score_down = get_score(self.down.current_node)
-        if score_up == score_down:
-            if score_up is None:
-                self.winner = TraversalOutcomes.tie
+        if self.winner:
             return
 
-        if score_up > score_down:
-            self.winner = TraversalOutcomes.up
+        scores_up = self.up.scores()
+        scores_down = self.down.scores()
+        for i in range(max([len(scores_up), len(scores_down)])):
+            if i > len(scores_up) - 1 and i > len(scores_up) - 1:
+                self.winner = TraversalOutcomes.tie
+            if i > len(scores_up) - 1:
+                self.winner = TraversalOutcomes.down
+                break
+            if i > len(scores_down) - 1:
+                self.winner = TraversalOutcomes.up
+                break
+
+            if scores_up[i] == scores_down[i]:
+                if scores_up is None:
+                    continue
+                else:
+                    break
+
+            if scores_up > scores_down:
+                self.winner = TraversalOutcomes.up
+            else:
+                self.winner = TraversalOutcomes.down
+
+    def run_graph_traversal(self):
+        self.check_for_winner()
+        if self.winner:
+            return
+
+        logging.debug(f" Starting '{'left' if self.side else 'right'}' E/Z graph traversal:"
+                      f" {self.double_bond.root.to_string(show_repr=(Atom,))}"
+                      f"\n-------------------------------")
+        logging.debug(f"\t {'step':>4}, {'up':<30}, {'num_up_paths':>12}, {'down':>30}, {'num_down_paths':>12}")
+        logging.debug(f"\t {0:4}, {str(self.up.best_path):<30}, {self.up.num_paths:>12}"
+                      f" {str(self.down.best_path):<30}, {self.down.num_paths:>12}")
+
+        # perform graph traversal
+        for i in range(1, MAX_DEPTH):
+            self.up.one_traverse_step()
+            self.down.one_traverse_step()
+
+            self.check_for_winner()
+            logging.debug(f"\t {i:4}, {str(self.up.best_path):<30}, {self.up.num_paths:>12}"
+                          f" {str(self.down.best_path):<30}, {self.down.num_paths:>12}")
+
+            if self.winner:
+                return
+
         else:
-            self.winner = TraversalOutcomes.down
+            logging.warning(f'Max traversal depth reached on E/Z determination of: '
+                            f'\nBigSMILES: {self.double_bond.parent} '
+                            f'\nBond: {repr(self.double_bond)}')
+            return
 
 
-def check_setup(left, right) -> bool:
-    """
-    Check to see if there were reasons to terminate early from traversal setup
+def check_setup(left_side: TraversalSide, right_side: TraversalSide) -> bool:
+    """ Check to see if there were reasons to terminate early from traversal setup """
+    if not left_side.setup_successful or not right_side.setup_successful:
+        return True
 
-    Parameters
-    ----------
-    left:
-
-    right:
-
-
-    Returns
-    -------
-    result:
-        True: terminate early, False: continue with graph traversal
-
-    """
     # check for 'odd' number of double bonds in a row
-    if (left.number_of_double_bonds_in_series + right.number_of_double_bonds_in_series + 1) % 2 == 0:
+    if (left_side.number_of_double_bonds_in_series + right_side.number_of_double_bonds_in_series + 1) % 2 == 0:
         # left + right + 1 (starting double bond) = even  --> return None for E/Z
         logging.warning("Double bond stereo-chemistry notation '/' and '\\' should "
                         f"not be used on even number of double bonds; they are axial chiral and use @/@@ notation on "
-                        f"center atom.\nBigSMILES:{left.double_bond.parent}")
+                        f"center atom.\nBigSMILES:{left_side.double_bond.parent}")
         return True
 
     return False
+
+
+def determine_winner(left_side: TraversalSide, right_side: TraversalSide) -> str | None:
+    if left_side.winner is None or right_side.winner is None:
+        return None
+
+    if left_side.winner is TraversalOutcomes.tie and right_side.winner is TraversalOutcomes.tie:
+        logging.warning("Double bond stereo-chemistry notation '/' and '\\' should "
+                        "not be used on symmetric molecules.")
+        return None
+
+    if (left_side.winner is TraversalOutcomes.tie or right_side.winner is TraversalOutcomes.tie) or \
+            (left_side.winner == right_side.winner):
+        return "Z"
+
+    return "E"
 
 
 def get_double_bond_ez(double_bond: Bond) -> str | None:
@@ -327,10 +471,10 @@ def get_double_bond_ez(double_bond: Bond) -> str | None:
     Notes
     -----
 
-    * Depth-first-search (DFS) prioritizing heavy atoms and following multiple branches if atom count equal.
-    Starts out at the double bond and heads left and right,
-    then will branch into up and down for a total of 4 simultaneous DFS. At each step the higher atomic number
-    element is chosen (if same, backtracking is noted)
+    * Breath-first-search (BFS) prioritizing heavy atoms and following more bonds.
+    Starts out at the double bond with two traverses heading left and two right,
+    with one going up and the other going down for a total of 4 simultaneous BFS.
+    At each step the below rules are applied to compute a score
     The searches terminate once a difference between the up-down score.
     * Rules:
         * rule 1: higher atomic mass has higher priority
@@ -344,42 +488,10 @@ def get_double_bond_ez(double_bond: Bond) -> str | None:
     left_side = TraversalSide(double_bond, True)
     right_side = TraversalSide(double_bond, False)
 
-    if not left_side.setup_successful or not right_side.setup_successful or check_setup(left_side, right_side):
+    if check_setup(left_side, right_side):
         return None
 
-    logging.debug(f" Starting E/Z graph traversal: {double_bond.root.to_string(show_repr=(Atom,))}"
-                  f"\n-------------------------------")
-    logging.debug(" step, left_up, left_down, right_up, right_down")
-    logging.debug(f" {0:4}, {repr(left_side.up.current_node):>7}, {repr(left_side.down.current_node):>9}, "
-                  f"{repr(right_side.up.current_node):>8}, {repr(right_side.down.current_node):>10}")
+    left_side.run_graph_traversal()
+    right_side.run_graph_traversal()
 
-    # perform graph traversal checking each step to see if done
-    for i in range(200):  # 200 is the max depth of traversal
-        if not left_side.done:
-            left_side.step()
-
-        if not right_side.done:
-            right_side.step()
-
-        logging.debug(f" {i:4}, {repr(left_side.up.current_node):>7}, {repr(left_side.down.current_node):>9}, "
-                      f"{repr(right_side.up.current_node):>8}, {repr(right_side.down.current_node):>10}")
-        if left_side.done and right_side.done:
-            logging.debug("Traversal Done \n")
-            break  # traversal done
-
-    else:
-        logging.warning(f'Max traversal depth reached on E/Z determination of: '
-                        f'\nBigSMILES: {double_bond.parent} '
-                        f'\nBond: {repr(double_bond)}')
-        return None
-
-    # process results
-    if left_side.winner is TraversalOutcomes.tie and right_side.winner is TraversalOutcomes.tie:
-        logging.warning("Double bond stereo-chemistry notation '/' and '\\' should "
-                        "not be used on symmetric molecules.")
-        return None
-    if (left_side.winner is TraversalOutcomes.tie or right_side.winner is TraversalOutcomes.tie) or \
-            (left_side.winner == right_side.winner):
-        return "Z"
-
-    return "E"
+    return determine_winner(left_side, right_side)

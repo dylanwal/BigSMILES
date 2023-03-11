@@ -18,7 +18,20 @@ cases = [
     ["CCCCC(\CCCCF)=C(\CCCCF)CCCC", {9: "Z"}],
     ["CCCC(C)C(\C(C)CCCF)=C(\CCCCF)CCCC", {11: "Z"}],
     ["C(CCCC)C(\C(CCCF)C)=C(\CCCCF)CCCC", {11: "Z"}],
-    ["FC1C2C3C/C(CCC3C2C1)=C4CC5CCC(F)C5C/4", {9: "Z"}],  # rings and bridges
+    ["C/C(CC)=C(C(OCC)C(CF)C)/C(C(CC)C)OCC", {3: "E"}],
+    ["C/C(CC)=C(C(CCC)C(CF)C)/C(C(CC)C)=C/CC", {3: "Z", 17: "E"}],
+    ["F/C(C)=C(C(C(CC)F)CC(CCl)CBr)/C(C(Cl)CC)CC(CF)CBr", {2: "E"}],
+    ["F/C(C)=C(C(C(CC)F)OC(CCl)NBr)/C(C(CC)Cl)OC(CF)NBr", {2: "E"}],
+    ["F/C(C)=C(C(C(F)=C)OC(CCl)NBr)/C(CCl)OC(CF)NBr", {2: "E"}],
+    ["F/C(C)=C(C(C(F)=C)OC(CCl)NBr)/C(C(C)(C)F)OC(CF)NBr", {2: "Z"}],
+    ["F/C=C(CC(O)(O)OCC)\CC(OCC)=O", {2: "Z"}],
+    ["F/C=C(CC(O)(OC)OCC)\CC(OCC)=O", {2: "Z"}],  # chemdraw E, rdkit Z
+    ["F/C=C(C/C(OCC)=N/C)/CC(NC)(OCC)NCC", {2, "Z"}],
+    ["F/C=C(C/C(OC)=N/CC)/CC(NC)(OCC)N(C)C", {2: "Z"}],  # chemdraw E, rdkit Z
+    ["F/C(C)=C(C(OC(NBr)CF)C(C)(F)C)\C(OC(C)C)C(F)=C", {2: "E"}]  # chemdraw Z, rdkit E
+
+    # rings and bridges
+    ["FC1C2C3C/C(CCC3C2C1)=C4CC5CCC(F)C5C/4", {9: "Z"}],
 
     # conjugated
     ["F/C=C/C/C=C\C", {1: "E", 4: "Z"}],

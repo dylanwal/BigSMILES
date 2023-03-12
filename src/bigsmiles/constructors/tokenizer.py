@@ -138,7 +138,7 @@ class Token:
 def tokenize(text: str) -> list[Token]:
     """
 
-    tokenizes a bigSMILES string
+    tokenizes a bigSMILES string into a list of `Token` objects.
 
     Parameters
     ----------
@@ -186,6 +186,33 @@ def tokenize(text: str) -> list[Token]:
 
     return result
 
+def tokenize_text(text: str) -> list[str]:
+    """
+
+    tokenizes a bigSMILES string into a list of strings
+
+    Parameters
+    ----------
+    text: str
+        BigSMILES string
+
+    Returns
+    -------
+    result: list[str]
+        A list of strings, one for each token
+
+    Raises
+    ------
+    TokenizeError
+        invalid symbol detected
+
+    Examples
+    --------
+    >>> tokenize("CC{[>][<]CC(C)[>][<]}CC(C)=C")
+    """
+    tokens = tokenize(text)
+    tokenized_text = [t.value for t in tokens]
+    return tokenized_text
 
 ATOM_PATTERN = re.compile(atom_pattern)
 

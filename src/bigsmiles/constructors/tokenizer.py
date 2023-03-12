@@ -76,7 +76,7 @@ token_specification = [
     (TokenKind.BranchStart.name, r'\('),
     (TokenKind.BranchEnd.name, r'\)'),
     (TokenKind.Ring.name, r'[\d]{1}'),
-    (TokenKind.Ring2.name, r'%[\d]{2}'),  # ring_id with two-digit numbers
+    (TokenKind.Ring2.name, r'%[1-9][\d]'),  # ring_id with two-digit numbers
     (TokenKind.BondEZ.name, r'/|\\'),  # cis trans
     (TokenKind.Disconnected.name, r"\."),  # mixture
 

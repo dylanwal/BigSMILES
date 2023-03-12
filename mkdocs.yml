@@ -47,6 +47,7 @@ nav:
   - Quickstart:
       - Overview: quickstart/overview.md
       - Lesson 1: quickstart/quickstart.md
+      - Tokenizing: quickstart/tokenizing.md
   - Tutorials: tutorials/tutorials.md
   - Reference:
       - Overview: reference/overview.md

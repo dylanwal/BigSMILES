@@ -66,6 +66,9 @@ Tokenization is mainly done through regular expression patterns.
 The tokenizer leverage python's regular expression to identify and label valid BigSMILE tokens.
 
 
+::: bigsmiles.constructors.tokenizer.tokenize_text
+
+
 ::: bigsmiles.constructors.tokenizer.tokenize
 
 

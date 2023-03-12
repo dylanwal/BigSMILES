@@ -4,7 +4,8 @@ import pytest
 
 from bigsmiles.errors import TokenizeError
 from bigsmiles.constructors.tokenizer import TokenKind, tokenize, Token, tokenize_bonding_descriptor, \
-    tokenize_atom_symbol
+    tokenize_atom_symbol, tokenize_text
+
 
 cases_for_atom_pattern = [
     ["C", {"symbol": "C", "isotope": None, "stereo": None, "hydrogens": None, "charge": 0, "class_": None}],
@@ -222,5 +223,31 @@ negative_token_tests = [
 
 @pytest.mark.parametrize("test_case", negative_token_tests)
 def test_tokenizer_error(test_case: str):
-    with pytest.raises(TokenizeError) as p:
+    with pytest.raises(TokenizeError) as _:
         tokenize(test_case)
+
+
+cases_for_text_tokenizer = [
+    ["CCCC", ["C", "C", "C", "C"]],
+
+    ["CC[12CH2]C1=C(C(=NC=C1C=O)C)O",
+     ['C', 'C', '[12CH2]', 'C', '1', '=', 'C', '(', 'C', '(', '=', 'N', 'C', '=', 'C', '1', 'C',
+      '=', 'O', ')', 'C', ')', 'O']
+     ],
+
+    ["CC{[>][<]CC(C)[>][<]}CC(C)=C",
+     ['C', 'C', '{', '[>]', '[<]', 'C', 'C', '(', 'C', ')', '[>]', '[<]', '}', 'C', 'C', '(', 'C', ')', '=', 'C']],
+
+    ["{[][>]NCCCCCCN[>],[<]C(=O)CCCCC(=O)[<],[>]Cl,[<][H][]}",
+     ['{', '[]', '[>]', 'N', 'C', 'C', 'C', 'C', 'C', 'C', 'N', '[>]', ',', '[<]', 'C', '(', '=', 'O', ')', 'C', 'C',
+      'C', 'C', 'C', '(', '=', 'O', ')', '[<]', ',', '[>]', 'Cl', ',', '[<]', '[H]', '[]', '}']
+     ],
+]
+
+
+@pytest.mark.parametrize("case", cases_for_text_tokenizer)
+def test_text_tokenizer(case: list):
+    input_, answer = case
+    results = tokenize_text(input_)
+    for result, ans in zip(results, answer):
+        assert result == ans

@@ -75,7 +75,7 @@ token_specification = [
     (TokenKind.AtomExtend.name, atom_pattern),  # Atom in brackets
     (TokenKind.BranchStart.name, r'\('),
     (TokenKind.BranchEnd.name, r'\)'),
-    (TokenKind.Ring.name, r'[\d]{1}'),
+    (TokenKind.Ring.name, r'[1-9]'),
     (TokenKind.Ring2.name, r'%[1-9][\d]'),  # ring_id with two-digit numbers
     (TokenKind.BondEZ.name, r'/|\\'),  # cis trans
     (TokenKind.Disconnected.name, r"\."),  # mixture
@@ -174,7 +174,7 @@ def tokenize(text: str) -> list[Token]:
                 raise TokenizeError(f"Invalid symbol. If the symbol is not in the list below it must be in []."
                                     f"\nNon-bracket elements: {chemical_data.organic_elements}"
                                     f"\n(starting with {value!r}; index: {match.span()[0]})"
-                                f'\n{text}' + "\n" + " " * match.span()[0] + "^(and forward)")
+                                    f'\n{text}' + "\n" + " " * match.span()[0] + "^(and forward)")
 
             raise TokenizeError(f'Invalid symbol (or group of symbols). (starting with {value!r}; '
                                 f'index: {match.span()[0]})'
@@ -185,6 +185,7 @@ def tokenize(text: str) -> list[Token]:
         )
 
     return result
+
 
 def tokenize_text(text: str) -> list[str]:
     """
@@ -208,7 +209,9 @@ def tokenize_text(text: str) -> list[str]:
 
     Examples
     --------
-    >>> tokenize("CC{[>][<]CC(C)[>][<]}CC(C)=C")
+    >>> tokenize_text("CC{[>][<]CC(C)[>][<]}CC(C)=C")
+    ['C', 'C', '{', '[>]', '[<]', 'C', 'C', '(', 'C', ')', '[>]', '[<]', '}', 'C', 'C', '(', 'C', ')', '=', 'C']
+
     """
     result = []
     for match in re.finditer(tok_regex, text.replace(" ", "")):
@@ -222,7 +225,7 @@ def tokenize_text(text: str) -> list[str]:
                 raise TokenizeError(f"Invalid symbol. If the symbol is not in the list below it must be in []."
                                     f"\nNon-bracket elements: {chemical_data.organic_elements}"
                                     f"\n(starting with {value!r}; index: {match.span()[0]})"
-                                f'\n{text}' + "\n" + " " * match.span()[0] + "^(and forward)")
+                                    f'\n{text}' + "\n" + " " * match.span()[0] + "^(and forward)")
 
             raise TokenizeError(f'Invalid symbol (or group of symbols). (starting with {value!r}; '
                                 f'index: {match.span()[0]})'
@@ -231,6 +234,7 @@ def tokenize_text(text: str) -> list[str]:
         result.append(value)
 
     return result
+
 
 ATOM_PATTERN = re.compile(atom_pattern)
 

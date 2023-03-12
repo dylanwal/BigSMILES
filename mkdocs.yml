@@ -76,8 +76,9 @@ nav:
   - BigSMILES:
       - Overview: bigsmiles/overview.md
       - Specification: bigsmiles/specification.md
+      - Interpretation: bigsmiles/interpretation.md
+      - Priority Rules: bigsmiles/priority_rules.md
       - Examples: bigsmiles/examples.md
-      - References: bigsmiles/references.md
   - Developers: developers/developers.md
   - Extras:
       - Change Log: extras/change_log.md

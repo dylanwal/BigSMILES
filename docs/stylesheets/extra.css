@@ -48,3 +48,14 @@
 .md-grid {
     max-width: 90%;
 }
+
+
+/* light mode alternating table bg colors */
+.md-typeset__table tr:nth-child(2n) {
+    background-color: #f8f8f8;
+}
+
+/* dark mode alternating table bg colors */
+[data-md-color-scheme="dark"] .md-typeset__table tr:nth-child(2n) {
+    background-color: hsla(var(--md-hue),25%,25%,1)
+}

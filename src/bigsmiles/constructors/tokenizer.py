@@ -210,9 +210,27 @@ def tokenize_text(text: str) -> list[str]:
     --------
     >>> tokenize("CC{[>][<]CC(C)[>][<]}CC(C)=C")
     """
-    tokens = tokenize(text)
-    tokenized_text = [t.value for t in tokens]
-    return tokenized_text
+    result = []
+    for match in re.finditer(tok_regex, text.replace(" ", "")):
+        kind = match.lastgroup
+
+        value = match.group()
+        if kind == 'SKIP':
+            continue
+        elif kind == 'MISMATCH':
+            if text[:2] in chemical_data.element_symbols:
+                raise TokenizeError(f"Invalid symbol. If the symbol is not in the list below it must be in []."
+                                    f"\nNon-bracket elements: {chemical_data.organic_elements}"
+                                    f"\n(starting with {value!r}; index: {match.span()[0]})"
+                                f'\n{text}' + "\n" + " " * match.span()[0] + "^(and forward)")
+
+            raise TokenizeError(f'Invalid symbol (or group of symbols). (starting with {value!r}; '
+                                f'index: {match.span()[0]})'
+                                f'\n{text}' + "\n" + " " * match.span()[0] + "^(and forward)")
+
+        result.append(value)
+
+    return result
 
 ATOM_PATTERN = re.compile(atom_pattern)
 

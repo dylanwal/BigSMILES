@@ -138,7 +138,7 @@ class Token:
 def tokenize(text: str) -> list[Token]:
     """
 
-    tokenizes a bigSMILES string
+    tokenizes a bigSMILES string into a list of `Token` objects.
 
     Parameters
     ----------
@@ -186,6 +186,51 @@ def tokenize(text: str) -> list[Token]:
 
     return result
 
+def tokenize_text(text: str) -> list[str]:
+    """
+
+    tokenizes a bigSMILES string into a list of strings
+
+    Parameters
+    ----------
+    text: str
+        BigSMILES string
+
+    Returns
+    -------
+    result: list[str]
+        A list of strings, one for each token
+
+    Raises
+    ------
+    TokenizeError
+        invalid symbol detected
+
+    Examples
+    --------
+    >>> tokenize("CC{[>][<]CC(C)[>][<]}CC(C)=C")
+    """
+    result = []
+    for match in re.finditer(tok_regex, text.replace(" ", "")):
+        kind = match.lastgroup
+
+        value = match.group()
+        if kind == 'SKIP':
+            continue
+        elif kind == 'MISMATCH':
+            if text[:2] in chemical_data.element_symbols:
+                raise TokenizeError(f"Invalid symbol. If the symbol is not in the list below it must be in []."
+                                    f"\nNon-bracket elements: {chemical_data.organic_elements}"
+                                    f"\n(starting with {value!r}; index: {match.span()[0]})"
+                                f'\n{text}' + "\n" + " " * match.span()[0] + "^(and forward)")
+
+            raise TokenizeError(f'Invalid symbol (or group of symbols). (starting with {value!r}; '
+                                f'index: {match.span()[0]})'
+                                f'\n{text}' + "\n" + " " * match.span()[0] + "^(and forward)")
+
+        result.append(value)
+
+    return result
 
 ATOM_PATTERN = re.compile(atom_pattern)
 

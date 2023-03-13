@@ -1,16 +1,27 @@
----
-
-## Overview
-
-
-
 
 
 ## Grammar Notation
 
-To define the BigSMILES syntax we will use 
-[extended Backus–Naur form (EBNF)](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form). The following will
-provide a brief definition of the syntax used.
+SMILES can be contextualized as a [context-free grammar](https://en.wikipedia.org/wiki/Context-free_grammar).
+This means that the syntax can be  defined by:
+
+`A --> <span>&#124;</span>`
+
+[extended Backus–Naur form (EBNF)](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form) is a notation 
+for formally describing syntax: how to write the linguistic We will use EBNF to describe the
+features in a language. Using this notation, a person can determine
+whether a program is syntactically correct: whether it adheres to the grammar
+and punctuation rules of the language.
+
+An EBNF description is an unordered list of EBNF rules. Each EBNF rule has three parts: 
+
+ * a left–hand side (LHS); names the EBNF rule
+ * a right-hand side (RHS); supplies a description
+ * the ::= character separating these two sides; read this symbol as “is defined as”.
+
+
+
+The following will provide a brief definition of the syntax used.
 
 A valid 'word' in a grammar is defined as containing only terminal symbols. In the formulation of EBNF a terminal is 
 a string and will only appear in the right-hand side of a rule.
@@ -31,6 +42,16 @@ although it may appear on the left-hand side of a rule in the grammar for termin
 | A* | matches zero or more occurrences of A                                   |
 | A? | matches A or nothing; optional A                                        |
 |(A) | A is treated as a unit and may be combined as described in this list    |
+
+
+To prove that a symbol is legal according to some EBNF rule, we must match
+all its characters with all the items in the EBNF rule, according to that rule’s
+description. If there is an exact match —we exhaust the characters in the
+symbol at the same time when exhaust the rule’s description— we classify
+the symbol as legal according to that EBNF description and say it matches;
+otherwise we classify the symbol as illegal and say it doesn’t match.
+
+
 
 
 ## General
@@ -85,13 +106,5 @@ bigSMILES ::= chain+ terminator | stochastic_object_implicit terminator
 reaction ::= bigSMILES (',' BigSMILES)? '>>' bigSMILES (',' BigSMILES)? | bigSMILES (',' BigSMILES)? '>' bigSMILES (',' BigSMILES)? '>' bigSMILES (',' BigSMILES)?
 ```
 
-!!! warning
 
-    The grammar only validates the syntax (the symbols used) it does not validate valency of atoms, or whether the
-    bond descriptors produce a valid stochastic object. Additional validation is needed to guarantee this.
- 
-
-syntax diagrams (railroad diagrams)
-[comment]: <> (https://www.bottlecaps.de/rr/ui)
-
-
+tabular proof and derivation trees

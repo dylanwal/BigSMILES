@@ -37,9 +37,11 @@ include:
 * syntax
 
 Among the most prevalent _documented_ revisions include:
+* [original publication - Weininger](https://pubs.acs.org/doi/abs/10.1021/ci00057a005)
+* [SMILES chapter - Weininger](https://onlinelibrary.wiley.com/doi/epdf/10.1002/9783527618279.ch5)
 * [Daylight](https://www.daylight.com/dayhtml/doc/theory/theory.smiles.html)
 * [openSMILES](http://opensmiles.org/opensmiles.html) ([github](https://github.com/opensmiles))
-* [SMILES+](https://github.com/IUPAC/IUPAC_SMILES_plus)
+* [SMILES+ - github](https://github.com/IUPAC/IUPAC_SMILES_plus)
 
 Reaction SMILES:
 * [Daylight Summer School](https://www.daylight.com/meetings/summerschool01/course/basics/smirks.html)

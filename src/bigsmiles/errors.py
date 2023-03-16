@@ -26,4 +26,8 @@ class ValidationError(BigSMILESError):
     """ raised when validating a SMILES/BigSMILES string is syntactically correct. """
 
 
+class DistributionError(BigSMILESError):
+    """ raise when issue with MW distribution """
+
+
 ERRORS = (BigSMILESError, TokenizeError)

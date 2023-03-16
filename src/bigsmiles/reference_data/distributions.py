@@ -1,0 +1,291 @@
+"""
+Optional
+
+"""
+import abc
+import math
+from ast import literal_eval as make_tuple
+
+try:
+    # optional packages need for this feature
+    from scipy import stats  # noqa
+    import numpy as np  # noqa
+except ImportError:
+    raise ImportError("'Scipy' is an optional package and needs to be installed. "
+                      "\n'pip install scipy' or 'conda install scipy' ")
+
+import bigsmiles.errors as errors
+
+_GLOBAL_RNG = np.random.default_rng()
+
+
+class Distribution(abc.ABC):
+    """
+    Generic class to generate molecular weight distribution.
+    """
+
+    def __init__(self, raw_text):
+        """
+        Initialize the generic distribution.
+        Arguments:
+        ----------
+        raw_text: str
+             Text representation of the distribution. Example: `flory_schulz(0.01)`
+        """
+        self._raw_text = raw_text.strip("| \t\n")
+        self._distribution = None
+        self.monomer_MW = None
+
+    @abc.abstractmethod
+    @property
+    def Mn(self) -> float | int:
+        """ Number average MW """
+        return 0
+
+    @abc.abstractmethod
+    @property
+    def Mw(self) -> float | int:
+        """ Weight average MW """
+        return 0
+
+    @property
+    def D(self) -> float | int:
+        """ molecular weight dispersity """
+        return self.Mn / self.Mw
+
+    @property
+    def N(self) -> float | int | None:
+        """ Chain length """
+        if self.monomer_MW is None:
+            return None
+        return self.Mn / self.monomer_MW
+
+    def draw_mw(self, rng=None):
+        """
+        Draw a sample from the molecular weight distribution.
+        Arguments:
+        ----------
+        rng: numpy.random.Generator
+             Numpy random number generator for the generation of numbers.
+        """
+        if self._distribution is None:
+            raise NotImplementedError
+
+        if rng is None:
+            rng = _GLOBAL_RNG
+        return self._distribution.rvs(random_state=rng)
+
+    def prob_mw(self, mw):
+        """
+        Calculate the probability that this mw was from this distribution.
+        Arguments:
+        ----------
+        mw: float
+             Integer heavy atom molecular weight.
+        """
+        if self._distribution is None:
+            raise NotImplementedError
+
+        if isinstance(mw, bigsmiles_gen.mol_prob.RememberAdd):
+            return self._distribution.cdf(mw.value) - self._distribution.cdf(mw.previous)
+
+        return self._distribution.pdf(mw)
+
+
+class FlorySchulz(Distribution):
+    """
+    Flory-Schulz distribution of molecular weights for geometrically distributed chain lengths.
+    :math:`W_a(N) = a^2 N (1-a)^M`
+    where :math:`0<a<1` is the experimentally determined constant of remaining monomers and
+    :math:`k` is the chain length.
+    The textual representation of this distribution is: `flory_schulz(a)`
+
+    ideal step-growth polymerization process
+
+    [wiki](https://en.wikipedia.org/wiki/Flory%E2%80%93Schulz_distribution)
+    """
+
+    class flory_schulz_gen(stats.rv_discrete):
+        """ Flory Schulz distribution """
+
+        def _pmf(self, k, a):
+            return a ** 2 * k * (1 - a) ** (k - 1)
+
+    def __init__(self, raw_text):
+        """
+        Initialization of Flory-Schulz distribution object.
+        Arguments:
+        ----------
+        raw_text: str
+             Text representation of the distribution.
+             Has to start with `flory_schulz`.
+        """
+        super().__init__(raw_text)
+
+        if not self._raw_text.startswith("flory_schulz"):
+            raise RuntimeError(
+                f"Attempt to initialize Flory-Schulz distribution from text '{raw_text}' "
+                f"that does not start with 'flory_schulz'"
+            )
+
+        self._a = float(make_tuple(self._raw_text[len("flory_schulz"):]))
+        self._distribution = self.flory_schulz_gen(name="Flory-Schulz")
+
+    def generate_string(self, extension):
+        if extension:
+            return f"|flory_schulz({self._a})|"
+        return ""
+
+    @property
+    def generable(self):
+        return True
+
+    def draw_mw(self, rng=None):
+        if rng is None:
+            rng = _GLOBAL_RNG
+        return self._distribution.rvs(a=self._a, random_state=rng)
+
+    def prob_mw(self, mw):
+        if isinstance(mw, bigsmiles_gen.mol_prob.RememberAdd):
+            return self._distribution.cdf(mw.value, a=self._a) - self._distribution.cdf(
+                mw.previous, a=self._a
+            )
+        return self._distribution.pmf(int(mw), a=self._a)
+
+
+class Gauss(Distribution):
+    """
+    Gauss distribution of molecular weights for geometrically distributed chain lengths.
+    :math:`G_{\\sigma,\\mu}(N) = 1/\\sqrt{\\sigma^2 2\\pi} \\exp(-1/2 (x-\\mu^2)/\\sigma`
+    where :math:`\\mu` is the mean and :math:`\\sigma^2` the variance.
+    The textual representation of this distribution is: `gauss(\\mu, \\sigma)`
+    """
+
+    def __init__(self, raw_text):
+        """
+        Initialization of Gaussian distribution object.
+        Arguments:
+        ----------
+        raw_text: str
+             Text representation of the distribution.
+             Has to start with `gauss`.
+        """
+        super().__init__(raw_text)
+
+        if not self._raw_text.startswith("gauss"):
+            raise RuntimeError(
+                f"Attempt to initialize Gaussian distribution from text '{raw_text}' that does not start with 'gauss'"
+            )
+
+        self._mu, self._sigma = make_tuple(self._raw_text[len("gauss"):])
+        self._mu = float(self._mu)
+        self._sigma = float(self._sigma)
+        self._distribution = stats.norm(loc=self._mu, scale=self._sigma)
+
+    def generate_string(self, extension):
+        if extension:
+            return f"|gauss({self._mu}, {self._sigma})|"
+        return ""
+
+    @property
+    def generable(self):
+        return True
+
+    def prob_mw(self, mw):
+        if self._sigma < 1e-6 and abs(self._mu - mw) < 1e-6:
+            return 1.0
+        return super().prob_mw(mw)
+
+
+class Uniform(Distribution):
+    """
+    Uniform distribution of different lengths, usually useful for short chains.
+    The textual representation of this distribution is: `uniform(low, high)`
+    """
+
+    def __init__(self, raw_text):
+        """
+        Initialization of Uniform distribution object.
+        Arguments:
+        ----------
+        raw_text: str
+             Text representation of the distribution.
+             Has to start with `gauss`.
+        """
+        super().__init__(raw_text)
+
+        if not self._raw_text.startswith("uniform"):
+            raise RuntimeError(
+                f"Attempt to initialize Uniform distribution from text '{raw_text}' that does not start with 'uniform'"
+            )
+
+        self._low, self._high = make_tuple(self._raw_text[len("uniform"):])
+        self._low = int(self._low)
+        self._high = int(self._high)
+        self._distribution = stats.uniform(loc=self._low, scale=(self._high - self._low))
+
+    def generate_string(self, extension):
+        if extension:
+            return f"|uniform({self._low}, {self._high})|"
+        return ""
+
+    @property
+    def generable(self):
+        return True
+
+
+class LogNormal(Distribution):
+    """
+
+    """
+
+    def __init__(self, Mn: int | float, D: float):
+        """
+        Initialization of Gaussian distribution object.
+        Arguments:
+        ----------
+        Mn: M
+        """
+        super().__init__()
+        self._Mn = Mn
+        self._MW = D * Mn
+
+        self.std = math.sqrt(math.log(D))
+        self.mean = math.log(Mn) - self.std**2/2
+        self._distribution = stats.lognorm(s=self.std, loc=self.mean)
+
+    @property
+    def Mn(self) -> float | int:
+        return self._Mn
+
+    def Mw(self) -> float | int:
+        return self._MW
+
+    def generate_string(self, extension):
+        if extension:
+            return f"|lognorm({self.Mn}, {self.D})|"
+        return ""
+
+    @property
+    def generable(self):
+        return True
+
+    def prob_mw(self, mw):
+        if self._sigma < 1e-6 and abs(self._mu - mw) < 1e-6:
+            return 1.0
+        return super().prob_mw(mw)
+
+
+
+distributions = {
+    "flory_schulz": FlorySchulz,
+    "gauss": Gauss,
+    "uniform": Uniform,
+}
+
+
+def get_distribution(distribution_text):
+    try:
+        return distributions[distribution_text]
+    except KeyError:
+        raise errors.DistributionError(f"Unknown distribution type {distribution_text}.")

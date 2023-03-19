@@ -59,53 +59,54 @@ def main():
     N = Mn/repeat_MW
 
 
-    # LogNormal
-    fig = go.Figure()
-    labels = []
-    for i in range(n):
-        dis = distributions.LogNormal(Mn[i], D[i])
-        fig = dis.plot_pdf(fig=fig)
-        labels.append(str(dis))
-
-    format_figure(fig)
-    fig.write_image("LogNormal.svg")
-
-
-    # FlorySchulz
-    fig = go.Figure()
-    labels = []
-    conversion = [0.8, 0.93, 0.99, 0.995, 0.999, 0.999]
-    for conv in conversion:
-        dis = distributions.FlorySchulz(conv, repeat_MW)
-        fig = dis.plot_pdf(fig=fig)
-        labels.append(str(dis))
-
-    format_figure(fig)
-    fig.write_image("FlorySchulz.svg")
+    # # LogNormal
+    # fig = go.Figure()
+    # labels = []
+    # for i in range(n):
+    #     dis = distributions.LogNormal(Mn[i], D[i])
+    #     fig = dis.plot_pdf(fig=fig)
+    #     labels.append(str(dis))
+    #
+    # format_figure(fig)
+    # fig.write_image("LogNormal.svg")
+    #
+    #
+    # # FlorySchulz
+    # fig = go.Figure()
+    # labels = []
+    # conversion = [0.8, 0.93, 0.99, 0.995, 0.999, 0.9999]
+    # for conv in conversion:
+    #     dis = distributions.FlorySchulz(conv, repeat_MW)
+    #     fig = dis.plot_pdf(fig=fig)
+    #     labels.append(str(dis))
+    #
+    # format_figure(fig)
+    # fig.write_image("FlorySchulz.svg")
 
 
     # # SchulzZimm
     # fig = go.Figure()
     # labels = []
     # for i in range(n):
-    #     dis = distributions.SchulzZimm(Mn[i], D[i])
+    #     dis = distributions.SchulzZimm(Mn[i], 1.1)
+    #     print(dis.D)
     #     fig = dis.plot_pdf(fig=fig)
     #     labels.append(str(dis))
     #
     # format_figure(fig)
     # fig.write_image("SchulzZimm.svg")
+
     #
-    #
-    # # Poisson
-    # fig = go.Figure()
-    # labels = []
-    # for i in range(n):
-    #     dis = distributions.Poisson(N[i])
-    #     fig = dis.plot_pdf(fig=fig)
-    #     labels.append(str(dis))
-    #
-    # format_figure(fig)
-    # fig.write_image("Poisson.svg")
+    # Poisson
+    fig = go.Figure()
+    labels = []
+    for i in range(n):
+        dis = distributions.Poisson(N[i], repeat_MW)
+        fig = dis.plot_pdf(fig=fig)
+        labels.append(str(dis))
+
+    format_figure(fig)
+    fig.write_image("Poisson.svg")
 
 
 if __name__ == "__main__":

@@ -89,6 +89,7 @@ class Distribution(abc.ABC):
     """
     Generic class for molecular weight distributions
     """
+    compute_with_mw = True
 
     def __init__(self, repeat_MW: int | float | None = None): # noqa
         """
@@ -97,16 +98,17 @@ class Distribution(abc.ABC):
         repeat_MW:
             repeat unit MW
         """
-        self._monomer_MW = repeat_MW
+        self._repeat_MW = repeat_MW
         self._Mn: int | float | None = None
         self._D: int | float | None = None
         self._N: int | float | None = None
         self._mean: int | float | None = None
         self._std: int | float | None = None
-        self._max: int | float | None = None
+        self._peak_max: int | float | None = None
 
         self._pdf: np.ndarray | None = None
-        self._x: np.ndarray | None = None
+        self._mw_i: np.ndarray | None = None
+        self._N_i: np.ndarray | None = None
 
     def __str__(self):
         return self._create_label()
@@ -119,22 +121,48 @@ class Distribution(abc.ABC):
         """ create string for bigSMILES """
 
     @abc.abstractmethod
-    def _compute_pdf(self, x: int | float | np.ndarray) -> np.ndarray:
+    def _compute_pdf(self, x: int | float | np.ndarray) -> int | float | np.ndarray:
         """ computes probability distribution function """
 
     @property
-    def x(self) -> np.ndarray:
-        """ either molecular weight or chain length (x-axis for pdf) """
-        if self._x is None:
-            self._x = self._get_x()
+    def mw_i(self) -> np.ndarray | None:
+        """ molecular weight array (x-axis for pdf) """
+        if self._mw_i:
+            return self._mw_i
 
-        return self._x
+        if self.compute_with_mw:
+            self._mw_i = self._get_mw_i()
+        else:
+            if self.repeat_MW is not None:
+                self._mw_i = self.N_i * self.repeat_MW
+            else:
+                logging.warning("'repeat_MW' needs to be defined.")
+                return None
+
+        return self._mw_i
+
+    @property
+    def N_i(self) -> np.ndarray | None:
+        """ chain length array (x-axis for pdf) """
+        if self._N_i:
+            return self._N_i
+
+        if self.compute_with_mw:
+            if self.repeat_MW:
+                self._N_i = self.mw_i / self.repeat_MW
+            else:
+                logging.warning("'repeat_MW' needs to be defined.")
+                return None
+        else:
+            self._N_i = self._get_N_i()
+
+        return self._N_i
 
     @property
     def Mn(self) -> float | int:  # noqa
         """ number average MW """
         if self._Mn is None:
-            self._Mn, self._D = calculate_Mn_D_from_xi(self._pdf(self.x), self.x)
+            self._Mn, self._D = calculate_Mn_D_from_xi(self.mw_i, self.pdf(self.mw_i))
 
         return self._Mn
 
@@ -147,38 +175,38 @@ class Distribution(abc.ABC):
     def D(self) -> float | int:  # noqa
         """ molecular weight dispersity """
         if self._D is None:
-            self._Mn, self._D = calculate_Mn_D_from_xi(self._pdf(self.x), self.x)
+            self._Mn, self._D = calculate_Mn_D_from_xi(self.mw_i, self.pdf(self.mw_i))
 
         return self._D
 
     @property
     def N(self) -> float | int | None:  # noqa
         """ Chain length """
-        if self.N is None:
-            if self.Mn and self._monomer_MW:
-                self._N = self.Mn / self._monomer_MW
+        if self._N is None:
+            if self.Mn and self._repeat_MW:
+                self._N = self.Mn / self._repeat_MW
 
         return self._N
 
     @property
-    def monomer_MW(self) -> float | int | None:  # noqa
+    def repeat_MW(self) -> float | int | None:  # noqa
         # TODO: have it figure out monomer MW from bigSMILES
-        return self._monomer_MW
+        return self._repeat_MW
 
     @property
-    def max(self):
+    def peak_max(self):
         """ max molecular weight """
-        if self._max is None:
+        if self._peak_max is None:
             max_result = minimize_scalar(lambda x_: -1 * self.pdf(x_), bounds=[-10, 10_000_000])
-            self._max = max_result.x
+            self._peak_max = max_result.x
 
-        return self._max
+        return self._peak_max
 
     @property
     def mean(self) -> int | float:
         """ mean molecular weight """
         if self._mean is None:
-            self._mean = np.trapz(x=self.x, y=self.x*self.pdf(self.x))
+            self._mean = np.trapz(x=self.mw_i, y=self.mw_i*self.pdf(self.mw_i))
 
         return self._mean
 
@@ -186,7 +214,7 @@ class Distribution(abc.ABC):
     def std(self) -> int | float:
         """ standard deviation molecular weight """
         if self.std is None:
-            self._std = np.sqrt(np.trapz(x=self.x, y=self.pdf(self.x)*(self.x-self.mean)**2))
+            self._std = np.sqrt(np.trapz(x=self.mw_i, y=self.pdf(self.mw_i)*(self.mw_i-self.mean)**2))
 
         return self._std
 
@@ -206,7 +234,7 @@ class Distribution(abc.ABC):
         * Highly Skewed: Values less than -1 or greater than 1
 
         """
-        return np.trapz(x=self.x, y=self.pdf(self.x) * (self.x - self.mean)**3) / self.std**3
+        return np.trapz(x=self.mw_i, y=self.pdf(self.mw_i) * (self.mw_i - self.mean)**3) / self.std**3
 
     @property
     def kurtosis(self) -> int | float:
@@ -224,20 +252,50 @@ class Distribution(abc.ABC):
         * Platykurtic: kurtosis < -3; the distribution has a lower and wider peak and thinner tails
 
         """
-        return (np.trapz(x=self.x, y=self.pdf(self.x)*(self.x-self.mean)**4)/self.std**4)-3
+        return (np.trapz(x=self.mw_i, y=self.pdf(self.mw_i)*(self.mw_i-self.mean)**4)/self.std**4)-3
 
-    def pdf(self, x: int | float | np.ndarray = None) -> np.ndarray:
+    def pdf(self, mw_i: int | float | np.ndarray = None) -> np.ndarray | None:
         """ probability distribution function (number/molar) """
-        if x is None:
-            x = self.x
-        if self._pdf is not None and x == self._x:
-            return self._pdf
+        if self.compute_with_mw:
+            if mw_i is None or mw_i is self.mw_i:
+                if not self._pdf:
+                    self._pdf = self._compute_pdf(self.mw_i)
+                return self._pdf
 
-        return self._compute_pdf(x)
+            return self._compute_pdf(mw_i)
+
+        if self.repeat_MW is None:
+            logging.warning("'repeat_MW' needs to be defined.")
+            return None
+
+        logging.warning("Use '.pdf_N' for more accurate results. (float to int conversion required)")
+
+        if self.mw_i is None:
+            mw_i = self.mw_i
+
+        if isinstance(mw_i, np.ndarray):
+            mw_i = np.floor_divide(mw_i, self.repeat_MW, dtype='uint')
+        elif isinstance(mw_i, float):
+            mw_i = mw_i // self.repeat_MW
+
+        return self._compute_pdf(mw_i)
 
     def cdf(self) -> tuple[np.ndarray, np.ndarray]:
         """ cumulative distribution function """
         return generate_cdf(self.pdf)
+
+    def pdf_N(self, N_i: int | np.ndarray = None) -> np.ndarray:
+        """ probability distribution function (number/molar) """
+        if x is None:
+            x = self.mw_i
+        if self._pdf is not None and x == self._mw_i:
+            return self._pdf
+
+        return self._compute_pdf(x)
+
+    def cdf_N(self) -> tuple[np.ndarray, np.ndarray]:
+        """ cumulative distribution function """
+        return generate_cdf(self.pdf_N)
 
     def draw_mw(self, n: int = 1):
         """
@@ -251,6 +309,21 @@ class Distribution(abc.ABC):
         """
         rnd = np.random.random((n,))
         x, cdf = self.cdf()
+
+        return np.interp(rnd, cdf, x)
+
+    def draw_N(self, n: int = 1):
+        """
+        draw a sample from the molecular weight distribution.
+
+        Parameters:
+        ----------
+        rng:
+             Numpy random number generator for the generation of numbers.
+
+        """
+        rnd = np.random.random((n,))
+        x, cdf = self.cdf_N()
 
         return np.interp(rnd, cdf, x)
 
@@ -268,19 +341,14 @@ class Distribution(abc.ABC):
 
         return self.pdf(mw)
 
-    def _get_x(self, mw_or_n: bool = True) -> np.ndarray:
+    def _get_mw_i(self) -> np.ndarray:
         """
-        attempt to determine a good x
-
-        Parameters
-        ----------
-        mw_or_n:
-            True: MW; False N
+        attempt to determine a good MW_i
 
         Returns
         -------
         x:
-            array of Mn or N
+            array of MW_i
 
         Notes
         -----
@@ -289,35 +357,39 @@ class Distribution(abc.ABC):
         It will then create a high density of points around the peak and low density everywhere else
 
         """
-        if mw_or_n:
-            # mw
-            peak_max_range = (-100, 10_000_000)
-            low_cutoff = 1000
-            low_cutoff_max_mw = math.log10(30_000)
-            x_min = math.log10(300)
-            x_max = math.log10(10_000_000)
-        else:
-            # chain length
-            peak_max_range = (-2, 10_000)
-            low_cutoff = 50
-            low_cutoff_max_mw = math.log10(400)
-            x_min = 1
-            x_max = math.log10(10_000)
+        # defaults
+        peak_max_range = (-100, 10_000_000)
+        low_cutoff = 1000
+        low_cutoff_max_mw = math.log10(30_000)
+        x_min = 1
+        x_max = math.log10(10_000_000)
 
+        # get distribution max
         max_result = minimize_scalar(lambda x_: -1 * self.pdf(x_), bounds=peak_max_range)
         max_MW, max_y = max_result.x, -1 * max_result.fun  # -1 is to undo the lambda function one line above
-        self._max = max_MW
+        self._peak_max = max_MW
 
-        # low MW
+        # for low MW
         if max_MW < low_cutoff:
             return np.logspace(1, low_cutoff_max_mw, 10_000)
 
-        # high MW
-        min_ = root_scalar(lambda x_: self.pdf(x_) - (max_y * 0.03), bracket=[50, max_MW - 10])
-        min_MW = min_.root
+        # for med MW
+        if self.pdf(0) > max_y * 0.03:
+            x = np.concatenate(
+            (
+                np.logspace(1, math.log10(max_MW), 5000),
+                np.logspace(math.log10(max_MW + 10), math.log10(max_MW * 5), 4500),
+                np.logspace(math.log10(max_MW * 5 + 100), math.log10(max_MW * 20), 500)
+                            )
+            )
+            return x
 
-        low_connection = math.log10(min_MW - 10)
-        lower_connection = math.log10(min_MW)
+        # for high MW
+        min_ = root_scalar(lambda x_: self.pdf(x_) - (max_y * 0.03), bracket=[0, max_MW - 10])
+        min_MW = max(min_.root, 500)
+
+        low_connection = math.log10(min_MW)
+        lower_connection = math.log10(min_MW + 10)
         up_connection = math.log10(max_MW + 2 * (max_MW - min_MW))
         upper_connection = math.log10(max_MW + 2 * (max_MW - min_MW) + 100)
 
@@ -331,10 +403,72 @@ class Distribution(abc.ABC):
 
         return x
 
+    def _get_N_i(self) -> np.ndarray:
+        """
+        attempt to determine a good N_i
+
+        Returns
+        -------
+        x:
+            array of MW_i
+
+        Notes
+        -----
+
+        * attempts to find a good x by first finding the peak max, then finding the lower bound.
+        It will then create a high density of points around the peak and low density everywhere else
+
+        """
+        # defaults
+        peak_max_range = (0, 10_000)
+        low_cutoff = 40
+        low_cutoff_max_mw = math.log10(100)
+        x_min = 1
+        x_max = math.log10(10_000)
+
+        # get distribution max
+        max_result = minimize_scalar(lambda x_: -1 * self.pdf(x_), bounds=peak_max_range)
+        max_MW, max_y = max_result.x, -1 * max_result.fun  # -1 is to undo the lambda function one line above
+        self._peak_max = max_MW
+
+        # for low MW
+        if max_MW < low_cutoff:
+            return np.logspace(1, low_cutoff_max_mw, 10_000, dtype="uint")
+
+        # for med MW
+        if self.pdf(0) > max_y * 0.03:
+            x = np.concatenate(
+            (
+                np.logspace(1, math.log10(max_MW), 5000, dtype="uint"),
+                np.logspace(math.log10(max_MW + 10), math.log10(max_MW * 5), 4500, dtype="uint"),
+                np.logspace(math.log10(max_MW * 5 + 100), math.log10(max_MW * 20), 500, dtype="uint")
+                            )
+            )
+            return x
+
+        # for high MW
+        min_ = root_scalar(lambda x_: self.pdf(x_) - (max_y * 0.03), bracket=[0, max_MW - 10])
+        min_MW = max(min_.root, 500)
+
+        low_connection = math.log10(min_MW)
+        lower_connection = math.log10(min_MW + 10)
+        up_connection = math.log10(max_MW + 2 * (max_MW - min_MW))
+        upper_connection = math.log10(max_MW + 2 * (max_MW - min_MW) + 100)
+
+        x = np.concatenate(
+            (
+                np.logspace(x_min, low_connection, 500, dtype="uint"),
+                np.logspace(lower_connection, up_connection, 9000, dtype="uint"),
+                np.logspace(upper_connection, x_max, 500, dtype="uint")
+                            )
+            )
+
+        return x
+
     def details(self) -> str:
         """ long string representation """
         text = self.__str__()
-        text += f"(Mn: {self.Mn}, D: {self.D}, N: {self.N}, Monomer_MW: {self.monomer_MW})"
+        text += f"(Mn: {self.Mn}, D: {self.D}, N: {self.N}, repeat_MW: {self.repeat_MW})"
         text += f"\n(mean: {self.mean}, std: {self.std}, skew: {self.skew}, kurtosis: {self.kurtosis})"
 
         return text
@@ -368,11 +502,11 @@ class Distribution(abc.ABC):
             fig = go.Figure()
 
         if normalize:
-            y = self.pdf(self.x)/self.pdf(self.max)
+            y = self.pdf(self.mw_i)/self.pdf(self.peak_max)
         else:
-            y = self.pdf(self.x)
+            y = self.pdf(self.mw_i)
 
-        fig.add_trace(go.Scatter(x=self.x, y=y, mode='lines', name=str(self)))
+        fig.add_trace(go.Scatter(x=self.mw_i, y=y, mode='lines', name=str(self)))
 
         if log_scale:
             fig.update_xaxes(type="log")
@@ -453,32 +587,34 @@ class FlorySchulz(Distribution):
         self._D = 1 + conversion
         self._N = 1/(1-conversion)
 
-    def _compute_pdf(self, x: int | float | np.ndarray) -> np.ndarray:
-        return self.a ** 2 * x * (1 - self.a) ** (x - 1)
+    def _compute_pdf_N(self, N_i: int | np.ndarray) -> int | float | np.ndarray:
+        return self.a ** 2 * N_i * (1 - self.a) ** (N_i - 1)
 
     @property
-    def mean(self) -> int | float:
+    def N_mean(self) -> int | float:
         return 2/self.a - 1
 
     @property
-    def std(self) -> int | float:
+    def N_std(self) -> int | float:
         return math.sqrt((2-2*self.a)/self.a**2)
 
     @property
-    def skew(self) -> int | float:
+    def N_skew(self) -> int | float:
         return (2-self.a)/math.sqrt(2-2*self.a)
 
     @property
-    def kurtosis(self) -> int | float:
+    def N_kurtosis(self) -> int | float:
         return (self.a * (self.a - 6) + 6) / (2 - 2 * self.a)
 
     def _create_label(self):
-        return f"|{self.label}({self.conversion:.2f})|"
+        return f"|{self.label}({self.conversion:.4f})|"
 
 
 class SchulzZimm(Distribution):
     """
     Schulz-Zimm distributions is effective at modeling SEC traces for polymers with Ɖ ranging from 1 to 2
+
+    * prone to numerical round-off errors; log normal provides similar behavior without numerical issues.
 
     """
     label = "schulz_zimm"
@@ -489,11 +625,20 @@ class SchulzZimm(Distribution):
         """
         super().__init__(repeat_MW)
         self._Mn = Mn
-        self._D = D
+        # self._D = D
         self.z = 1 / (D - 1)
 
-    def _compute_pdf(self, x: int | float | np.ndarray) -> np.ndarray:
-        return self.z**(self.z+1)/gamma(self.z) * x**(self.z-1)/self.Mn**self.z * np.exp(-self.z * x / self.Mn)
+    def _compute_pdf(self, x: int | float | np.ndarray) -> int | float | np.ndarray:
+        if isinstance(x, int) or isinstance(x, float):
+            if x == 0:
+                return 0
+            return self.z**(self.z+1)/gamma(self.z) * x**(self.z-1)/self.Mn**self.z * np.exp(-self.z * x / self.Mn)
+
+        mask = x > 0  # mask is to avoid Zero gamma
+        pdf = np.zeros_like(x)
+        pdf[mask] = (self.z**(self.z+1)/gamma(self.z)) * (x[mask]**(self.z-1)/self.Mn**self.z) * np.exp(-self.z*x[mask]/self.Mn)
+
+        return pdf
 
     def _create_label(self):
         return f"|{self.label}({self.Mn:.0f},{self.D:.2f})|"
@@ -508,7 +653,7 @@ distributions and log-normal distributions.
 
     """
     label = "poisson"
-    default_x = np.linspace(1, 10_000, 10_000)
+    compute_with = "_compute_pdf_N"
 
     def __init__(self, N: int | float, repeat_MW: int | float | None = None):  # noqa
         """
@@ -523,10 +668,13 @@ distributions and log-normal distributions.
         """
         super().__init__(repeat_MW)
         self._N = N
-        self._D = 1 + 1/N
+        # self._D = 1 + 1/N
 
-    def _compute_pdf(self, x: int | float | np.ndarray) -> np.ndarray:
-        return (self.N**x * math.exp(-self.N)) / math.factorial(x)
+    def _compute_pdf_N(self, n_i: int | np.ndarray) -> int | float | np.ndarray:
+        return (self.N**n_i * math.exp(-self.N)) / np.math.factorial(n_i)
+
+    def _compute_pdf(self, mw_i: int | np.ndarray) -> int | float | np.ndarray:
+        return self.repeat_MW * self._compute_pdf_N(self.N_i)
 
     def _create_label(self):
         return f"|{self.label}({self.Mn:.0f})|"
@@ -554,7 +702,7 @@ class Gauss(Distribution):
         self._mean = mean
         self._std = std
 
-    def _compute_pdf(self, x: int | float | np.ndarray) -> np.ndarray:
+    def _compute_pdf(self, x: int | float | np.ndarray) -> int | float | np.ndarray:
         return 1 / (self.std * math.sqrt(2*math.pi)) * np.exp(-0.5 * ((x - self.mean)/self.std)**2)
 
     def _create_label(self):
@@ -616,7 +764,7 @@ class CustomDistribution(Distribution):
         self.pdf = pdf
 
     def _compute_pdf(self, x: int | float | np.ndarray) -> int | float | np.ndarray:
-        return np.interp(x, self.x, self.pdf)
+        return np.interp(x, self.mw_i, self.pdf)
 
     def _create_label(self):
         return f"|{self.label}({self.Mn:.0f},{self.D:.2f})|"

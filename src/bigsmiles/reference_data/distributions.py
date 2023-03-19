@@ -1,18 +1,19 @@
 """
-Optional
+Optional package
+
 
 """
 from __future__ import annotations
-
 import abc
+import logging
 import math
-from ast import literal_eval as make_tuple
-
 
 try:
     # optional packages need for this feature
-    from scipy import stats  # noqa
-    import numpy as np  # noqa
+    from scipy.integrate import cumulative_trapezoid
+    from scipy.special import gamma
+    from scipy.optimize import minimize_scalar, root_scalar
+    import numpy as np
 except ImportError:
     raise ImportError("'Scipy' is an optional package and needs to be installed. "
                       "\n'pip install scipy' or 'conda install scipy' ")  # scipy will install numpy too
@@ -23,27 +24,89 @@ import bigsmiles.errors as errors
 _GLOBAL_RNG = np.random.default_rng()
 
 
-def cal_Mn_D_from_xi(mw_i: np.ndarray, x_i: np.ndarray) -> tuple[float, float]:
-    """ calculate Mn and D from xi vs MW data (MW goes low to high) """
-    mw_n = np.sum(x_i * mw_i)
-    mw_w = np.sum(x_i * mw_i**2) / mw_n
+def calculate_Mn_D_from_xi(mw_i: np.ndarray, x_i: np.ndarray) -> tuple[float, float]:  # noqa
+    """
+    calculate Mn and D from xi (molar probability distribution function) vs MW_i
+
+    Parameters
+    ----------
+    mw_i:
+        array containing molecular weight of polymer 'i' ( i is degree of polymerization, chain length)
+    x_i:
+        array containing mole fraction of polymer 'i' ( i is degree of polymerization, chain length)
+
+    Returns
+    -------
+    mw_n: float
+        number average molecular weight
+    mw_d: float
+        molecular weight dispersity
+
+    """
+    mw_n = np.trapz(x=mw_i, y=mw_i * x_i)
+    mw_w = np.trapz(x=mw_i, y=x_i * mw_i**2) / mw_n
     mw_d = mw_w / mw_n
     return mw_n, mw_d
 
 
+def generate_cdf(pdf, npts: int = 1000, x_range: tuple[float, float] = (0, 1)) -> tuple[np.ndarray, np.ndarray]:
+    """
+    calculate cumulative distribution function (cdf)
+
+    Parameters
+    ----------
+    pdf:
+        probability distribution function
+    npts:
+        number of points for cdf
+    x_range:
+        range for which the func, will be evaluated over
+
+    Returns
+    -------
+    x:
+        x position of cdf
+    cdf:
+        cdf
+
+    """
+    x = np.linspace(x_range[0], x_range[1], npts)
+    y = pdf(x)
+
+    y_norm = y / np.trapz(y, x)
+    cdf = cumulative_trapezoid(y_norm, x)
+    cdf = np.insert(cdf, 0, 0)
+
+    # deal with numerical round off errors
+    cdf, index_ = np.unique(cdf, return_index=True)
+    x = x[index_]
+    x[-1] = x_range[1]
+
+    return x, cdf
+
+
 class Distribution(abc.ABC):
     """
-    Generic class to generate molecular weight distribution.
+    Generic class for molecular weight distributions
     """
-    def __init__(self, distribution):
-        """
-        Initialize the generic distribution.
-        """
 
-        self._Mn = None
-        self._D = None
-        self._monomer_MW = None
-        self._distribution = distribution
+    def __init__(self, repeat_MW: int | float | None = None): # noqa
+        """
+        Parameters
+        ----------
+        repeat_MW:
+            repeat unit MW
+        """
+        self._monomer_MW = repeat_MW
+        self._Mn: int | float | None = None
+        self._D: int | float | None = None
+        self._N: int | float | None = None
+        self._mean: int | float | None = None
+        self._std: int | float | None = None
+        self._max: int | float | None = None
+
+        self._pdf: np.ndarray | None = None
+        self._x: np.ndarray | None = None
 
     def __str__(self):
         return self._create_label()
@@ -53,11 +116,26 @@ class Distribution(abc.ABC):
 
     @abc.abstractmethod
     def _create_label(self):
-        """ Create string for bigSMILES. """
+        """ create string for bigSMILES """
+
+    @abc.abstractmethod
+    def _compute_pdf(self, x: int | float | np.ndarray) -> np.ndarray:
+        """ computes probability distribution function """
+
+    @property
+    def x(self) -> np.ndarray:
+        """ either molecular weight or chain length (x-axis for pdf) """
+        if self._x is None:
+            self._x = self._get_x()
+
+        return self._x
 
     @property
     def Mn(self) -> float | int:  # noqa
         """ number average MW """
+        if self._Mn is None:
+            self._Mn, self._D = calculate_Mn_D_from_xi(self._pdf(self.x), self.x)
+
         return self._Mn
 
     @property
@@ -68,15 +146,19 @@ class Distribution(abc.ABC):
     @property
     def D(self) -> float | int:  # noqa
         """ molecular weight dispersity """
+        if self._D is None:
+            self._Mn, self._D = calculate_Mn_D_from_xi(self._pdf(self.x), self.x)
+
         return self._D
 
     @property
     def N(self) -> float | int | None:  # noqa
         """ Chain length """
-        if self._monomer_MW is None:
-            return None
+        if self.N is None:
+            if self.Mn and self._monomer_MW:
+                self._N = self.Mn / self._monomer_MW
 
-        return self._Mn / self._monomer_MW
+        return self._N
 
     @property
     def monomer_MW(self) -> float | int | None:  # noqa
@@ -84,12 +166,29 @@ class Distribution(abc.ABC):
         return self._monomer_MW
 
     @property
+    def max(self):
+        """ max molecular weight """
+        if self._max is None:
+            max_result = minimize_scalar(lambda x_: -1 * self.pdf(x_), bounds=[-10, 10_000_000])
+            self._max = max_result.x
+
+        return self._max
+
+    @property
     def mean(self) -> int | float:
-        return np.trapz(x=self.mw_i, y=self.mw_i*self.xi)
+        """ mean molecular weight """
+        if self._mean is None:
+            self._mean = np.trapz(x=self.x, y=self.x*self.pdf(self.x))
+
+        return self._mean
 
     @property
     def std(self) -> int | float:
-        return np.sqrt(np.trapz(x=self.mw_i, y=self.xi * (self.mw_i - self.mw_mean) ** 2))
+        """ standard deviation molecular weight """
+        if self.std is None:
+            self._std = np.sqrt(np.trapz(x=self.x, y=self.pdf(self.x)*(self.x-self.mean)**2))
+
+        return self._std
 
     @property
     def skew(self) -> int | float:
@@ -107,7 +206,7 @@ class Distribution(abc.ABC):
         * Highly Skewed: Values less than -1 or greater than 1
 
         """
-        return np.trapz(x=self.mw_i, y=self.xi * (self.mw_i - self.mw_mean) ** 3) / self.mw_std ** 3
+        return np.trapz(x=self.x, y=self.pdf(self.x) * (self.x - self.mean)**3) / self.std**3
 
     @property
     def kurtosis(self) -> int | float:
@@ -125,25 +224,24 @@ class Distribution(abc.ABC):
         * Platykurtic: kurtosis < -3; the distribution has a lower and wider peak and thinner tails
 
         """
-        return (np.trapz(x=self.mw_i, y=self.xi * (self.mw_i - self.mw_mean) ** 4) / self.mw_std ** 4)- 3
+        return (np.trapz(x=self.x, y=self.pdf(self.x)*(self.x-self.mean)**4)/self.std**4)-3
 
-    def pdf(self, x: np.ndarray | None = None, **kwargs) -> tuple[np.ndarray, np.ndarray]:
-        """ probability density function """
+    def pdf(self, x: int | float | np.ndarray = None) -> np.ndarray:
+        """ probability distribution function (number/molar) """
         if x is None:
-            x = np.logspace(2, 6, 1000)  # 100 to 1_000_000
+            x = self.x
+        if self._pdf is not None and x == self._x:
+            return self._pdf
 
-        return x, self._distribution.pdf(x, **kwargs)
+        return self._compute_pdf(x)
 
-    def cdf(self, x: np.ndarray | None = None, **kwargs) -> tuple[np.ndarray, np.ndarray]:
+    def cdf(self) -> tuple[np.ndarray, np.ndarray]:
         """ cumulative distribution function """
-        if x is None:
-            x = np.linspace(0, 1, 1000)
+        return generate_cdf(self.pdf)
 
-        return x, self._distribution.cdf(x, **kwargs)
-
-    def draw_mw(self, rng: np.random.Generator = None):
+    def draw_mw(self, n: int = 1):
         """
-        Draw a sample from the molecular weight distribution.
+        draw a sample from the molecular weight distribution.
 
         Parameters:
         ----------
@@ -151,13 +249,14 @@ class Distribution(abc.ABC):
              Numpy random number generator for the generation of numbers.
 
         """
-        if rng is None:
-            rng = _GLOBAL_RNG
-        return self._distribution.rvs(random_state=rng)
+        rnd = np.random.random((n,))
+        x, cdf = self.cdf()
+
+        return np.interp(rnd, cdf, x)
 
     def prob_mw(self, mw: int | float):
         """
-        Calculate the probability that this mw was from this distribution.
+        calculate the probability that this mw was from this distribution.
 
         Parameters:
         ----------
@@ -167,19 +266,113 @@ class Distribution(abc.ABC):
         # if isinstance(mw, bigsmiles_gen.mol_prob.RememberAdd):
         #     return self._distribution.cdf(mw.value) - self._distribution.cdf(mw.previous)
 
-        return self._distribution.pdf(mw)
+        return self.pdf(mw)
 
-    def plot_pdf(self, log_scale: bool = True):
+    def _get_x(self, mw_or_n: bool = True) -> np.ndarray:
+        """
+        attempt to determine a good x
+
+        Parameters
+        ----------
+        mw_or_n:
+            True: MW; False N
+
+        Returns
+        -------
+        x:
+            array of Mn or N
+
+        Notes
+        -----
+
+        * attempts to find a good x by first finding the peak max, then finding the lower bound.
+        It will then create a high density of points around the peak and low density everywhere else
+
+        """
+        if mw_or_n:
+            # mw
+            peak_max_range = (-100, 10_000_000)
+            low_cutoff = 1000
+            low_cutoff_max_mw = math.log10(30_000)
+            x_min = math.log10(300)
+            x_max = math.log10(10_000_000)
+        else:
+            # chain length
+            peak_max_range = (-2, 10_000)
+            low_cutoff = 50
+            low_cutoff_max_mw = math.log10(400)
+            x_min = 1
+            x_max = math.log10(10_000)
+
+        max_result = minimize_scalar(lambda x_: -1 * self.pdf(x_), bounds=peak_max_range)
+        max_MW, max_y = max_result.x, -1 * max_result.fun  # -1 is to undo the lambda function one line above
+        self._max = max_MW
+
+        # low MW
+        if max_MW < low_cutoff:
+            return np.logspace(1, low_cutoff_max_mw, 10_000)
+
+        # high MW
+        min_ = root_scalar(lambda x_: self.pdf(x_) - (max_y * 0.03), bracket=[50, max_MW - 10])
+        min_MW = min_.root
+
+        low_connection = math.log10(min_MW - 10)
+        lower_connection = math.log10(min_MW)
+        up_connection = math.log10(max_MW + 2 * (max_MW - min_MW))
+        upper_connection = math.log10(max_MW + 2 * (max_MW - min_MW) + 100)
+
+        x = np.concatenate(
+            (
+                np.logspace(x_min, low_connection, 500),
+                np.logspace(lower_connection, up_connection, 9000),
+                np.logspace(upper_connection, x_max, 500)
+                            )
+            )
+
+        return x
+
+    def details(self) -> str:
+        """ long string representation """
+        text = self.__str__()
+        text += f"(Mn: {self.Mn}, D: {self.D}, N: {self.N}, Monomer_MW: {self.monomer_MW})"
+        text += f"\n(mean: {self.mean}, std: {self.std}, skew: {self.skew}, kurtosis: {self.kurtosis})"
+
+        return text
+
+    def plot_pdf(self, log_scale: bool = True, normalize: bool = True, fig=None):
+        """
+        for quick visualization of distribution
+
+        Parameters
+        ----------
+        log_scale:
+            True: x-axis log-scale; False: x-axis is linear scale
+        normalize:
+            True: max set 1
+        fig:
+            plotly figure
+
+        Returns
+        -------
+        fig:
+            plotly figure
+
+        """
         try:
             import plotly.graph_objs as go
         except ImportError:
             raise ImportError("'plotly' is an optional package and needs to be installed. "
                               "\n'pip install plotly'")
 
-        x, pdf = self.pdf()
+        if fig is None:  # create figure is one is not provided
+            fig = go.Figure()
 
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=x, y=pdf, mode='lines'))
+        if normalize:
+            y = self.pdf(self.x)/self.pdf(self.max)
+        else:
+            y = self.pdf(self.x)
+
+        fig.add_trace(go.Scatter(x=self.x, y=y, mode='lines', name=str(self)))
 
         if log_scale:
             fig.update_xaxes(type="log")
@@ -188,7 +381,7 @@ class Distribution(abc.ABC):
 
 
 class LogNormal(Distribution):
-    """
+    r"""
     Similar to Schulz-Zimm and commonly used to fit experimental molecular weight distributions
 
 
@@ -203,32 +396,32 @@ class LogNormal(Distribution):
     """
     label = "lognorm"
 
-    class log_normal_dist(stats.rv_continuous):
-        """ Flory Schulz distribution """
-        def __init__(self, Mn, D):
-            super().__init__(momtype=0, a=0, b=1_000_000)
-            self.D = D
-            self.Mn = Mn
-
-        def _pdf(self, x_):
-            pre_factor = 1 / (x_ * math.sqrt(2*math.pi*math.log(self.D)))
-            exp_ = np.exp(-1 * (np.log(x_/self.Mn) + math.log(self.D)/2)**2 / (2 * math.log(self.D)))
-            return pre_factor * exp_
-
-    def __init__(self, Mn: int | float, D: int | float):  # noqa
+    def __init__(self, Mn: int | float, D: int | float, repeat_MW: int | float | None = None):  # noqa
         """
         Initialization of Gaussian distribution object.
         Arguments:
         ----------
         Mn: M
         """
-        distribution = self.log_normal_dist(Mn, D)
-        super().__init__(distribution)
+        super().__init__(repeat_MW)
         self._Mn = Mn
         self._D = D
 
     def _create_label(self):
-        return f"|{self.label}({self.Mn}, {self.D})|"
+        return f"|{self.label}({self.Mn:.0f},{self.D:.2f})|"
+
+    def _compute_pdf(self, x: int | float | np.ndarray) -> int | float | np.ndarray:
+        if isinstance(x, int) or isinstance(x, float):
+            if x == 0:
+                return 0
+            pre_factor = 1 / (x * math.sqrt(2*math.pi*math.log(self.D)))
+        else:
+            mask = x > 0  # mask is to avoid ZeroDivisionError
+            pre_factor = np.zeros_like(x)
+            pre_factor[mask] = 1 / (x[mask] * math.sqrt(2*math.pi*math.log(self.D)))
+
+        exp_ = np.exp(-1 * (np.log(x/self.Mn) + math.log(self.D)/2)**2 / (2 * math.log(self.D)))
+        return pre_factor * exp_
 
 
 class FlorySchulz(Distribution):
@@ -243,14 +436,9 @@ class FlorySchulz(Distribution):
 
     [wiki](https://en.wikipedia.org/wiki/Flory%E2%80%93Schulz_distribution)
     """
+    label = "flory_schulz"
 
-    class flory_schulz_gen(stats.rv_discrete):
-        """ Flory Schulz distribution """
-
-        def _pmf(self, k, a):
-            return a ** 2 * k * (1 - a) ** (k - 1)
-
-    def __init__(self, conversion: float | int = None, N: int = None):
+    def __init__(self, conversion: float | int, repeat_MW: int | float | None = None):  # noqa
         """
         Initialization of Flory-Schulz distribution object.
         Arguments:
@@ -259,38 +447,33 @@ class FlorySchulz(Distribution):
              Text representation of the distribution.
              Has to start with `flory_schulz`.
         """
-        if N is None:
-            N = 1/(1-conversion)
-        else:
-            conversion = 1-1/N
+        super().__init__(repeat_MW)
+        self.conversion = conversion
+        self.a = 1 - self.conversion
+        self._D = 1 + conversion
+        self._N = 1/(1-conversion)
 
-        D = 1 + conversion
-
-        super().__init__()
-
-    def _create_distribution(self):
-        self._distribution = self.flory_schulz_gen(name="Flory-Schulz")
-
-    def generate_string(self, extension):
-        if extension:
-            return f"|flory_schulz({self._a})|"
-        return ""
+    def _compute_pdf(self, x: int | float | np.ndarray) -> np.ndarray:
+        return self.a ** 2 * x * (1 - self.a) ** (x - 1)
 
     @property
-    def generable(self):
-        return True
+    def mean(self) -> int | float:
+        return 2/self.a - 1
 
-    def draw_mw(self, rng=None):
-        if rng is None:
-            rng = _GLOBAL_RNG
-        return self._distribution.rvs(a=self._a, random_state=rng)
+    @property
+    def std(self) -> int | float:
+        return math.sqrt((2-2*self.a)/self.a**2)
 
-    def prob_mw(self, mw):
-        if isinstance(mw, bigsmiles_gen.mol_prob.RememberAdd):
-            return self._distribution.cdf(mw.value, a=self._a) - self._distribution.cdf(
-                mw.previous, a=self._a
-            )
-        return self._distribution.pmf(int(mw), a=self._a)
+    @property
+    def skew(self) -> int | float:
+        return (2-self.a)/math.sqrt(2-2*self.a)
+
+    @property
+    def kurtosis(self) -> int | float:
+        return (self.a * (self.a - 6) + 6) / (2 - 2 * self.a)
+
+    def _create_label(self):
+        return f"|{self.label}({self.conversion:.2f})|"
 
 
 class SchulzZimm(Distribution):
@@ -298,22 +481,22 @@ class SchulzZimm(Distribution):
     Schulz-Zimm distributions is effective at modeling SEC traces for polymers with Ɖ ranging from 1 to 2
 
     """
+    label = "schulz_zimm"
 
-    def __init__(self, Mn: int | float, D: float):
+    def __init__(self, Mn: int | float, D: int | float, repeat_MW: int | float | None = None):  # noqa
         """
 
         """
-        super().__init__(Mn, D)
+        super().__init__(repeat_MW)
+        self._Mn = Mn
+        self._D = D
+        self.z = 1 / (D - 1)
 
-    def _create_distribution(self):
-        self.std = math.sqrt(math.log(self.D))
-        self.mean = math.log(self.Mn) - self.std**2/2
-        self._distribution = stats.lognorm(s=self.std, loc=self.mean)
+    def _compute_pdf(self, x: int | float | np.ndarray) -> np.ndarray:
+        return self.z**(self.z+1)/gamma(self.z) * x**(self.z-1)/self.Mn**self.z * np.exp(-self.z * x / self.Mn)
 
-    def generate_string(self, extension):
-        if extension:
-            return f"|schulz_zimm({self.Mn}, {self.D})|"
-        return ""
+    def _create_label(self):
+        return f"|{self.label}({self.Mn:.0f},{self.D:.2f})|"
 
 
 class Poisson(Distribution):
@@ -324,28 +507,29 @@ narrow for most living polymerizations, which has motivated the implantation of 
 distributions and log-normal distributions.
 
     """
+    label = "poisson"
+    default_x = np.linspace(1, 10_000, 10_000)
 
-    def __init__(self, Mn: int | float, monomer_MW: int | float):
+    def __init__(self, N: int | float, repeat_MW: int | float | None = None):  # noqa
         """
 
         Parameters:
         ----------
         Mn:
 
-        monomer_MW:
+        repeat_MW:
 
 
         """
-        D = 1 + monomer_MW/Mn
-        super().__init__(Mn, D)
+        super().__init__(repeat_MW)
+        self._N = N
+        self._D = 1 + 1/N
 
-    def _create_distribution(self):
-        self._distribution = stats.poisson(mu=self.N)
+    def _compute_pdf(self, x: int | float | np.ndarray) -> np.ndarray:
+        return (self.N**x * math.exp(-self.N)) / math.factorial(x)
 
-    def generate_string(self, extension):
-        if extension:
-            return f"|poisson({self.Mn}, {self.D})|"
-        return ""
+    def _create_label(self):
+        return f"|{self.label}({self.Mn:.0f})|"
 
 
 class Gauss(Distribution):
@@ -355,8 +539,9 @@ class Gauss(Distribution):
     where :math:`\\mu` is the mean and :math:`\\sigma^2` the variance.
     The textual representation of this distribution is: `gauss(\\mu, \\sigma)`
     """
+    label = "gauss"
 
-    def __init__(self, raw_text):
+    def __init__(self, mean: int | float, std: int | float, repeat_MW: int | float | None = None):  # noqa
         """
         Initialization of Gaussian distribution object.
         Arguments:
@@ -365,30 +550,19 @@ class Gauss(Distribution):
              Text representation of the distribution.
              Has to start with `gauss`.
         """
-        super().__init__(raw_text)
+        super().__init__(repeat_MW)
+        self._mean = mean
+        self._std = std
 
-        if not self._raw_text.startswith("gauss"):
-            raise RuntimeError(
-                f"Attempt to initialize Gaussian distribution from text '{raw_text}' that does not start with 'gauss'"
-            )
+    def _compute_pdf(self, x: int | float | np.ndarray) -> np.ndarray:
+        return 1 / (self.std * math.sqrt(2*math.pi)) * np.exp(-0.5 * ((x - self.mean)/self.std)**2)
 
-        self._mu, self._sigma = make_tuple(self._raw_text[len("gauss"):])
-        self._mu = float(self._mu)
-        self._sigma = float(self._sigma)
-        self._distribution = stats.norm(loc=self._mu, scale=self._sigma)
-
-    def generate_string(self, extension):
-        if extension:
-            return f"|gauss({self._mu}, {self._sigma})|"
-        return ""
-
-    @property
-    def generable(self):
-        return True
+    def _create_label(self):
+        return f"|{self.label}({self.mean:.0f},{self.std:.2f})|"
 
     def prob_mw(self, mw):
-        if self._sigma < 1e-6 and abs(self._mu - mw) < 1e-6:
-            return 1.0
+        # if self.std < 1e-6 and abs(self.mean - mw) < 1e-6:
+        #     return 1.0
         return super().prob_mw(mw)
 
 
@@ -397,8 +571,9 @@ class Uniform(Distribution):
     Uniform distribution of different lengths, usually useful for short chains.
     The textual representation of this distribution is: `uniform(low, high)`
     """
+    label = "uniform"
 
-    def __init__(self, raw_text):
+    def __init__(self, low: int | float, high: int | float, repeat_MW: int | float | None = None):  # noqa
         """
         Initialization of Uniform distribution object.
         Arguments:
@@ -407,44 +582,44 @@ class Uniform(Distribution):
              Text representation of the distribution.
              Has to start with `gauss`.
         """
-        super().__init__(raw_text)
+        super().__init__(repeat_MW)
+        self.low = low
+        self.high = high
 
-        if not self._raw_text.startswith("uniform"):
-            raise RuntimeError(
-                f"Attempt to initialize Uniform distribution from text '{raw_text}' that does not start with 'uniform'"
-            )
+    def _compute_pdf(self, x: int | float | np.ndarray) -> int | float | np.ndarray:
+        if isinstance(x, int) or isinstance(x, float):
+            return 1 if self.low < x < self.high else 0
 
-        self._low, self._high = make_tuple(self._raw_text[len("uniform"):])
-        self._low = int(self._low)
-        self._high = int(self._high)
-        self._distribution = stats.uniform(loc=self._low, scale=(self._high - self._low))
+        low_index = np.argmin(np.abs(x-self.low))
+        high_index = np.argmin(np.abs(x-self.high))
+        output = np.zeros_like(x)
+        output[low_index: high_index] = 1
+        return output
 
-    def generate_string(self, extension):
-        if extension:
-            return f"|uniform({self._low}, {self._high})|"
-        return ""
-
-    @property
-    def generable(self):
-        return True
+    def _create_label(self):
+        return f"|{self.label}({self.low:.0f},{self.high:.0f})|"
 
 
 class CustomDistribution(Distribution):
     """
     Distribution from data
     """
+    label = "custom"
 
-    def __init__(self, pdf: np.ndarray):
-        Mn = 100
-        D = 100
-        super().__init__(Mn, D)
+    def __init__(self, x: np.ndarray, pdf: np.ndarray, repeat_MW: int | float | None = None):  # noqa
+        super().__init__(repeat_MW)
 
-    def _get_dis(self):
-        kernel = stats.gaussian_kde(data)
-        class rv(stats.rv_continuous):
-            def _cdf(self, x):
-                return kernel.integrate_box_1d(-numpy.Inf, x)
-        return rv()
+        if np.any(x < 0):
+            logging.warning("Negative values detected in 'CustomDistribution`. Results may be inaccurate.")
+
+        self._x = x
+        self.pdf = pdf
+
+    def _compute_pdf(self, x: int | float | np.ndarray) -> int | float | np.ndarray:
+        return np.interp(x, self.x, self.pdf)
+
+    def _create_label(self):
+        return f"|{self.label}({self.Mn:.0f},{self.D:.2f})|"
 
 
 distributions = {
@@ -454,6 +629,7 @@ distributions = {
     "poisson": Poisson,
     "gauss": Gauss,
     "uniform": Uniform,
+    "custom": CustomDistribution
 }
 
 

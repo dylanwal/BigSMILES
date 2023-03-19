@@ -62,6 +62,7 @@ nav:
           - Stochastic Fragment: reference/data_structure/Stochastic_fragment.md
           - Stochastic Object: reference/data_structure/Stochastic_object.md
           - Reaction: reference/data_structure/Reaction.md
+          - Distributions: reference/data_structure/distributions.md
       - Methods:
           - Overview: reference/methods/overview.md
           - parse_tree: reference/methods/parse_tree.md
@@ -97,6 +98,8 @@ markdown_extensions:
   - pymdownx.snippets
   - pymdownx.caret
   - pymdownx.tilde
+  - attr_list
+  - md_in_html
   - pymdownx.superfences:
       # make exceptions to highlighting of code:
       custom_fences:

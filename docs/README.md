@@ -3,7 +3,7 @@
 
 
 ## To view docs locally
-Enter this into your terminal: `mkdocs serve`
+Enter this into your terminal: `mkdocs serve` or `mkdocs build`
 
 
 

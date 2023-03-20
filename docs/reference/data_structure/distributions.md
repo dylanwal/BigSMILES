@@ -1,10 +1,60 @@
 ---
 
-## Log Normal
 
-[comment]: <> (https://github.com/squidfunk/mkdocs-material/blob/4ad2dc1e288a0ffe78a8db3a04978a6e089ce35e/docs/reference/images.md?plain=1#L160)
+## Continuous Distributions (based on molecular weight)
 
-<figure markdown>
-  ![plot](../../img/graphs/lognormal_light.svg#only-light)
-  ![plot](../../img/graphs/lognormal_dark.svg#only-dark)
-</figure>
+### Log Normal Distribution
+
+::: bigsmiles.data_structures.distributions.LogNormal
+
+![LogNormal graph](../../img/graphs/LogNormal.svg)
+
+### Schulz Zimm Distribution
+
+::: bigsmiles.data_structures.distributions.SchulzZimm
+
+![SchulzZimm graph](../../img/graphs/SchulzZimm.svg)
+
+
+### Gaussian Distribution (Normal Distribution)
+
+::: bigsmiles.data_structures.distributions.Gauss
+
+![Gauss graph](../../img/graphs/Gauss.svg)
+
+
+### Uniform Distribution
+
+::: bigsmiles.data_structures.distributions.Uniform
+
+![Uniform graph](../../img/graphs/Uniform.svg)
+
+
+### Custom Distribution
+
+::: bigsmiles.data_structures.distributions.CustomDistribution
+
+![CustomDistribution graph](../../img/graphs/CustomDistribution.svg)
+
+---
+
+## Discrete Distributions (based on chain length)
+
+### Poisson Distribution
+
+::: bigsmiles.data_structures.distributions.Poisson
+
+![Poisson graph](../../img/graphs/Poisson.svg)
+
+---
+
+
+### Flory Schulz Distribution
+
+::: bigsmiles.data_structures.distributions.FlorySchulz
+
+![FlorySchulz graph](../../img/graphs/FlorySchulz.svg)
+
+---
+
+

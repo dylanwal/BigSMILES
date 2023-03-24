@@ -28,3 +28,5 @@
 ::: bigsmiles.distributions.continuous.CustomDistribution
 
 ![CustomDistribution graph](../../img/graphs/CustomDistribution.svg)
+
+(data from: [https://doi.org/10.1038/s41467-020-16874-6](https://doi.org/10.1038/s41467-020-16874-6))

@@ -18,7 +18,7 @@ class DistributionDiscrete(Distribution, abc.ABC):
 
     !!! info
 
-        See [Distribution]() for attributes.
+        See [Distribution][bigsmiles.distributions.base.Distribution] for attributes.
 
     """
 
@@ -27,11 +27,11 @@ class DistributionDiscrete(Distribution, abc.ABC):
         """ computes probability mass function """
 
     @utils.check_for_repeat_MW
-    def _compute_mw_i(self) -> np.ndarray:
-        return self.N_i * self.repeat_MW
+    def _compute_mw_i(self):
+        self._mw_i = self.N_i * self.repeat_MW
 
-    def _compute_N_i(self) -> np.ndarray:
-        return np.linspace(0, self._N_i_max - 1, self._N_i_max, dtype="uint")
+    def _compute_N_i(self):
+        self._N_i = np.linspace(0, self._N_i_max - 1, self._N_i_max, dtype="uint")
 
     @utils.check_for_repeat_MW
     def _compute_Mn(self):
@@ -85,15 +85,13 @@ class FlorySchulz(DistributionDiscrete):
     > Flory-Schulz distribution model ideal step-growth polymerization.
     >> See [Wikipida](https://en.wikipedia.org/wiki/Flory%E2%80%93Schulz_distribution) for more information.
 
-    The probability mass function is:
-
     $$
-        x_i(N_i) = a^2 N_i (1-a)^(N_i -1)
+        x_i(N_i) = a^2 N_i (1-a)^{N_i -1}
     $$
 
     * $x_i(N_i)$: mole fraction of chain length $N_i$
     * $N_i$: chain length of polymer 'i' units long
-    * $a$: fraction of remaining monomer ($a \epsilon [0,1]$) $a=1-conversion$
+    * $a$: fraction of remaining monomer $(a~\epsilon~[0,1]) ~~~~~ a=1-conversion$
 
     """
     label = "flory_schulz"
@@ -129,7 +127,7 @@ class FlorySchulz(DistributionDiscrete):
     #     return (self.a * (self.a - 6) + 6) / (2 - 2 * self.a)
 
     def _create_label(self):
-        return f"|{self.label}({self.conversion:.4f})|"
+        return f"{self.label}({self.conversion:.4f})"
 
 
 class Poisson(DistributionDiscrete):
@@ -138,8 +136,6 @@ class Poisson(DistributionDiscrete):
     > Poisson distributions tend to be to narrow for most living polymerization's (except for anionic polymerization)
     > and log-normal distributions provide better modeling (for ATRP, RAFT, NMP, etc.).
     >> See [Wikipida](https://en.wikipedia.org/wiki/Poisson_distribution) for more information.
-
-    The probability mass function is:
 
     $$
         x_i(N_i) = \frac{N^N_i exp(-N)}{N_i!} \approx exp(N_i ln(N) - ln(\Gamma + 1)-N)
@@ -194,4 +190,4 @@ class Poisson(DistributionDiscrete):
         return np.exp(xlogy(N_i, self.N) - gammaln(N_i + 1) - self.N)
 
     def _create_label(self):
-        return f"|{self.label}({self.N:.0f})|"
+        return f"{self.label}({self.N:.0f})"

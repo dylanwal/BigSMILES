@@ -46,17 +46,17 @@ class Atom:
         """
         Attributes
         ----------
-        id_: int
+        id_:
             id of atom (id is limited to atoms). Range: [1, inf]
-        symbol: str
+        symbol:
             symbol symbol (e.g., H, C, O, Zn)
-        isotope: int | None
+        isotope:
             isotope (e.g., [13C])
-        stereo: str | None
+        stereo:
             stereochemistry [None, "@", "@@"] (None means not defined)
-        hydrogens: int | None
+        hydrogens:
             number of explict hydrogens  (e.g., [CH2])
-        charge: int
+        charge:
             symbol charge  (e.g., [Fe+3])
         valence: int
             The capacity to form bonds with other atoms

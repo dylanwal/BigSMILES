@@ -48,9 +48,10 @@ plugins:
 nav:
   - Home: index.md
   - Quickstart:
-      - Overview: quickstart/overview.md
+      - Installation: quickstart/installation.md
       - Lesson 1: quickstart/quickstart.md
       - Tokenizing: quickstart/tokenizing.md
+      - Distributions: quickstart/distributions.md
   - Tutorials: tutorials/tutorials.md
   - Reference:
       - Overview: reference/overview.md
@@ -87,7 +88,7 @@ nav:
       - Specification: bigsmiles/specification.md
       - Interpretation: bigsmiles/interpretation.md
       - Examples: bigsmiles/examples.md
-  - Developers: developers/developers.md
+  - For Developers: developers/developers.md
   - Extras:
       - Change Log: extras/change_log.md
       - License: extras/license.md

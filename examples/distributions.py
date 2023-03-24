@@ -1,18 +1,19 @@
-import bigsmiles.distributions as distributions
 
 
-def main():
-    repeat_MW = 104.15  # styrene
-    Mn = 10_000
-    D = 1.1
-    dis = distributions.Uniform(Mn, D, repeat_MW)
-    fig = distributions.plot_x_i(dis)
-    fig = distributions.plot_w_i(dis, fig=fig)
-    fig = distributions.plot_x_i_pmd(dis, fig=fig)
-    fig.show()
-
-    print(dis.details())
+import bigsmiles.distributions
 
 
-if __name__ == "__main__":
-    main()
+dis = bigsmiles.distributions.LogNormal(Mn=10_000, D=1.12, repeat_MW=104.15)
+
+print('Mn: ', dis.Mn)
+print('Mw: ', dis.Mw)
+print('D: ', dis.D)
+print('skew in mw: ', dis.skew_mw)
+print('standard deviation in mw: ', dis.std_mw)
+print('kurtosis in mw: ', dis.kurtosis_mw)
+print('peak mw: ', dis.peak_mw)
+print('chain length', dis.N)
+
+fig = bigsmiles.distributions.plot_w_i(dis)
+# fig.show()
+fig.write_image("quickstart_distributions.svg")

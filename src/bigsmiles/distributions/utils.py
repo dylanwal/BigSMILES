@@ -66,8 +66,8 @@ def compute_Mn_D_from_wi_mw_i(mw_i: np.ndarray, w_i: np.ndarray) -> tuple[float,
     mw_i = mw_i[mask]
     w_i = w_i[mask]
 
-    mw_n = 1 / np.sum(w_i / mw_i)
-    mw_w = np.sum(w_i * mw_i)
+    mw_n = np.sum(w_i) / np.sum(w_i/mw_i)
+    mw_w = np.sum(w_i * mw_i) / np.sum(w_i)
     mw_d = mw_w / mw_n
     return mw_n, mw_d
 
@@ -175,3 +175,9 @@ def normalize_distribution(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     """ normalize a distribution to area = 1"""
     area = np.trapz(x=x, y=y)
     return y / area
+
+
+def cutoff(y: np.ndarray, cutoff_: int | float) -> np.ndarray:
+    mask = y < (cutoff_ * np.max(y))
+    y[mask] = 0
+    return y

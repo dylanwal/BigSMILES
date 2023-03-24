@@ -18,7 +18,7 @@ class DistributionContinuous(Distribution, abc.ABC):
 
     !!! info
 
-        See [Distribution]() for attributes.
+        See [Distribution][bigsmiles.distributions.base.Distribution] for attributes.
 
     """
 
@@ -142,8 +142,6 @@ class LogNormal(DistributionContinuous):
     > most popular distribution to model living polymerization.
     >> See [Wikipida](https://en.wikipedia.org/wiki/Log-normal_distribution) for more information.
 
-    The probability density function is:
-
     $$
         P(x) = \frac{1}{x\sigma_{LN}\sqrt{2\pi}}exp\Bigg(-\frac{(ln(x)-\mu_{LN})^2}{2\sigma^2}\Bigg)
     $$
@@ -157,10 +155,10 @@ class LogNormal(DistributionContinuous):
     To put it into polymer specific terminology:
 
     $$
-        x_i(mw_i) = \frac{1}{mw_i\sqrt{2\pi ln(Đ))}} exp\Bigg(-\frac{\Big(ln\big(\frac{mw_i}{M_n}\Big)+
+        x_i(mw_i) = \frac{1}{mw_i\sqrt{2\pi ln(Đ)}} exp\Bigg(-\frac{\Big(ln\Big(\frac{mw_i}{M_n}\Big)+
         \frac{Đ}{2}\Big)^2}{2\sigma^2}\Bigg)
          ~~~~~~~~~~~
-        w_i(mw_i) = \frac{1}{M_n\sqrt{2\pi ln(Đ))}} exp\Bigg(-\frac{\Big(ln\big(\frac{mw_i}{M_n}\Big)+
+        w_i(mw_i) = \frac{1}{M_n\sqrt{2\pi ln(Đ)}} exp\Bigg(-\frac{\Big(ln\Big(\frac{mw_i}{M_n}\Big)+
         \frac{Đ}{2}\Big)^2}{2\sigma^2}\Bigg)
     $$
 
@@ -193,7 +191,7 @@ class LogNormal(DistributionContinuous):
         self._D = D
 
     def _create_label(self):
-        return f"|{self.label}({self.Mn:.0f},{self.D:.2f})|"
+        return f"{self.label}({self.Mn:.0f},{self.D:.2f})"
 
     def _compute_x_i(self, x: int | float | np.ndarray) -> int | float | np.ndarray:
         if isinstance(x, int) or isinstance(x, float):
@@ -217,12 +215,11 @@ class SchulzZimm(DistributionContinuous):
     > without numerical issues.
     >> See [Wikipida](https://en.wikipedia.org/wiki/Schulz-Zimm_distribution) for more information.
 
-    The probability density function is:
 
     $$
-        x_i(mw_i) = \frac{z^{z+1}}{\Gamma(z+1)}\frac{mw_i^{z-1}}{M_n^z}exp\Big(-\frac{zmw_i}{M_n}\Big)
+        x_i(mw_i) = \frac{z^{z+1}}{\Gamma(z+1)}\frac{mw_i^{z-1}}{M_n^z}exp\Big(-\frac{z~mw_i}{M_n}\Big)
          ~~~~~~~~~~~
-        w_i(mw_i) = \frac{z^{z+1}}{\Gamma(z+1)}\frac{mw_i^{z}}{M_n^{z+1}}exp\Big(-\frac{zmw_i}{M_n}\Big)
+        w_i(mw_i) = \frac{z^{z+1}}{\Gamma(z+1)}\frac{mw_i^{z}}{M_n^{z+1}}exp\Big(-\frac{z~mw_i}{M_n}\Big)
     $$
 
     * $x_i(mw_i)$: mole fraction of molecular weight $mw_i$
@@ -270,7 +267,7 @@ class SchulzZimm(DistributionContinuous):
         return pdf
 
     def _create_label(self):
-        return f"|{self.label}({self.Mn:.0f},{self.D:.2f})|"
+        return f"{self.label}({self.Mn:.0f},{self.D:.2f})"
 
 
 class Gaussian(DistributionContinuous):
@@ -278,8 +275,6 @@ class Gaussian(DistributionContinuous):
     > Gaussian distribution of molecular weights for geometrically distributed chain lengths.
     > Only useful for low dispersity samples (D <1.1); use log-normal instead.
     >> See [Wikipida](https://en.wikipedia.org/wiki/Normal_distribution) for more information.
-
-    The probability density function is:
 
     $$
         P(x) = \frac{1}{\sigma\sqrt{2\pi}} exp\Big(-\Big(\frac{x-\mu}{4\sigma}\Big)^2\Big)
@@ -315,7 +310,7 @@ class Gaussian(DistributionContinuous):
         return 1 / (self.std_mw * math.sqrt(2 * math.pi)) * np.exp(-0.5 * ((x - self.Mn) / self.std_mw) ** 2)
 
     def _create_label(self):
-        return f"|{self.label}({self.Mn:.0f},{self.D:.2f})|"
+        return f"{self.label}({self.Mn:.0f},{self.D:.2f})"
 
     # def prob_mw(self, mw):
     #     # if self.std < 1e-6 and abs(self.mean - mw) < 1e-6:
@@ -326,8 +321,6 @@ class Gaussian(DistributionContinuous):
 class Uniform(DistributionContinuous):
     r"""
     > Uniform distribution of different lengths, usually useful for short chains.
-
-    The probability density function is:
 
     $$
         x_i(mw_i) = \begin{cases} 0 &mw_i < low \\ 1 & low \le mw_i \le high \\ 0 &mw_i > high \end{cases}
@@ -353,23 +346,27 @@ class Uniform(DistributionContinuous):
             repeat unit molecular weight
         """
         super().__init__(repeat_MW)
+        if low > high:
+            raise ValueError("'low' must be a lower value than 'high'. ")
+
         self.low = low
         self.high = high
+        self._value = 1/(high-low)
         self._Mn = (high + low) / 2
         self._peak_mw = self._Mn
 
     def _compute_x_i(self, x: int | float | np.ndarray) -> int | float | np.ndarray:
         if isinstance(x, int) or isinstance(x, float):
-            return 1 if self.low < x < self.high else 0
+            return 1 if self.low < self._value < self.high else 0
 
         low_index = np.argmin(np.abs(x - self.low))
         high_index = np.argmin(np.abs(x - self.high))
         output = np.zeros_like(x, 'f')
-        output[low_index: high_index] = 1
+        output[low_index: high_index] = self._value
         return output
 
     def _create_label(self):
-        return f"|{self.label}({self.low:.0f},{self.high:.0f})|"
+        return f"{self.label}({self.low:.0f},{self.high:.0f})"
 
     def _get_mw_i(self) -> np.ndarray:
         return np.array([10, self.low - 1, self.low, self.high - 1, self.high, 10_000_000])
@@ -379,8 +376,16 @@ class CustomDistribution(DistributionContinuous):
     r"""
     Provide your own molecule weight distribution.
 
+    !!! warning
+
+        There are several numerical challenges with processing real molecular weight distributions that contains noise.
+        To deal with these issues any 'y' value < 2% of max 'y' value will be set to zero. This does a good job
+        of eliminating numerical issues without significantly changing the results. There are better ways to handle
+        this, but that is outside the scope of this project.
+
     """
     label = "custom"
+    _cutoff = 0.02
 
     def __init__(self,
                  mw_i: np.ndarray,
@@ -412,29 +417,24 @@ class CustomDistribution(DistributionContinuous):
         return np.interp(x, self._raw_mw_i, self._raw_x_i, left=0, right=0)
 
     def _create_label(self):
-        return f"|{self.label}({self.Mn:.0f},{self.D:.2f})|"
+        return f"{self.label}({self.Mn:.0f},{self.D:.2f})"
 
     def _process_inputs(self, mw_i: np.ndarray | None, x_i: np.ndarray | None, w_i: np.ndarray | None):
         if x_i is None and w_i is None or x_i is not None and w_i is not None:
             raise ValueError("Only provide one 'x_i' or 'w_i'. ")
 
-        flip_flag = False
         if mw_i[0] > mw_i[-1]:
             mw_i = np.flip(mw_i)
-
-        if x_i is not None:
-            if flip_flag:
+            if x_i is not None:
                 x_i = np.flip(x_i)
-            if np.any(x_i < 0):
-                logging.warning("Negative values detected in 'CustomDistribution`. Results may be inaccurate.")
-        elif w_i is not None:
-            if flip_flag:
+            if w_i is not None:
                 w_i = np.flip(w_i)
-            if np.any(w_i < 0):
-                logging.warning("Negative values detected in 'CustomDistribution`. Results may be inaccurate.")
 
+        if w_i is not None:
+            w_i = utils.normalize_distribution(mw_i, w_i)
+            w_i = utils.cutoff(w_i, self._cutoff)
             self._Mn, self._D = utils.compute_Mn_D_from_wi_mw_i(mw_i, w_i)
             x_i = utils.wi_to_xi(mw_i, w_i, self._Mn)
 
-        self._raw_x_i = x_i
+        self._raw_x_i = utils.normalize_distribution(x=mw_i, y=x_i)
         self._raw_mw_i = mw_i

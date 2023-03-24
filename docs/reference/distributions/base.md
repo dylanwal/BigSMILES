@@ -1,0 +1,3 @@
+---
+
+::: bigsmiles.distributions.base.Distribution

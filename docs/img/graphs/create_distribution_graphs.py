@@ -8,7 +8,7 @@ import math
 import plotly.graph_objs as go
 import numpy as np
 
-import bigsmiles.data_structures.distributions as distributions
+import bigsmiles.distributions as distributions
 
 
 color_list = [
@@ -39,10 +39,10 @@ def format_figure(fig):
     fig.layout.legend.font.size = 10
     fig.update_layout(autosize=False, width=800, height=500, font=dict(family="Arial", size=18, color="black"),
                       plot_bgcolor="white", showlegend=True, legend=dict(x=.02, y=.95))
-    fig.update_xaxes(title="<b>molecular weight (g/mol)</b>", tickprefix="<b>", ticksuffix="</b>", showline=True,
+    fig.update_xaxes(title="<b>molecular weight, <i>mw<sub>i</sub></i> (g/mol)</b>", tickprefix="<b>", ticksuffix="</b>", showline=True,
                      linewidth=5, mirror=True, linecolor='black', ticks="outside", tickwidth=4, showgrid=False,
                      gridwidth=1, gridcolor="lightgray", range=[1, 7])
-    fig.update_yaxes(title="<b>normalized mole fraction</b>", tickprefix="<b>", ticksuffix="</b>", showline=True,
+    fig.update_yaxes(tickprefix="<b>", ticksuffix="</b>", showline=True,
                      linewidth=5, mirror=True, linecolor='black', ticks="outside", tickwidth=4, showgrid=False,
                      gridwidth=1, gridcolor="lightgray", range=[-0.05, 1.1])
 
@@ -58,7 +58,7 @@ def main():
     labels = []
     for i in range(n):
         dis = distributions.LogNormal(Mn[i], D[i])
-        fig = dis.plot_pdf(fig=fig)
+        fig = distributions.plot_w_i(dis, fig=fig)
         labels.append(str(dis))
 
     format_figure(fig)
@@ -69,7 +69,7 @@ def main():
     labels = []
     for i in range(n):
         dis = distributions.SchulzZimm(Mn[i], D[i])
-        fig = dis.plot_pdf(fig=fig)
+        fig = distributions.plot_w_i(dis, fig=fig)
         labels.append(str(dis))
 
     format_figure(fig)
@@ -80,12 +80,12 @@ def main():
     labels = []
     d_ = np.linspace(1.01, 1.2, n)
     for i in range(n):
-        dis = distributions.Gauss(Mn[i], d_[i])
-        fig = dis.plot_pdf(fig=fig)
+        dis = distributions.Gaussian(Mn[i], d_[i])
+        fig = distributions.plot_w_i(dis, fig=fig)
         labels.append(str(dis))
 
     format_figure(fig)
-    fig.write_image("Gauss.svg")
+    fig.write_image("Gaussian.svg")
 
     # uniform
     fig = go.Figure()
@@ -93,7 +93,7 @@ def main():
     wide = np.logspace(3, 6, n)
     for i in range(n):
         dis = distributions.Uniform(500, wide[i])
-        fig = dis.plot_pdf(fig=fig)
+        fig = distributions.plot_w_i(dis, fig=fig)
         labels.append(str(dis))
 
     format_figure(fig)
@@ -106,8 +106,8 @@ def main():
     for i in range(1, len(data[0])):
         x = data[:, 0]
         y = data[:, i]
-        dis = distributions.CustomDistribution(mw_i=x, pdf=y)
-        fig = dis.plot_pdf(fig=fig)
+        dis = distributions.CustomDistribution(mw_i=x, w_i=y)
+        fig = distributions.plot_w_i(dis, fig=fig)
         labels.append(str(dis))
 
     format_figure(fig)
@@ -120,12 +120,13 @@ def main():
     conversion = [0.40, 0.95, 0.99, 0.995, 0.999, 0.9995]
     for conv in conversion:
         dis = distributions.FlorySchulz(conv, repeat_MW)
-        fig = dis.plot_pmf(fig=fig)
+        fig = distributions.plot_x_i_pmd(dis, fig=fig)
         labels.append(str(dis))
 
     format_figure(fig)
     fig.update_xaxes(range=(0, 4))
-    fig.layout.xaxis.title = "<b>chain length</b>"
+    fig.update_yaxes(title="<b>normalized mole fraction, <i>x<sub>i</sub></i></b>")
+    fig.layout.xaxis.title = "<b>chain length, <i>N<sub>i</sub></i></b>"
     fig.write_image("FlorySchulz.svg")
 
     # Poisson
@@ -134,12 +135,13 @@ def main():
     N = np.linspace(20, 800, n, dtype='int')
     for i in range(n):
         dis = distributions.Poisson(N[i], repeat_MW)
-        fig = dis.plot_pmf(fig=fig)
+        fig = distributions.plot_x_i_pmd(dis, fig=fig)
         labels.append(str(dis))
 
     format_figure(fig)
     fig.update_xaxes(range=(0, 4))
-    fig.layout.xaxis.title = "<b>chain length</b>"
+    fig.update_yaxes(title="<b>normalized mole fraction, <i>x<sub>i</sub></i></b>")
+    fig.layout.xaxis.title = "<b>chain length, <i>N<sub>i</sub></i></b>"
     fig.write_image("Poisson.svg")
 
     print("done")

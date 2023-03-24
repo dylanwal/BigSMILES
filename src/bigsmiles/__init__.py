@@ -8,5 +8,6 @@ from bigsmiles.data_structures.bigsmiles import Atom, Bond, Branch, BondDescript
     StochasticObject, StochasticFragment, BigSMILES
 from bigsmiles.data_structures.reaction import Reaction
 
+
 __all__ = ["Atom", "Bond", "Branch", "BondDescriptor", "BondDescriptorAtom", "StochasticObject", "StochasticFragment",
            "BigSMILES", "Reaction", "ERRORS", "Config", "tokenize_text", "tokenize"]

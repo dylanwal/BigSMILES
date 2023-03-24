@@ -1091,7 +1091,7 @@ def contains_stochastic_object(nodes: list[Atom, Bond, Branch, StochasticObject]
 
 
 class BigSMILES:
-    """
+    r"""
     this class is used to represent a BigSMILES.
 
     BigSMILES is a superset of SMILES; so any this class handles SMILES as well

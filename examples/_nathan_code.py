@@ -674,7 +674,7 @@ def performance_test():
 
 
 def main():
-    polymer = "O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCC(C)N[>][<]}CF"  # wrong end group can terminate on other
+    polymer = "O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}"  # wrong end group can terminate on other
     # polymer = "OC{[>][<]CC(C{[>][<]CCO[>][<]}CN)[>][<]}CC"
     # polymer = "CCC(C){[$][$]CC(C1CCCCC1)[$][$]}{[$][$]CCCC[$],[$]CC(CC)[$][$]}[H]"
     # polymer = "C{[$][$]CC[$],[$]CC(CC[$])[$][$]}O"
@@ -682,7 +682,7 @@ def main():
     # polymer = "C{[<][>]CC[>2],[<2]N[>][<]}O"   # Fails
     # polymer = "C{[<]CC(C[>])C(C[<])CO[>]}O"
     # polymer = "F{[<][>]CO[>],[>]C(N[<])C[<][>]}F"  # end group wrong can terminate on other
-    polymer = "F{[<][>]OO[>],[>]C(N[<])C[<][>]}S"  # end group wrong
+    # polymer = "F{[<][>]OO[>],[>]C(N[<])C[<][>]}S"  # end group wrong
     # polymer = "{[][>]C([>])([>]),[<]OO[>][>]}CB"  # error
     # polymer = "F{[<1][>1]C([<2])C[<1],[>2]OO[<2][>2]}N"  #
     # polymer = "F{[<][>]C([<])C[<],[>]OO[<][>]}N"  #
@@ -697,6 +697,14 @@ def main():
     draw(graph)
 
 
+def main2():
+    import bigsmiles
+
+    big  = bigsmiles.BigSMILES("O{[>][<]C(=O)CCCCC(=O)[<],[>]NCCCCCCN[>][<]}" )
+    g = big.graph()
+    fig = g.draw()
+    fig.show()
+
 if __name__ == "__main__":
-    main()
+    main2()
     # performance_test()

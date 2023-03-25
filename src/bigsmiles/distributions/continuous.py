@@ -87,10 +87,10 @@ class DistributionContinuous(Distribution, abc.ABC):
         self._N_i = n_i.astype(int)
 
     def _compute_Mn(self):
-        self._Mn, self._D = utils.compute_Mn_D_from_xi_mw_i(self.mw_i, self.x_i(self.mw_i))
+        self._Mn, _ = utils.compute_Mn_D_from_xi_mw_i(self.mw_i, self.x_i(self.mw_i))
 
     def _compute_D(self):
-        self._Mn, self._D = utils.compute_Mn_D_from_xi_mw_i(self.mw_i, self.x_i(self.mw_i))
+        _, self._D = utils.compute_Mn_D_from_xi_mw_i(self.mw_i, self.x_i(self.mw_i))
 
     @utils.check_for_repeat_MW
     def _compute_N(self):
@@ -252,6 +252,10 @@ class SchulzZimm(DistributionContinuous):
 
         self.z = 1 / (D - 1)
 
+        if self.z > 43:
+            # TODO fix overflow error (x**(self.z -1) is issue when x = 10_000_000)
+            raise RuntimeError(f"D>{1.025} causes numerical overflow errors.")
+
     def _compute_x_i(self, x: int | float | np.ndarray) -> int | float | np.ndarray:
         if isinstance(x, int) or isinstance(x, float):
             if x == 0:
@@ -261,8 +265,8 @@ class SchulzZimm(DistributionContinuous):
 
         mask = x > 0  # mask is to avoid Zero gamma
         pdf = np.zeros_like(x, dtype='f')
-        pdf[mask] = (self.z ** (self.z + 1) / gamma(self.z + 1)) * (
-                x[mask] ** (self.z - 1) / self.Mn ** self.z) * np.exp(-self.z * x[mask] / self.Mn)
+        pdf[mask] = (self.z ** (self.z + 1) / gamma(self.z + 1)) * \
+                    (x[mask] ** (self.z - 1) / self.Mn ** self.z) * np.exp(-self.z * x[mask] / self.Mn)
 
         return pdf
 
@@ -305,6 +309,9 @@ class Gaussian(DistributionContinuous):
         self._Mn = Mn
         self._D = D
         self._std_mw = Mn * math.sqrt(D - 1)
+
+        if self.x_i(0) > 0.0002:
+            logging.warning("Values many be inaccurate as distribution is is non-zero at MW=0.")
 
     def _compute_x_i(self, x: int | float | np.ndarray) -> int | float | np.ndarray:
         return 1 / (self.std_mw * math.sqrt(2 * math.pi)) * np.exp(-0.5 * ((x - self.Mn) / self.std_mw) ** 2)

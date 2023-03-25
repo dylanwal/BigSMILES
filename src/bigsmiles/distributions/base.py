@@ -4,6 +4,7 @@ import numpy as np
 
 import bigsmiles.distributions.utils as utils
 
+# TODO: add numerical bound of validity for all distirbutions; when distributions cut off at Zero cause issues
 
 class Distribution(abc.ABC):
     """
@@ -233,8 +234,8 @@ class Distribution(abc.ABC):
         """ mole fraction of molecular weight as a function of $N_i$  (Probability mass distribution) """
         if N_i is None:
             N_i = self.N_i
-        elif isinstance(N_i, np.ndarray) and N_i.dtype.kind == 'i':
-            if np.max(N_i) > self._N_i_max:
+        elif isinstance(N_i, np.ndarray) and (N_i.dtype.kind == 'i' or N_i.dtype.kind == 'u'):
+            if np.max(N_i) > np.max(self.N_i):
                 raise ValueError(f'Probability mass distribution limit exceeded. Max value: {self._N_i_max}')
         elif isinstance(N_i, int):
             pass

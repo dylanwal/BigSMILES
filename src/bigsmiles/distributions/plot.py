@@ -192,7 +192,7 @@ def plot_w_i_cdf(dis: Distribution, fig=None):
     x, y = dis.w_i_cdf()
     fig_out = _plotting_general(x, y, str(dis), False, True, fig)
 
-    if fig_out is None:
+    if fig is None:
         _add_layout(fig_out)
         fig_out.layout.xaxis.title = "<b>molecular weight, <i>mw<sub>i</sub></i> (g/mol)</b>"
         fig_out.layout.yaxis.title = "<b> cumulative wight fraction </b>"

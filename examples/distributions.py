@@ -15,5 +15,5 @@ print('peak mw: ', dis.peak_mw)
 print('chain length', dis.N)
 
 fig = bigsmiles.distributions.plot_w_i(dis)
-# fig.show()
-fig.write_image("quickstart_distributions.svg")
+fig.show()
+# fig.write_image("quickstart_distributions.svg")

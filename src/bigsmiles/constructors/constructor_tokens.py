@@ -3,9 +3,9 @@ from __future__ import annotations
 import logging
 
 import bigsmiles.errors as errors
-from bigsmiles.validation.validation_string import run_string_validation
+from bigsmiles.constructors.validation.validation_string import run_string_validation
 from bigsmiles.constructors.tokenizer import Token, TokenKind, tokenize
-from bigsmiles.validation.validation_tokens import run_token_validation
+from bigsmiles.constructors.validation.validation_tokens import run_token_validation
 import bigsmiles.constructors.constructor_str as constructor
 from bigsmiles.data_structures.bigsmiles import BigSMILES, Branch, StochasticFragment, Atom, StochasticObject, \
     has_node_attr, BondDescriptorAtom

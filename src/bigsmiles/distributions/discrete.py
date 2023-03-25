@@ -41,7 +41,7 @@ class DistributionDiscrete(Distribution, abc.ABC):
         self._D = np.sum(self.x_i(self.N_i) * self.N_i ** 2) / self.N
 
     def _compute_N(self):
-        self._N = np.sum(self.N_i * self.x_i(self.N_i))
+        self._N = np.sum(self.N_i * self.x_i_pmd(self.N_i))
 
     def _compute_peak_N(self):  # noqa
         self._peak_N = self.N_i[np.argmax(self.x_i_pmd())]
@@ -66,9 +66,9 @@ class DistributionDiscrete(Distribution, abc.ABC):
     @utils.check_for_repeat_MW
     def _compute_x_i(self, mw_i: int | float | np.ndarray) -> int | float | np.ndarray:
         if self._x_i is None:
-            self._x_i_pmd = utils.normalize_distribution(self.N_i, self.x_i_pmd(self.N_i))
+            self._x_i = utils.normalize_distribution(self.mw_i, self.x_i_pmd(self.N_i))
 
-        return np.interp(mw_i, self._x_i_pmd, self.mw_i, 0, 0)
+        return np.interp(mw_i, self.mw_i, self._x_i, 0, 0)
 
     @wraps(Distribution.draw_mw)
     @utils.check_for_repeat_MW
@@ -110,6 +110,10 @@ class FlorySchulz(DistributionDiscrete):
         self.a = 1 - self.conversion
         self._D = 1 + conversion
         self._N = 2 / self.a - 1
+
+        if conversion > 0.997:
+            # TODO: make more dynamic for high conversion (need to go to higher N_i to avoid issues)
+            self._N_i = np.linspace(0, 300_000 - 1, 300_000, dtype="uint")
 
     def _compute_x_i_pmd(self, N_i: int | np.ndarray) -> int | float | np.ndarray:  # noqa
         return self.a ** 2 * N_i * (1 - self.a) ** (N_i - 1)

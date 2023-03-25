@@ -15,7 +15,7 @@ import bigsmiles.errors as errors
 import bigsmiles.reference_data.chemical_data as chemical_data
 from bigsmiles.data_structures.bigsmiles import Atom, Bond, BondDescriptor, Branch, StochasticFragment, \
     StochasticObject, BigSMILES, BondDescriptorAtom, has_node_attr, has_ring_attr, has_parent_attr
-import bigsmiles.validation.validation_bigsmiles_obj as validation_bigsmiles_obj
+import bigsmiles.constructors.validation.validation_bigsmiles_obj as validation_bigsmiles_obj
 
 
 ## Utility functions for construction ## noqa

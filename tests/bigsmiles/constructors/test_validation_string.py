@@ -1,7 +1,7 @@
 import pytest
 
 import bigsmiles.errors as errors
-import bigsmiles.validation.validation_string as validation
+import bigsmiles.constructors.validation.validation_string as validation
 
 ring_renumbering_cases = [
     ["O1CCCCC1N1CCCCC1", "O1CCCCC1N2CCCCC2"],

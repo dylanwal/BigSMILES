@@ -59,7 +59,7 @@ class TokenKind(enum.Enum):
 
 _isotope_pattern = r'(?P<isotope>[\d]{1,3})?'
 _element_pattern = r'(?P<symbol>' + "|".join(chemical_data.aromatic_elements) + "|" \
-                   + "|".join(chemical_data.elements_ordered) + ')'
+                   + "|".join(chemical_data.elements_ordered_reverse) + ')'
 _stereo_pattern = r'(?P<stereo>@{1,2})?'
 _hydrogen_pattern = r'(?P<hydrogens>H[\d]?)?'
 _charge_pattern = r'(?P<charge>[-|\+]{1,3}[\d]?)?'

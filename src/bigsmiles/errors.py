@@ -30,4 +30,5 @@ class DistributionError(BigSMILESError):
     """ raise when issue with MW distribution """
 
 
-ERRORS = (BigSMILESError, TokenizeError)
+class MolecularFormulaError(BigSMILESError):
+    """ raise when issue with calculating molecular formula """

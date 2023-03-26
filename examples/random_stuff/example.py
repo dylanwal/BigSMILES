@@ -50,9 +50,10 @@ def single():
     case = cases[0]
     print("case: ", case)
     output = bigsmiles.BigSMILES(case)
+    output.molar_mass
     print("output: ", output)
-    for i, bond in enumerate(output.bonds):
-        print(i, "   ", bond, bond.bond_order, bond.double_bond_ez)
+    # for i, bond in enumerate(output.bonds):
+    #     print(i, "   ", bond, bond.bond_order, bond.double_bond_ez)
     # output.print_tree(print_repr=False)
 
     # drawer = chemdraw.Drawer(str(output))

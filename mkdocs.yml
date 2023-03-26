@@ -67,6 +67,8 @@ nav:
               - Stochastic Fragment: reference/data_structure/Stochastic_fragment.md
               - Stochastic Object: reference/data_structure/Stochastic_object.md
           - Reaction: reference/data_structure/Reaction.md
+          - Polymer: reference/data_structure/Polymer.md
+          - Molecular Formula: reference/data_structure/molecular_formula.md
       - Methods:
           - Overview: reference/methods/overview.md
           - parse_tree: reference/methods/parse_tree.md

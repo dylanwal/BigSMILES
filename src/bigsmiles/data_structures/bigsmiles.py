@@ -17,6 +17,7 @@ import logging
 
 import bigsmiles.errors as errors
 import bigsmiles.reference_data.chemical_data as chemical_data
+import bigsmiles.data_structures.molecular_formula as mole_formula
 from bigsmiles.config import Config
 
 _conjugated_warning = True
@@ -26,9 +27,9 @@ class Atom:
     """
     this class represents an atom
     """
-    __slots__ = ["id_", "symbol", "isotope", "stereo", "hydrogens", "charge", "class_", "organic",
+    __slots__ = ("id_", "symbol", "isotope", "stereo", "hydrogens", "charge", "class_", "organic",
                  "aromatic", "valence", "possible_valence", "_default_valence", "_valene_warning_raised", "_bonds",
-                 "parent", "__dict__"]
+                 "parent", "__dict__")
     _eq_attr = ("id_", "symbol", "isotope", "stereo", "hydrogens", "charge", "valence", "aromatic")
 
     def __init__(self,
@@ -44,7 +45,7 @@ class Atom:
                  **kwargs
                  ):
         """
-        Attributes
+        Parameters
         ----------
         id_:
             id of atom (id is limited to atoms). Range: [1, inf]
@@ -337,8 +338,8 @@ class Bond:
     """
     this class represents a bond
     """
-    __slots__ = ["id_", "symbol", "atom1", "atom2", "ring_id", "parent", "__dict__", "double_bond_stereo"]
-    _eq_attr = ("id_", "symbol", "ring_id") # "double_bond_ez"
+    __slots__ = ("id_", "symbol", "atom1", "atom2", "ring_id", "parent", "__dict__", "double_bond_stereo")
+    _eq_attr = ("id_", "symbol", "ring_id")  # "double_bond_ez"
 
     def __init__(self,
                  id_: int,
@@ -350,7 +351,6 @@ class Bond:
                  **kwargs
                  ):
         """
-
         Parameters
         ----------
         id_: int
@@ -528,7 +528,7 @@ class BondDescriptor:
     """
     this class represents a bonding descriptor
     """
-    __slots__ = ["parent", "descriptor", "index_", "_instances", "_instances_up_to_date", "bond_symbol", "__dict__"]
+    __slots__ = ("parent", "descriptor", "index_", "_instances", "_instances_up_to_date", "bond_symbol", "__dict__")
     _eq_attr = ("descriptor", "index_", "bond_symbol")
 
     def __init__(self,
@@ -539,7 +539,6 @@ class BondDescriptor:
                  **kwargs
                  ):
         """
-
         Parameters
         ----------
         parent: StochasticObject
@@ -663,7 +662,7 @@ class BondDescriptorAtom:
     this class represents a bonding descriptor and has the ability to bond
     it should be thought of as an atom with only on bonding site that can be any bond (single, double triple)
     """
-    __slots__ = ["descriptor", "id_", "_bond", "__dict__", "parent"]
+    __slots__ = ("descriptor", "id_", "_bond", "__dict__", "parent")
 
     def __init__(self,
                  id_: int,
@@ -731,7 +730,8 @@ class BondDescriptorAtom:
                   show_repr: tuple | None = None,
                   skip_color: bool = False
                   ) -> str:
-        text = Config.add_color(self.descriptor.to_string(show_hydrogens, show_repr), 'Green', skip_color)
+        text = Config.add_color(self.descriptor.to_string(show_hydrogens, show_atom_index, show_repr, skip_color),
+                                'Green', skip_color)
 
         if show_repr is not None and BondDescriptorAtom in show_repr:
             text += "{" + str(self.id_) + "}"
@@ -771,7 +771,7 @@ class Branch:
     """
     this class represents a branch
     """
-    __slots__ = ["nodes", "id_", "parent", "__dict__"]
+    __slots__ = ("nodes", "id_", "parent", "__dict__")
 
     def __init__(self, id_: int, parent: BigSMILES | StochasticFragment | Branch, **kwargs):
         """
@@ -850,7 +850,7 @@ class StochasticFragment:
 
     stochastic fragments are only found within stochastic objects
     """
-    __slots__ = ["nodes", "id_", "parent", "bonding_descriptors", "rings", "__dict__"]
+    __slots__ = ("nodes", "id_", "parent", "bonding_descriptors", "rings", "_molecular_formula", "__dict__")
 
     def __init__(self, id_: int, parent: StochasticObject, **kwargs):
         """
@@ -867,6 +867,7 @@ class StochasticFragment:
         self.nodes: list[Atom | Bond | BondDescriptorAtom | Branch | StochasticObject] = []
         self.rings: list[Bond] = []
         self.bonding_descriptors: list[BondDescriptor] = []
+        self._molecular_formula: mole_formula.MolecularFormula | None = None
 
         if kwargs:
             for k, v in kwargs.items():
@@ -927,13 +928,36 @@ class StochasticFragment:
     def _get_id(self, node_type) -> int:
         return self.root._get_id(node_type)  # noqa
 
+    @property
+    def molecular_formula(self) -> mole_formula.MolecularFormula:
+        if self._molecular_formula is None:
+            from bigsmiles.data_structures.compute_molecular_formula_from_bigsmiles import compute_molecular_formula_from_bigsmiles
+            return compute_molecular_formula_from_bigsmiles(self)
+
+        return self._molecular_formula
+
+    @property
+    def molar_mass(self) -> int | float:
+        """
+        Returns
+        -------
+        molar_mass:
+            molar mass in g/mol
+
+        !!! warning
+            Will return a number with stochastic object inside.
+            Use 'molecular_formula.contains_stochastic_object' to check.
+
+        """
+        return self.molecular_formula.molar_mass
+
 
 class StochasticObject:
     """
     this class is represents a stochastic object
     """
-    __slots__ = ["nodes", "bonding_descriptors", "id_", "parent", "bd_left", "bd_right",
-                 "_bond_left", "_bond_right", "__dict__"]
+    __slots__ = ("nodes", "bonding_descriptors", "id_", "parent", "bd_left", "bd_right",
+                 "_bond_left", "_bond_right", "__dict__")
 
     def __init__(self, id_: int, parent: BigSMILES | StochasticFragment | Branch, **kwargs):
         """
@@ -1103,7 +1127,7 @@ class BigSMILES:
     bigsmiles("CC(CC){[>][<]CC(c1ccccc1)[>][<]}[H]")
 
     """
-    __slots__ = ["nodes", "atoms", "bonds", "rings", "__dict__"]
+    __slots__ = ("nodes", "atoms", "bonds", "rings", "_molecular_formula", "__dict__")
 
     def __init__(self, text: str | None = None, **kwargs):
         """
@@ -1120,6 +1144,7 @@ class BigSMILES:
         self.rings: list[Bond] = []  # does not include rings in sub-objects
 
         self._ids_ = {Atom: 0, Bond: 0, BondDescriptorAtom: 0, StochasticFragment: 0, StochasticObject: 0, Branch: 0}
+        self._molecular_formula: mole_formula.MolecularFormula | None = None
 
         # parse input string
         if text:
@@ -1211,6 +1236,29 @@ class BigSMILES:
     def _get_id(self, node_type) -> int:
         self._ids_[node_type] += 1
         return self._ids_[node_type]
+
+    @property
+    def molecular_formula(self) -> mole_formula.MolecularFormula:
+        if self._molecular_formula is None:
+            from bigsmiles.data_structures.compute_molecular_formula_from_bigsmiles import compute_molecular_formula_from_bigsmiles
+            return compute_molecular_formula_from_bigsmiles(self)
+
+        return self._molecular_formula
+
+    @property
+    def molar_mass(self) -> int | float:
+        """
+        Returns
+        -------
+        molar_mass:
+            molar mass in g/mol
+
+        !!! warning
+            Will return a number with stochastic object inside.
+            Use 'molecular_formula.contains_stochastic_object' to check.
+
+        """
+        return self.molecular_formula.molar_mass
 
 
 # types  (for python >3.10)

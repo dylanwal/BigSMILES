@@ -66,10 +66,12 @@ del element_data
 
 # create tuples, sets, and dictionaries for performance
 element_symbols = {element.symbol for element in periodic_table}
-elements_ordered = sorted(element_symbols, reverse=True)  # sorted in reverse so "Cl" hits before "C"
+elements_ordered = tuple(sorted(element_symbols))
+elements_ordered_reverse = tuple(sorted(element_symbols, reverse=True))  # sorted in reverse so "Cl" hits before "C"
 aromatic_elements = {element.symbol.lower() for element in periodic_table if element.aromatic}
 elements_aromatic = element_symbols.union(aromatic_elements)
 organic_elements = {element.symbol for element in periodic_table if element.organics}
-organic_ordered = sorted(organic_elements, reverse=True)  # sorted in reverse so "Cl" hits before "C"
+organic_ordered = tuple(sorted(organic_elements, reverse=True))  # sorted in reverse so "Cl" hits before "C"
 atom_valences = {element.symbol: element.valences for element in periodic_table}
 symbol_to_atomic_number = {element.symbol: element.atomic_number for element in periodic_table}
+symbol_to_atomic_mass = {element.symbol: element.atomic_mass for element in periodic_table}

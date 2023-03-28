@@ -771,7 +771,7 @@ def close_stochastic_fragment(parent: StochasticFragment) -> StochasticObject:
 
 ## functions for building BigSMILES in chunks ## noqa
 ###################################################################################################################
-def append_bigsmiles_fragment(parent, bigsmiles_: BigSMILES, bond_symbol: str | None, **kwargs) -> BigSMILES:
+def append_bigsmiles(parent, bigsmiles_: BigSMILES, bond_symbol: str | None, **kwargs) -> BigSMILES:
     """
 
     Parameters
@@ -792,6 +792,42 @@ def append_bigsmiles_fragment(parent, bigsmiles_: BigSMILES, bond_symbol: str | 
 
     atom = bigsmiles_.nodes[0]
     prior_atom = get_prior(parent, (Atom, StochasticObject))
+    add_bond(parent, bond_symbol, prior_atom, atom, **kwargs)
+
+    set_new_parent(parent, bigsmiles_)
+
+    # append fragment
+    parent.nodes += bigsmiles_.nodes
+    parent.root.atoms += bigsmiles_.atoms
+    parent.root.bonds += bigsmiles_.bonds
+    parent.root.rings += bigsmiles_.rings
+
+    return parent
+
+
+def append_stochastic_fragment(
+        parent: BigSMILES,
+        stoch_frag: StochasticFragment,
+        bond_symbol: str | None,
+        connection: BondDescriptor | None = None,
+        place_holder: str | None = None,
+        **kwargs
+) -> BigSMILES:
+    """
+
+    Parameters
+    ----------
+    parent
+    stoch_frag
+    bond_symbol
+    kwargs
+
+    Returns
+    -------
+
+    """
+    prior_atom = get_prior(parent, (Atom, StochasticObject))
+    connection_atom = get_bonding_descriptor()
     add_bond(parent, bond_symbol, prior_atom, atom, **kwargs)
 
     set_new_parent(parent, bigsmiles_)
@@ -1080,14 +1116,6 @@ def add_bigsmiles_as_stochastic_fragment(stoch_obj: StochasticObject, bigsmiles_
     return add_stochastic_fragment(stoch_obj, stoch_fragment)
 
 
-def replace_stochastic_object(stoch_obj: StochasticObject, bigsmiles_: BigSMILES):
-    pass
-
-
-def append_stochastic_fragment(bigsmiles_: BigSMILES, stoch_frag: StochasticFragment):
-    pass
-
-
 def set_new_parent(new_parent, obj):
     """ re-direct 'parent' to new bigsmiles object """
     for node in obj.nodes:
@@ -1095,7 +1123,8 @@ def set_new_parent(new_parent, obj):
             node.parent = new_parent
 
 
-__all__ = ["has_node_attr", "add_atom", "add_bond", "add_ring_by_index", "add_ring_from_atoms", "add_bonding_descriptor_atom",
+__all__ = ["has_node_attr", "add_atom", "add_bond", "add_ring_by_index", "add_ring_from_atoms",
+           "add_bonding_descriptor_atom",
            "add_bond_atom_pair", "add_bond_bonding_descriptor_pair", "open_branch", "close_branch",
            "open_stochastic_object", "open_stochastic_object_fragment", "open_stochastic_object_fragment_with_bond",
            "close_stochastic_object", "open_stochastic_fragment", "close_open_stochastic_fragment",

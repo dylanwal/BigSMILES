@@ -3,7 +3,7 @@ import copy
 
 import numpy as np
 
-from bigsmiles.data_structures.bigsmiles import BigSMILES, StochasticObject
+from bigsmiles.data_structures.bigsmiles import BigSMILES, StochasticObject, StochasticFragment
 import bigsmiles.constructors.constructor as constructor
 from bigsmiles.data_structures.polymer import Polymer, StochasticObjectSpecification
 
@@ -12,7 +12,9 @@ class GenerationData:
     """ grouping of data for generating a molecules from a Polymer. """
     def __init__(self, polymer: Polymer, rng: np.random.Generator = None):
         self.polymer = polymer
-        self.rng = rng
+        self.rng = rng  # will get from distribution if None
+
+        # compute list once and store for speed
         self.sorted_spec = sorted(polymer.spec, key=lambda x: x.depth)
         self.stoch_depth_level_one_index = self.get_stoch_objects_index()
 
@@ -34,16 +36,21 @@ class GenerationData:
         # TODO: limit homo-linear polymer
         N = spec._get_N_for_generation(self.rng)
 
+        bond = spec.stochastic_object.bonds[0].symbol
         bigsmiles_ = BigSMILES()
         for i in range(N):
-            chunk = self.get_chunk(spec, i)
-            constructor.append_bigsmiles_fragment(bigsmiles_, chunk, bond_symbol="")
+            chunk = self.get_chunk(spec, i, bond)
+            constructor.append_stochastic_fragment(bigsmiles_, chunk, bond_symbol=bond)
 
         self.replacement_fragments.append(bigsmiles_)
 
-    def get_chunk(self, spec, i) -> BigSMILES:
+    def get_chunk(self, spec, i, bond: str = None) -> StochasticFragment:
+        # pass i for composition
+        # pass bond to make sure bond order match; bond descriptor
         if len(spec.stochastic_fragments) == 1:
-            return self.build_chunk(stochastic_fragment, i)
+            return spec.stochastic_fragments[0]
+
+        raise NotImplemented('')
 
 
 def generate_molecules(polymer: Polymer, n: int = 1, rng: np.random.Generator = None) -> BigSMILES | list[BigSMILES]:

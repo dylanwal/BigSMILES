@@ -49,7 +49,7 @@
 
 
 
-::: bigsmiles.constructors.constructor.append_bigsmiles_fragment
+::: bigsmiles.constructors.constructor.append_bigsmiles
 
 ::: bigsmiles.constructors.constructor.attach_bigsmiles_branch
 

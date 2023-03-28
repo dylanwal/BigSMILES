@@ -23,6 +23,17 @@ from bigsmiles.config import Config
 _conjugated_warning = True
 
 
+def get_nest_depth(obj, count_type: type) -> int:
+    counter = 0
+
+    while obj.root is not obj:
+        obj = obj.parent
+        if isinstance(obj, count_type):
+            counter += 1
+
+    return counter
+
+
 class Atom:
     """
     this class represents an atom
@@ -219,6 +230,16 @@ class Atom:
         for attr in self._eq_attr:
             text += f"{attr}: {getattr(self, attr)}, "
         return text[:-2] + "}"
+
+    @property
+    def nesting_depth_branch(self) -> int:
+        """ how deep is the atom nested in branches. """
+        return get_nest_depth(self, Branch)
+
+    @property
+    def nesting_depth_stochastic_objects(self) -> int:
+        """ how deep is the atom nested in branches. """
+        return get_nest_depth(self, StochasticObject)
 
     def to_string(self,
                   show_hydrogens: bool = False,
@@ -468,6 +489,16 @@ class Bond:
     def root(self) -> BigSMILES:
         """ the owner at the top of the parent tree """
         return self.parent.root
+
+    @property
+    def nesting_depth_branch(self) -> int:
+        """ how deep is the atom nested in branches. """
+        return get_nest_depth(self, Branch)
+
+    @property
+    def nesting_depth_stochastic_objects(self) -> int:
+        """ how deep is the atom nested in branches. """
+        return get_nest_depth(self, StochasticObject)
 
     # @property
     # def double_bond_ez(self) -> str | None:
@@ -766,6 +797,16 @@ class BondDescriptorAtom:
         """ limited accuracy """
         return self.descriptor.aromatic
 
+    @property
+    def nesting_depth_branch(self) -> int:
+        """ how deep is the atom nested in branches. """
+        return get_nest_depth(self, Branch)
+
+    @property
+    def nesting_depth_stochastic_objects(self) -> int:
+        """ how deep is the atom nested in branches. """
+        return get_nest_depth(self, StochasticObject)
+
 
 class Branch:
     """
@@ -839,6 +880,16 @@ class Branch:
     def root(self) -> BigSMILES:
         """ the owner at the top of the parent tree """
         return self.parent.root
+
+    @property
+    def nesting_depth_branch(self) -> int:
+        """ how deep is the atom nested in branches. """
+        return get_nest_depth(self, Branch)
+
+    @property
+    def nesting_depth_stochastic_objects(self) -> int:
+        """ how deep is the atom nested in branches. """
+        return get_nest_depth(self, StochasticObject)
 
     def _get_id(self, node_type) -> int:
         return self.root._get_id(node_type)  # noqa
@@ -929,6 +980,16 @@ class StochasticFragment:
         return self.root._get_id(node_type)  # noqa
 
     @property
+    def nesting_depth_branch(self) -> int:
+        """ how deep is the atom nested in branches. """
+        return get_nest_depth(self, Branch)
+
+    @property
+    def nesting_depth_stochastic_objects(self) -> int:
+        """ how deep is the atom nested in branches. """
+        return get_nest_depth(self, StochasticObject)
+
+    @property
     def molecular_formula(self) -> mole_formula.MolecularFormula:
         if self._molecular_formula is None:
             from bigsmiles.data_structures.compute_molecular_formula_from_bigsmiles import compute_molecular_formula_from_bigsmiles
@@ -1007,6 +1068,10 @@ class StochasticObject:
         return True
 
     @property
+    def number_of_stochastic_fragments(self) -> int:
+        return len(self.nodes)
+
+    @property
     def details(self) -> str:
         """ long string representation """
         text = str(self) + "  {"
@@ -1035,6 +1100,16 @@ class StochasticObject:
         if self._bond_right is not None:
             raise errors.ConstructorError(f"Trying to make a bond to {self} when it already has a bond.")
         self._bond_right = bond
+
+    @property
+    def nesting_depth_branch(self) -> int:
+        """ how deep is the atom nested in branches. """
+        return get_nest_depth(self, Branch)
+
+    @property
+    def nesting_depth_stochastic_objects(self) -> int:
+        """ how deep is the atom nested in branches. """
+        return get_nest_depth(self, StochasticObject)
 
     @property
     def aromatic(self) -> bool:

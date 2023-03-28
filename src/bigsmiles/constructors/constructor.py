@@ -1080,6 +1080,14 @@ def add_bigsmiles_as_stochastic_fragment(stoch_obj: StochasticObject, bigsmiles_
     return add_stochastic_fragment(stoch_obj, stoch_fragment)
 
 
+def replace_stochastic_object(stoch_obj: StochasticObject, bigsmiles_: BigSMILES):
+    pass
+
+
+def append_stochastic_fragment(bigsmiles_: BigSMILES, stoch_frag: StochasticFragment):
+    pass
+
+
 def set_new_parent(new_parent, obj):
     """ re-direct 'parent' to new bigsmiles object """
     for node in obj.nodes:

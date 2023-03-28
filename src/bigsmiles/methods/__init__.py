@@ -1,1 +1,2 @@
 from bigsmiles.methods.display_methods.tree_to_string import tree_to_string, TreeConfig
+from bigsmiles.methods.generator.polymer_generator import generate_molecules

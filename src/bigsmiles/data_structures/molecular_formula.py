@@ -48,7 +48,9 @@ class MolecularFormula:
         Hills system (Hill notation) is the default ordering where cabon followed by hydrogen is first then
         all other elements in alphabetical order. If no carbon is present, all elements (including hydrogen) are listed
         alphabetically. Also, single-letter elements coming before two-letter symbols.
-        Reference: J. Am. Chem. Soc. 1900, 22, 8, 478. https://pubs.acs.org/doi/abs/10.1021/ja02046a005
+
+        Reference: J. Am. Chem. Soc. 1900, 22, 8, 478.
+        [https://pubs.acs.org/doi/abs/10.1021/ja02046a005](https://pubs.acs.org/doi/abs/10.1021/ja02046a005)
         """
         if self._formula is None:
             self._formula = elements_to_formula_string(self._elements)
@@ -268,7 +270,7 @@ def elements_to_formula_string(elements: dict[str, int], order: list[str] = None
                 chemical_formula += element + str(elements[element])
 
     if "{}" in elements:
-        chemical_formula += "{}" + str(elements["{}"] if elements["{}"] is not 1 else "")
+        chemical_formula += "{}" + str(elements["{}"] if elements["{}"] != 1 else "")
 
     return chemical_formula
 

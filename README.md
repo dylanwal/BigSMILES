@@ -17,11 +17,13 @@ that contain stochastic molecular structures.
 
 All SMILES are a valid BigSMILES; so this code can also be used with SMILES.
 
-<u>** Features **</u>
+<u>**Features**</u>
 
 * Parse BigSMILES/SMILES into tokens 
 * Parse BigSMILES into Compact Graph / Abstract Parse Tree (core data structure for this package)
 * Validation of BigSMILES/SMILES (not comprehensive yet)
+* Polymer and Atom properties
+  * Molar mass
 * Molecular weight distributions
   * Create theory distributions (Poisson, Schulz Zimm, log normal, etc.) 
   * Compute Mn, D, skew, kurtosis, etc.
@@ -59,7 +61,7 @@ Optional dependencies (you will be prompted to install when you use these parts 
 
 * [Numpy](https://github.com/numpy/numpy) (Distributions)
 * [Scipy](https://github.com/scipy/scipy) (Distributions)
-
+* [Plotly](https://github.com/plotly/plotly.py) (Plotting)
 
 ---
 

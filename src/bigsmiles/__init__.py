@@ -6,7 +6,11 @@ from bigsmiles.constructors.tokenizer import tokenize_text, tokenize, tokenize_a
 from bigsmiles.data_structures.bigsmiles import Atom, Bond, Branch, BondDescriptor, BondDescriptorAtom, \
     StochasticObject, StochasticFragment, BigSMILES
 from bigsmiles.data_structures.reaction import Reaction
+from bigsmiles.data_structures.polymer import Polymer
+
+import bigsmiles.methods as methods
+import bigsmiles.distributions as distributions
 
 
 __all__ = ["Atom", "Bond", "Branch", "BondDescriptor", "BondDescriptorAtom", "StochasticObject", "StochasticFragment",
-           "BigSMILES", "Reaction", "Config", "tokenize_text", "tokenize"]
+           "BigSMILES", "Reaction", "Polymer", "Config", "tokenize_text", "tokenize"]

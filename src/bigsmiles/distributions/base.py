@@ -1,3 +1,4 @@
+from __future__ import annotations
 import abc
 
 import numpy as np
@@ -65,8 +66,14 @@ class Distribution(abc.ABC):
     @property
     def repeat_MW(self) -> float | int | None:  # noqa
         """ repeat unit MW """
-        # repeat_MW is a property to prevent changing it which can cause wrong values to already computed values.
         return self._repeat_MW
+
+    @repeat_MW.setter
+    def repeat_MW(self, repeat_MW: float | int):  # noqa
+        if (isinstance(repeat_MW, int) or isinstance(repeat_MW, float)) and repeat_MW > 0:
+            self._repeat_MW = repeat_MW
+        else:
+            raise ValueError(f"'repeat_MW' must be a positive integer or float. Given: {repeat_MW}")
 
     @property
     def mw_i(self) -> np.ndarray:
@@ -258,12 +265,14 @@ class Distribution(abc.ABC):
 
         """
 
-    def draw_N(self, n: int = 1) -> int | np.ndarray:  # noqa
+    def draw_N(self, n: int = 1, rng: np.random.Generator = None) -> int | np.ndarray:  # noqa
         """
         draw a sample from the molecular weight distribution.
 
         Parameters:
         ----------
+        n:
+            number of points
         rng:
              Numpy random number generator for the generation of numbers.
 

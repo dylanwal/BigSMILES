@@ -2,6 +2,7 @@
 Discrete Distribution
 
 """
+from __future__ import annotations
 import abc
 from functools import wraps
 

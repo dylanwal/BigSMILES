@@ -121,7 +121,7 @@ class DistributionContinuous(Distribution, abc.ABC):
         return self._x_i_pmd[N_i]
 
     @wraps(Distribution.draw_mw)
-    def draw_mw(self, n: int = 1, rng=None) -> int | float | np.ndarray:
+    def draw_mw(self, n: int = 1, rng: np.random.Generator = None) -> int | float | np.ndarray:
         if rng is None:
             rng = self._DEFAULT_RNG
 
@@ -132,8 +132,11 @@ class DistributionContinuous(Distribution, abc.ABC):
 
     @wraps(Distribution.draw_N)
     @utils.check_for_repeat_MW
-    def draw_N(self, n: int = 1) -> int | np.ndarray:  # noqa
-        return np.random.choice(self.N_i, n, p=self.x_i_pmd())
+    def draw_N(self, n: int = 1,  rng: np.random.Generator = None) -> int | np.ndarray:  # noqa
+        if rng is None:
+            rng = self._DEFAULT_RNG
+
+        return rng.choice(self.N_i, n, p=self.x_i_pmd())
 
 
 class LogNormal(DistributionContinuous):

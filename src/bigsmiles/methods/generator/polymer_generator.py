@@ -1,138 +1,93 @@
+from __future__ import annotations
 import copy
 
-import networkx as nx
-from rdkit import Chem
-from rdkit.Chem import Descriptors as rdDescriptors
-from rdkit.Chem import rdFingerprintGenerator
+import numpy as np
 
-_RDKGEN = rdFingerprintGenerator.GetRDKitFPGenerator(fpSize=512)
+from bigsmiles.data_structures.bigsmiles import BigSMILES, StochasticObject
+import bigsmiles.constructors.constructor as constructor
+from bigsmiles.data_structures.polymer import Polymer, StochasticObjectSpecification
 
 
-class MolGen:
+class GenerationData:
+    """ grouping of data for generating a molecules from a Polymer. """
+    def __init__(self, polymer: Polymer, rng: np.random.Generator = None):
+        self.polymer = polymer
+        self.rng = rng
+        self.sorted_spec = sorted(polymer.spec, key=lambda x: x.depth)
+        self.stoch_depth_level_one_index = self.get_stoch_objects_index()
+
+        # single generation data (re-written each generation)
+        self.replacement_fragments: list[BigSMILES] = []
+
+    def get_stoch_objects_index(self):
+        return [i for i, obj in enumerate(self.polymer.bigsmiles.nodes) if isinstance(obj, StochasticObject)]
+
+    def generate_stochastic_objects(self):
+        """ loop through each stochastic object and generate specific instances of each """
+        # use sorted list so innermost stochastic objects are built first and can be used by following
+        # parent stochastic object
+        for spec_ in self.sorted_spec:
+            self.build_fragment(spec_)
+
+    def build_fragment(self, spec: StochasticObjectSpecification):
+        """ build a specific realization of a stochastic object. """
+        # TODO: limit homo-linear polymer
+        N = spec._get_N_for_generation(self.rng)
+
+        bigsmiles_ = BigSMILES()
+        for i in range(N):
+            chunk = self.get_chunk(spec, i)
+            constructor.append_bigsmiles_fragment(bigsmiles_, chunk, bond_symbol="")
+
+        self.replacement_fragments.append(bigsmiles_)
+
+    def get_chunk(self, spec, i) -> BigSMILES:
+        if len(spec.stochastic_fragments) == 1:
+            return self.build_chunk(stochastic_fragment, i)
+
+
+def generate_molecules(polymer: Polymer, n: int = 1, rng: np.random.Generator = None) -> BigSMILES | list[BigSMILES]:
     """
-    Wrapper class to hold incompletely generated molecules.
-    It mainly holds the incompletely generated rdkit.mol,
-    as well as a list of not completed bond_descriptors.
+    Generate molecules. In this context, a molecule is a specific realization of a polymer. It is calculated by using
+    molecular weight distribution and composition information.
+
+    Parameters
+    ----------
+    polymer:
+        polymer you want to generate specific realization for
+    n:
+        how many molecules you want generated
+    rng:
+        random number generator
+
+    Returns
+    -------
+    bigsmiles:
+        generated molecules
+
     """
+    data = GenerationData(polymer, rng)
 
-    def __init__(self, token):
-        """
-        Generate a new incompletely generated molecule from a token.
+    if n == 1:
+        return generate_one_molecule(data)
 
-        Arguments:
-        ----------
-        token: SmilesToken
-           Token, that starts a new molecule generation.
-        """
-        if not token.generable:
-            raise RuntimeError(f"Attempting to generate token {str(token)}, which isn't generable.")
-        self.bond_descriptors = copy.deepcopy(token.bond_descriptors)
-        self.graph = nx.Graph()
-        assert len(token.residues) == 1
-        smiles = token.generate_smiles_fragment()
-        rdFP = _RDKGEN.GetFingerprint(Chem.MolFromSmiles(smiles))
-        self.graph.add_node(0, smiles=smiles, big_smiles=str(token), rdFP=rdFP)
-        for bd in self.bond_descriptors:
-            # Our graph has only 1 node and all BD are associated with that.
-            bd.node_idx = 0
-        self.mol = Chem.MolFromSmiles(token.generate_smiles_fragment())
+    molecules = []
+    for i in range(n):
+        molecules.append(generate_one_molecule(data))
 
-    @property
-    def fully_generated(self):
-        """
-        Is this molecule fully generated?
-        """
-        return len(self.bond_descriptors) == 0
+    return molecules
 
-    def attach_other(self, self_bond_idx: int, other, other_bond_idx: int):
-        """
-        Combine two molecules and store the result in this one.
 
-        Arguments:
-        ----------
-        self_bond_idx: int
-           Bond descriptor index of this molecule, that is going to bind.
+def generate_one_molecule(data: GenerationData) -> BigSMILES:
+    """ Generate a single molecule. """
+    # build stochastic objects
+    data.generate_stochastic_objects()
 
-        other: MolGen
-           Other half generated molecules, that binds to this one.
+    # build molecule
+    bigsmiles = copy.deepcopy(data.polymer.bigsmiles())
 
-        other_bond_idx: int
-           Index of the BondDescriptor in the other molecule, that is going to bind.
-        """
+    # loop through top level and replace all stochastic objects with specific realization
+    for index, fragment in zip(data.stoch_depth_level_one_index, data.replacement_fragments):
+        constructor.replace_stochastic_object(bigsmiles.nodes[index], fragment)
 
-        self.get_mol()
-        if self_bond_idx >= len(self.bond_descriptors):
-            raise RuntimeError(f"Invalid bond descriptor id {self_bond_idx} (self).")
-        if other_bond_idx >= len(other.bond_descriptors):
-            raise RuntimeError(f"Invalid bond descriptor id {other_bond_idx} (other).")
-
-        current_atom_number = len(self.mol.GetAtoms())
-        other_bond_descriptors = copy.deepcopy(other.bond_descriptors)
-
-        if not other_bond_descriptors[other_bond_idx].is_compatible(
-            self.bond_descriptors[self_bond_idx]
-        ):
-            print(self.bond_descriptors)
-            raise RuntimeError(
-                f"Unable to attach mols, because bond descriptor {str(other_bond_descriptors[other_bond_idx])}"
-                f" is incompatible with {str(self.bond_descriptors[self_bond_idx])}."
-            )
-        self_graph_len = len(self.graph)
-        for bd in other_bond_descriptors:
-            bd.atom_bonding_to += current_atom_number
-            bd.node_idx += self_graph_len
-
-        # print([atom.GetSymbol() for atom in self.mol.GetAtoms()],
-        #       [bd.atom_bonding_to for bd in self.bond_descriptors])
-        # print([atom.GetSymbol() for atom in other.mol.GetAtoms()],
-        #       [bd.atom_bonding_to - current_atom_number for bd in other_bond_descriptors])
-
-        new_mol = Chem.CombineMols(self.mol, other.mol)
-        new_mol = Chem.EditableMol(new_mol)
-
-        new_mol.AddBond(
-            self.bond_descriptors[self_bond_idx].atom_bonding_to,
-            other_bond_descriptors[other_bond_idx].atom_bonding_to,
-            self.bond_descriptors[self_bond_idx].bond_type,
-        )
-        self.graph = nx.disjoint_union(self.graph, other.graph)
-        self.graph.add_edge(
-            self.bond_descriptors[self_bond_idx].node_idx,
-            other_bond_descriptors[other_bond_idx].node_idx,
-            bond_type=self.bond_descriptors[self_bond_idx].bond_type,
-        )
-
-        # Remove bond descriptors from list, as they have reacted now.
-        del self.bond_descriptors[self_bond_idx]
-        del other_bond_descriptors[other_bond_idx]
-
-        self.bond_descriptors += other_bond_descriptors
-
-        self.mol = new_mol.GetMol()
-        return self
-
-    def get_mol(self):
-        """
-        Obtain a sanitized copy of the generated (so far) generated molecule.
-        """
-
-        mol = copy.deepcopy(self.mol)
-        Chem.SanitizeMol(mol)
-        return mol
-
-    @property
-    def smiles(self):
-        """
-        Get SMILES of the (so far) generated molecule.
-        """
-        mol = self.get_mol()
-        return Chem.MolToSmiles(mol)
-
-    @property
-    def weight(self):
-        return rdDescriptors.HeavyAtomMolWt(self.mol)
-
-    def add_graph_res(self, residues):
-        for n in self.graph:
-            self.graph.nodes[n]["res"] = residues.index(self.graph.nodes[n]["smiles"])
-
+    return bigsmiles

@@ -2,40 +2,16 @@ import copy
 import enum
 import types
 
-try:
-    import networkx as nx
-except ImportError:
-    raise ImportError("To use this feature install networkx. (pip install networkx)")
+from bigsmiles.data_structures.stochastic_graph.graph import StochasticNode, Edge, DiGraph
 
-from bigsmiles.bigsmiles import BigSMILES, StochasticObject, StochasticFragment, Branch, Bond, BondDescriptor, \
-    BondDescriptorAtom, Atom
-from bigsmiles.graph.draw_graph import draw, draw_plotly
+from bigsmiles.data_structures.bigsmiles import BigSMILES, StochasticObject, StochasticFragment, Branch, Bond, \
+    BondDescriptor, BondDescriptorAtom, Atom
 
 
-class BigSMILESGraphError(Exception):
-    pass
-
-
-class BigSMILESGraph(nx.DiGraph):
-
-    def __init__(self, bigsmiles: BigSMILES, *args, **kwargs):
-        self.bigsmiles = bigsmiles
-        super().__init__(*args, **kwargs)
-
-    def draw(self):
-        draw(self)
-
-
-remove_attr = {
-    Atom: {"id_", "bonds"},
-    Bond: {"id_", "atom1", "atom2"},
-    BondDescriptorAtom: {}
-}
-
-
-def create_nx_graph(bigsmiles: BigSMILES) -> nx.DiGraph:
-    """ Starting point for creating BigSMILES graph. """
+def bigsmiles_to_stochastic_graph(bigsmiles: BigSMILES) -> DiGraph:
+    """ Starting point for creating BigSMILES stochastic_graph. """
     graph = get_graph(bigsmiles)
+    
     for i in range(10):
         stoch_objs = get_stochastic_objects(graph)
         if not stoch_objs:
@@ -47,23 +23,9 @@ def create_nx_graph(bigsmiles: BigSMILES) -> nx.DiGraph:
     return graph
 
 
-def get_small_molecule_graph(bigsmiles: BigSMILES) -> nx.DiGraph:
-    """ Creates a new Digraph for small molecules. """
-    graph = nx.DiGraph()
-    graph.draw = types.MethodType(draw, graph)
-    graph.draw_plotly = types.MethodType(draw_plotly, graph)
-    for bond in bigsmiles.bonds:
-        add_bond(graph, bond)
-
-    return graph
-
-
-def get_graph(obj: BigSMILES | StochasticFragment) -> nx.DiGraph:
+def get_graph(obj: BigSMILES | StochasticFragment) -> DiGraph:
     """ Creates a new Digraph and loops through nodes"""
-    graph = nx.DiGraph()
-    graph.draw = types.MethodType(draw, graph)
-    graph.draw_plotly = types.MethodType(draw_plotly, graph)
-    # graph._added = set()
+    graph = DiGraph(obj)
 
     # add first path
     for node in obj.nodes:
@@ -74,71 +36,38 @@ def get_graph(obj: BigSMILES | StochasticFragment) -> nx.DiGraph:
     return graph
 
 
-def get_stochastic_objects(graph):
+def get_stochastic_objects(graph: DiGraph) -> list[StochasticObject]:
     stochastic_objects = []
     for node in graph.nodes:
-        if "stoch_obj" in graph.nodes[node]:
+        if isinstance(node, StochasticObject):
             stochastic_objects.append(node)
     return stochastic_objects
 
 
-def get_obj_attr(obj: Atom | Bond | BondDescriptorAtom) -> dict:
-    """ Creates dict of attributes for object. """
-    dict_ = {s: getattr(obj, s) for s in obj.__slots__ if hasattr(obj, s)}
-    for attr in remove_attr[type(obj)]:
-        if attr in dict_:
-            del dict_[attr]
-
-    return dict_
-
-
-def add_rings(graph: nx.Graph, rings: list[Bond]):
+def add_rings(graph: DiGraph, rings: list[Bond]):
     for ring in rings:
         add_bond(graph, ring)
 
 
-def add_atom(graph: nx.Graph, atom: Atom) -> str:
-    label = f"{atom.element}{atom.id_}"
-    if graph.has_node(label):
-        return label
-
-    graph.add_node(label, node_type=Atom, **get_obj_attr(atom))
-    return label
+def add_atom(graph: DiGraph, atom: Atom):
+    graph.add_node(atom)
 
 
-def add_bond(graph: nx.Graph, bond: Bond):
-    atom1_label = add_obj(graph, bond.atom1)
-    atom2_label = add_obj(graph, bond.atom2)
-
-    if graph.has_edge(atom1_label, atom2_label):
-        return
-
-    graph.add_edge(atom1_label, atom2_label, **get_obj_attr(bond))
+def add_bond(graph: DiGraph, bond: Bond):
+    graph.add_edge(bond)
 
 
-def add_branch(graph: nx.Graph, branch: Branch):
+def add_branch(graph: DiGraph, branch: Branch):
     for node in branch.nodes:
         add_obj(graph, node)
 
 
-def add_stochastic_object(graph: nx.Graph, stoch_obj: StochasticObject) -> str:
-    label = f"Q{stoch_obj.id_}"
-    if graph.has_node(label):
-        return label
-
-    graph.add_node(label, node_type=StochasticObject, stoch_obj=stoch_obj)
-    return label
+def add_stochastic_object(graph: DiGraph, stoch_obj: StochasticObject):
+    graph.add_node(stoch_obj)
 
 
-def add_bonding_descriptor_atom(graph: nx.Graph, bond_descr: BondDescriptorAtom) -> str:
-    label = f"{bond_descr.descriptor.symbol}{bond_descr.descriptor.index_}_{bond_descr.id_}" + \
-            "\n{" + str(bond_descr.descriptor.stochastic_object.id_) + "}"
-    if graph.has_node(label):
-        return label
-
-    graph.add_node(label, node_type=BondDescriptorAtom, **get_obj_attr(bond_descr))
-
-    return label
+def add_bonding_descriptor_atom(graph: DiGraph, bond_descr: BondDescriptorAtom):
+    graph.add_node(bond_descr)
 
 
 obj_func = {
@@ -150,8 +79,8 @@ obj_func = {
 }
 
 
-def add_obj(graph, obj: Atom | StochasticObject) -> str:
-    return obj_func[type(obj)](graph, obj)
+def add_obj(graph: DiGraph, obj: Atom | StochasticObject):
+    obj_func[type(obj)](graph, obj)
 
 
 #####################################################################################
@@ -162,11 +91,11 @@ class GraphBondDirection(enum.Enum):
 
 
 class GraphBond:
-    def __init__(self, direction: GraphBondDirection, u: str, v: str, attr: dict = None):
+    def __init__(self, direction: GraphBondDirection, u: str, v: str, symbol: str):
         self.direction = direction
         self.u = u
         self.v = v
-        self.attr = attr
+        self.symbol = symbol
 
     def __repr__(self):
         return f"{self.u} --> {self.v}"
@@ -175,7 +104,7 @@ class GraphBond:
         self.u, self.v = self.v, self.u
 
 
-def get_bonds_into_node(graph: nx.DiGraph, node: str) -> list[GraphBond]:
+def get_bonds_into_node(graph: DiGraph, node: str) -> list[GraphBond]:
     bonds_nodes = list(graph.in_edges(node))
 
     bonds = []
@@ -185,7 +114,7 @@ def get_bonds_into_node(graph: nx.DiGraph, node: str) -> list[GraphBond]:
     return bonds
 
 
-def get_bonds_out_of_node(graph: nx.DiGraph, node: str) -> list[GraphBond]:
+def get_bonds_out_of_node(graph: DiGraph, node: str) -> list[GraphBond]:
     bonds_nodes = list(graph.out_edges(node))
 
     bonds = []
@@ -195,7 +124,7 @@ def get_bonds_out_of_node(graph: nx.DiGraph, node: str) -> list[GraphBond]:
     return bonds
 
 
-def get_all_bonds_of_node(graph: nx.DiGraph, node: str) -> list[GraphBond]:
+def get_all_bonds_of_node(graph: DiGraph, node: str) -> list[GraphBond]:
     bonds = []
     bonds += get_bonds_into_node(graph, node)
     bonds += get_bonds_out_of_node(graph, node)
@@ -216,53 +145,53 @@ def is_complement_bond_descr(bond_descr1: BondDescriptor, bond_descr2: BondDescr
     return False
 
 
-def process_stochastic_objects(graph: nx.DiGraph, node: str):
+def process_stochastic_objects(graph: DiGraph, stoch_obj: StochasticObject):
     """ Main entry point for processing stochastic objects. """
-    stoch_obj = graph.nodes[node]['stoch_obj']
-
     # grab end groups
-    left_bond = get_bonds_into_node(graph, node)[0]
-    right_bond = get_bonds_out_of_node(graph, node)[0]
-    graph.remove_node(node)  # remove placeholder stochastic object
+    left_bond = GraphBond(stoch_obj.bond_left)
+    right_bond = stoch_obj.bond_right
+    graph.remove_node(stoch_obj)  # remove placeholder stochastic object
 
     # add
-    add_bond_descriptors(graph, stoch_obj)
-    add_left_end_groups(graph, stoch_obj, left_bond)
-    add_right_end_groups(graph, stoch_obj, right_bond)
+    bond_descr_dict = add_bond_descriptors(graph, stoch_obj)
+    add_left_end_groups(graph, stoch_obj, left_bond, bond_descr_dict)
+    add_right_end_groups(graph, stoch_obj, right_bond, bond_descr_dict)
 
     # add repeat units
     for stoch_frag in stoch_obj.nodes:
         add_stochastic_fragment(graph, stoch_frag)
 
 
-def add_bond_descriptors(graph: nx.DiGraph, stoch_obj: StochasticObject):
+def add_bond_descriptors(graph: DiGraph, stoch_obj: StochasticObject)-> dict:
     bond_descr_dict = {}
     for bond_descr in stoch_obj.bonding_descriptors:
         if any_unidirctional_stoch_frag(stoch_obj, bond_descr) or bond_descr.symbol == "$":
-            label = f"{bond_descr.symbol}{bond_descr.index_}" + "\n{" + str(bond_descr.stochastic_object.id_) + "}"
+            node = StochasticNode(bond_descr.symbol, bond_descr.index_, bond_descr.parent.id_)
         else:
-            label = f"<>{bond_descr.index_}" + "\n{" + str(bond_descr.stochastic_object.id_) + "}"
+            node = StochasticNode("<>", bond_descr.index_, bond_descr.parent.id_)
 
-        graph.add_node(label)
-        bond_descr_dict[bond_descr] = label
+        graph.add_node(node)
+        bond_descr_dict[bond_descr] = node
 
-    # attach bonding descriptor list to graph for future use
-    graph.bond_descr = bond_descr_dict
-
-
-def add_left_end_groups(graph: nx.DiGraph, stoch_obj: StochasticObject, left_bond: GraphBond):
-    for bd, bd_node in graph.bond_descr.items():
-        if bd is stoch_obj.end_group_left.descriptor:
-            graph.add_edge(left_bond.u, bd_node, **left_bond.attr)
+    # attach bonding descriptor list to stochastic_graph for future use
+    return bond_descr_dict
 
 
-def add_right_end_groups(graph: nx.DiGraph, stoch_obj: StochasticObject, right_bond: GraphBond):
-    for bd, bd_node in graph.bond_descr.items():
-        if is_complement_bond_descr(bd, stoch_obj.end_group_right.descriptor):
-            graph.add_edge(bd_node, right_bond.v, **right_bond.attr)
+def add_left_end_groups(graph: DiGraph, stoch_obj: StochasticObject, left_bond: GraphBond, bond_descr_dict):
+    for bd, bd_node in bond_descr_dict.items():
+        if bd is stoch_obj.bd_left:
+            edge = Edge(left_bond.u, bd_node)
+            graph.add_edge(edge)
 
 
-def add_stochastic_fragment(graph: nx.DiGraph, stoch_frag: StochasticFragment):
+def add_right_end_groups(graph: DiGraph, stoch_obj: StochasticObject, right_bond: GraphBond, bond_descr_dict):
+    for bd, bd_node in bond_descr_dict.items():
+        if is_complement_bond_descr(bd, stoch_obj.bd_right):
+            edge = Edge(bd_node, right_bond.v)
+            graph.add_edge(edge)
+
+
+def add_stochastic_fragment(graph: DiGraph, stoch_frag: StochasticFragment):
     stoch_frag_graph = get_graph(stoch_frag)
 
     counter = 0
@@ -275,21 +204,21 @@ def add_stochastic_fragment(graph: nx.DiGraph, stoch_frag: StochasticFragment):
 
                     stoch_frag_graph2 = copy.copy(stoch_frag_graph)
                     map_labels = {node: node + "\n" + str(counter) for node in stoch_frag_graph2.nodes}
-                    stoch_frag_graph2 = nx.relabel_nodes(stoch_frag_graph2, map_labels)
+                    stoch_frag_graph2 = relabel_nodes(stoch_frag_graph2, map_labels)
                     add_stoch_fragment_single(graph, stoch_frag_graph2, node + "\n" + str(counter), bd_node)
                     counter += 1
 
 
 def add_stoch_fragment_single(
-        graph: nx.DiGraph,
-        stoch_frag_graph: nx.DiGraph,
+        graph: DiGraph,
+        stoch_frag_graph: DiGraph,
         node: str,
         bd_node: str
 ):
     start_bond = get_all_bonds_of_node(stoch_frag_graph, node)[0]
     stoch_frag_graph.remove_node(node)
 
-    # attach to graph
+    # attach to stochastic_graph
     if start_bond.direction == GraphBondDirection.Out:
         graph.add_nodes_from(stoch_frag_graph.nodes(data=True))
         graph.add_edges_from(stoch_frag_graph.edges(data=True))
@@ -303,10 +232,10 @@ def add_stoch_fragment_single(
         graph.add_edges_from(stoch_frag_graph.edges(data=True))
         graph.add_edge(bd_node, start_bond.u, **start_bond.attr)
         connect_ends(graph, start_bond.u)
-        # graph.add_edge(start_bond.v, bd_node, **start_bond.attr)
+        # stochastic_graph.add_edge(start_bond.v, bd_node, **start_bond.attr)
 
 
-def connect_ends(graph: nx.DiGraph, node: str, prior_node: str = None):
+def connect_ends(graph: DiGraph, node: str, prior_node: str = None):
     edges = get_bonds_into_node(graph, node)
 
     # flip chains to be outs
@@ -331,7 +260,7 @@ def connect_ends(graph: nx.DiGraph, node: str, prior_node: str = None):
 
 
 def get_subgraph_needing_direction_flip(
-        graph: nx.DiGraph,
+        graph: DiGraph,
         edges_in: list[GraphBond],
         prior_atom: str
 ) -> list[GraphBond]:
@@ -363,7 +292,7 @@ def any_unidirctional_stoch_frag(stoch_obj: StochasticObject, bond_descr: BondDe
     return False
 
 
-def flip_edge(graph: nx.DiGraph, node1: str, node2: str):
+def flip_edge(graph: DiGraph, node1: str, node2: str):
     if not graph.has_edge(node1, node2) and graph.has_edge(node2, node1):
         node1, node2 = node2, node1
     attrs = graph.get_edge_data(node1, node2)

@@ -179,6 +179,16 @@ class Atom:
                 raise ValueError("Bond not connect to atom so it can't be deleted."
                                  f"\n Atom:{self.details}\nBond attempting to remove: {bond.details}")
 
+    def delete(self):
+        """ delete atom """
+        for bond in self.bonds:
+            bond.delete()  # will call self.delete_bond
+
+        self.parent.nodes.remove(self)
+        if self.parent is not self.root:
+            self.root.atoms.remove(self)
+        del self
+
     @property
     def implicit_hydrogens(self) -> float:
         """ number of implicit hydrogens. (zero if explict hydrogens have been specified) """
@@ -456,6 +466,7 @@ class Bond:
         """ deletes bond and removes it from atoms and root """
         self.atom1.delete_bond(self)
         self.atom2.delete_bond(self)
+
         self.parent.nodes.remove(self)
         if self.parent is not self.root:
             self.root.bonds.remove(self)
@@ -540,7 +551,7 @@ class Bond:
     #     if self.aromatic:
     #         return True
     #
-    #     # a depth of two graph traversal looking for a double or triple bond
+    #     # a depth of two stochastic_graph traversal looking for a double or triple bond
     #     for atom in self:
     #         for bond in atom.bonds:
     #             if bond.id_ == self.id_:
@@ -807,6 +818,18 @@ class BondDescriptorAtom:
         """ how deep is the atom nested in branches. """
         return get_nest_depth(self, StochasticObject)
 
+    def delete_bond(self):
+        self._bond = None
+
+    def delete(self):
+        """ delete bonding descriptor atom and bond """
+        self.bond.delete()
+
+        self.parent.nodes.remove(self)
+        if self.parent is not self.root:
+            self.root.atoms.remove(self)
+        del self
+
 
 class Branch:
     """
@@ -893,6 +916,13 @@ class Branch:
 
     def _get_id(self, node_type) -> int:
         return self.root._get_id(node_type)  # noqa
+
+    def delete(self):
+        for node in self.nodes:
+            node.delete()
+
+        self.parent.nodes.remove(self)
+        del self
 
 
 class StochasticFragment:
@@ -988,6 +1018,13 @@ class StochasticFragment:
     def nesting_depth_stochastic_objects(self) -> int:
         """ how deep is the atom nested in branches. """
         return get_nest_depth(self, StochasticObject)
+
+    def delete(self):
+        for node in self.nodes:
+            node.delete()
+
+        self.parent.nodes.remove(self)
+        del self
 
     @property
     def molecular_formula(self) -> mole_formula.MolecularFormula:
@@ -1174,6 +1211,13 @@ class StochasticObject:
 
     def _get_id(self, node_type) -> int:
         return self.root._get_id(node_type)  # noqa
+
+    def delete(self):
+        for node in self.nodes:
+            node.delete()
+
+        self.parent.nodes.remove(self)
+        del self
 
 
 def contains_stochastic_object(nodes: list[Atom, Bond, Branch, StochasticObject]):

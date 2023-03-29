@@ -3,7 +3,7 @@
 
 def adjacency_list(bigsmiles_: BigSMILES):
     """
-    a collection of unordered lists used to represent a finite graph
+    a collection of unordered lists used to represent a finite stochastic_graph
     Parameters
     ----------
     bigsmiles_

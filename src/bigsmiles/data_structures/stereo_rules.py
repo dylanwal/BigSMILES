@@ -226,7 +226,7 @@ class TraversalDirection:
     def one_traverse_step(self):
         self._up_to_date = False
 
-        # traverse the graph one step
+        # traverse the stochastic_graph one step
         for i in range(len(self.paths)):  # index used as size of self.up may change during loop
             additional_paths = next_step(self.paths[i])
             self.paths += additional_paths
@@ -403,7 +403,7 @@ class TraversalSide:
         logging.debug(f"\t {0:4}, {str(self.up.best_path):<30}, {self.up.num_paths:>12}"
                       f" {str(self.down.best_path):<30}, {self.down.num_paths:>12}")
 
-        # perform graph traversal
+        # perform stochastic_graph traversal
         for i in range(1, MAX_DEPTH):
             self.up.one_traverse_step()
             self.down.one_traverse_step()

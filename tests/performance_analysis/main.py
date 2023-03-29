@@ -78,14 +78,14 @@ def time_bigsmiles_parsing(polymers: list[str], iter_: int) -> float:
 
 
 def time_bigsmiles_parsing_graph(polymers: list[str], iter_: int) -> float:
-    print(f"Starting graph time test: {datetime.datetime.now().time()}  (May take a minute.)")
+    print(f"Starting stochastic_graph time test: {datetime.datetime.now().time()}  (May take a minute.)")
     start_time = time.perf_counter()
 
     for i in range(iter_):
         bigsmiles.BigSMILES(polymers[i % len(polymers)]).graph()
 
     run_time = time.perf_counter() - start_time
-    print(f"Done graph time test:{datetime.datetime.now().time()}")
+    print(f"Done stochastic_graph time test:{datetime.datetime.now().time()}")
     return run_time/iter_ * 1000  # micro-seconds
 
 
@@ -130,7 +130,7 @@ def main():
 
     python_ = sys.version_info
     titles = "date/time (UTF), package version, time per parse (us), memory usage per bigsmiles (bytes), " \
-             "platform.processor, graph time (us), memory usage per graph (bytes)", "python version", "notes"
+             "platform.processor, stochastic_graph time (us), memory usage per stochastic_graph (bytes)", "python version", "notes"
     row = f"\n{datetime.datetime.utcnow()}, {bigsmiles.__version__}, {bigsmiles_parse_time:2.5f}, " \
           f"{bigsmiles_parse_memory:2.0f}, {platform.processor().replace(',', '')}, {bigsmiles_graph_time:2.5f}, " \
           f"{bigsmiles_graph_memory:2.0f}, {python_.major}.{python_.minor}.{python_.micro}, "

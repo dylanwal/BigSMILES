@@ -40,23 +40,23 @@ edge_color_map = {
 }
 
 
-def draw(self: nx.Graph):
-    # edge_color = [edge_color_map[edge['symbol']] for _, _, edge in self.edges(data=True)]
+def draw(graph):
+    # edge_color = [edge_color_map[edge['symbol']] for _, _, edge in graph.edges(data=True)]
 
     plt.close()
     plt.ylim([-1.1, 1.1])
     plt.xlim([-1.1, 1.1])
     plt.axis('off')
-    nx.draw_networkx(self,
-                     pos=nx.kamada_kawai_layout(self, pos=nx.random_layout(self)),
-                     # pos=kamada_kawai_layout(self),
-                     # pos=nx.spring_layout(self, iterations=200),
-                     # pos = nx.circular_layout(self),
+    nx.draw_networkx(graph,
+                     pos=nx.kamada_kawai_layout(graph, pos=nx.random_layout(graph)),
+                     # pos=kamada_kawai_layout(graph),
+                     # pos=nx.spring_layout(graph, iterations=200),
+                     # pos = nx.circular_layout(graph),
                      # edge_color=edge_color,
                      node_size=250,
                      arrowsize=10,
                      arrows=True,
-                     node_color=get_atom_colors(self),
+                     node_color=get_atom_colors(graph),
                      width=2,
                      with_labels=True,
                      font_size=6,
@@ -66,13 +66,13 @@ def draw(self: nx.Graph):
     plt.show()
 
 
-def draw_plotly(self: nx.Graph):
+def draw_plotly(graph):
     import plotly.graph_objects as go
 
-    pos = nx.kamada_kawai_layout(self, pos=nx.random_layout(self))
+    pos = nx.kamada_kawai_layout(graph, pos=nx.random_layout(graph))
     edge_x = []
     edge_y = []
-    for edge in self.edges():
+    for edge in graph.edges():
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
         edge_x.append(x0)
@@ -86,12 +86,12 @@ def draw_plotly(self: nx.Graph):
         x=edge_x, y=edge_y,
         line=dict(width=0.5, color='#888'),
         hoverinfo='text',
-        hovertext=['<br>'.join([f"{k}: {v}" for k, v in data.items()]) for _, _, data in self.edges(data=True)],
+        hovertext=['<br>'.join([f"{k}: {v}" for k, v in data.items()]) for _, _, data in graph.edges(data=True)],
         mode='lines')
 
     node_x = []
     node_y = []
-    for node in self.nodes():
+    for node in graph.nodes():
         x, y = pos[node]
         node_x.append(x)
         node_y.append(y)
@@ -101,7 +101,7 @@ def draw_plotly(self: nx.Graph):
         mode='markers',
         hoverinfo='text',
         # hovertemplate='%{text}',
-        hovertext= ['<br>'.join([f"{k}: {v}" for k, v in data.items()]) for _, data in self.nodes(data=True)],
+        hovertext= ['<br>'.join([f"{k}: {v}" for k, v in data.items()]) for _, data in graph.nodes(data=True)],
         marker=dict(
             color=[],
             size=10,

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 import time
 import datetime
@@ -126,11 +128,12 @@ def main():
     bigsmiles_graph_time = 0 #time_bigsmiles_parsing_graph(polymer_string, time_iter)
     bigsmiles_graph_memory = 0# memory_bigsmiles_graph(polymer_string)
 
+    python_ = sys.version_info
     titles = "date/time (UTF), package version, time per parse (us), memory usage per bigsmiles (bytes), " \
-             "platform.processor, graph time (us), memory usage per graph (bytes)"
+             "platform.processor, graph time (us), memory usage per graph (bytes)", "python version", "notes"
     row = f"\n{datetime.datetime.utcnow()}, {bigsmiles.__version__}, {bigsmiles_parse_time:2.5f}, " \
           f"{bigsmiles_parse_memory:2.0f}, {platform.processor().replace(',', '')}, {bigsmiles_graph_time:2.5f}, " \
-          f"{bigsmiles_graph_memory:2.0f}"
+          f"{bigsmiles_graph_memory:2.0f}, {python_.major}.{python_.minor}.{python_.micro}, "
 
     print(titles, row)
     with open("performance.csv", "a", encoding="UTF-8") as file:

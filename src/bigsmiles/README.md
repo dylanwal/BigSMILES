@@ -37,3 +37,11 @@ Order of creating objects:
 2) Add bond and atom together
    1) If bond not present (i.e. it is a single bond) add it manually. 
 
+# TODO
+* add cis/trans
+* aromatic stuff
+* graph representation
+* adacency matrix
+* chemical formula
+* fingerprints
+* documentation

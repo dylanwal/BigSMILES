@@ -1,0 +1,1 @@
+This part of the project documentation focuses on a **problem-oriented** approach or cookbook recipes. 

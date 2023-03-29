@@ -1,0 +1,1677 @@
+{
+    "1": {
+        "name": "Hydrogen",
+        "atomic_mass": 1.008,
+        "period": 1,
+        "symbol": "H",
+        "electron_configuration": "1s1",
+        "group": 1,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            1
+        ]
+    },
+    "2": {
+        "name": "Helium",
+        "atomic_mass": 4.0026022,
+        "period": 1,
+        "symbol": "He",
+        "electron_configuration": "1s2",
+        "group": 18,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "3": {
+        "name": "Lithium",
+        "atomic_mass": 6.94,
+        "period": 2,
+        "symbol": "Li",
+        "electron_configuration": "1s2 2s1",
+        "group": 1,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            1
+        ]
+    },
+    "4": {
+        "name": "Beryllium",
+        "atomic_mass": 9.01218315,
+        "period": 2,
+        "symbol": "Be",
+        "electron_configuration": "1s2 2s2",
+        "group": 2,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            2
+        ]
+    },
+    "5": {
+        "name": "Boron",
+        "atomic_mass": 10.81,
+        "period": 2,
+        "symbol": "B",
+        "electron_configuration": "1s2 2s2 2p1",
+        "group": 13,
+        "aromatic": true,
+        "organics": true,
+        "conflict": false,
+        "valences": [
+            3
+        ]
+    },
+    "6": {
+        "name": "Carbon",
+        "atomic_mass": 12.011,
+        "period": 2,
+        "symbol": "C",
+        "electron_configuration": "1s2 2s2 2p2",
+        "group": 14,
+        "aromatic": true,
+        "organics": true,
+        "conflict": false,
+        "valences": [
+            4
+        ]
+    },
+    "7": {
+        "name": "Nitrogen",
+        "atomic_mass": 14.007,
+        "period": 2,
+        "symbol": "N",
+        "electron_configuration": "1s2 2s2 2p3",
+        "group": 15,
+        "aromatic": true,
+        "organics": true,
+        "conflict": false,
+        "valences": [
+            3
+        ]
+    },
+    "8": {
+        "name": "Oxygen",
+        "atomic_mass": 15.999,
+        "period": 2,
+        "symbol": "O",
+        "electron_configuration": "1s2 2s2 2p4",
+        "group": 16,
+        "aromatic": true,
+        "organics": true,
+        "conflict": false,
+        "valences": [
+            2
+        ]
+    },
+    "9": {
+        "name": "Fluorine",
+        "atomic_mass": 18.9984031636,
+        "period": 2,
+        "symbol": "F",
+        "electron_configuration": "1s2 2s2 2p5",
+        "group": 17,
+        "aromatic": false,
+        "organics": true,
+        "conflict": false,
+        "valences": [
+            1
+        ]
+    },
+    "10": {
+        "name": "Neon",
+        "atomic_mass": 20.17976,
+        "period": 2,
+        "symbol": "Ne",
+        "electron_configuration": "1s2 2s2 2p6",
+        "group": 18,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "11": {
+        "name": "Sodium",
+        "atomic_mass": 22.989769282,
+        "period": 3,
+        "symbol": "Na",
+        "electron_configuration": "1s2 2s2 2p6 3s1",
+        "group": 1,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            1
+        ]
+    },
+    "12": {
+        "name": "Magnesium",
+        "atomic_mass": 24.305,
+        "period": 3,
+        "symbol": "Mg",
+        "electron_configuration": "1s2 2s2 2p6 3s2",
+        "group": 2,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            2
+        ]
+    },
+    "13": {
+        "name": "Aluminium",
+        "atomic_mass": 26.98153857,
+        "period": 3,
+        "symbol": "Al",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p1",
+        "group": 13,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "14": {
+        "name": "Silicon",
+        "atomic_mass": 28.085,
+        "period": 3,
+        "symbol": "Si",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p2",
+        "group": 14,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            4
+        ]
+    },
+    "15": {
+        "name": "Phosphorus",
+        "atomic_mass": 30.9737619985,
+        "period": 3,
+        "symbol": "P",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p3",
+        "group": 15,
+        "aromatic": true,
+        "organics": true,
+        "conflict": false,
+        "valences": [
+            3,
+            5
+        ]
+    },
+    "16": {
+        "name": "Sulfur",
+        "atomic_mass": 32.06,
+        "period": 3,
+        "symbol": "S",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p4",
+        "group": 16,
+        "aromatic": true,
+        "organics": true,
+        "conflict": false,
+        "valences": [
+            2,
+            4,
+            6
+        ]
+    },
+    "17": {
+        "name": "Chlorine",
+        "atomic_mass": 35.45,
+        "period": 3,
+        "symbol": "Cl",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p5",
+        "group": 17,
+        "aromatic": false,
+        "organics": true,
+        "conflict": false,
+        "valences": [
+            1,
+            3,
+            5,
+            7
+        ]
+    },
+    "18": {
+        "name": "Argon",
+        "atomic_mass": 39.9481,
+        "period": 3,
+        "symbol": "Ar",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6",
+        "group": 18,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "19": {
+        "name": "Potassium",
+        "atomic_mass": 39.09831,
+        "period": 4,
+        "symbol": "K",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s1",
+        "group": 1,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            1
+        ]
+    },
+    "20": {
+        "name": "Calcium",
+        "atomic_mass": 40.0784,
+        "period": 4,
+        "symbol": "Ca",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2",
+        "group": 2,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            2
+        ]
+    },
+    "21": {
+        "name": "Scandium",
+        "atomic_mass": 44.9559085,
+        "period": 4,
+        "symbol": "Sc",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d1",
+        "group": 3,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "22": {
+        "name": "Titanium",
+        "atomic_mass": 47.8671,
+        "period": 4,
+        "symbol": "Ti",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d2",
+        "group": 4,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            3
+        ]
+    },
+    "23": {
+        "name": "Vanadium",
+        "atomic_mass": 50.94151,
+        "period": 4,
+        "symbol": "V",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d3",
+        "group": 5,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "24": {
+        "name": "Chromium",
+        "atomic_mass": 51.99616,
+        "period": 4,
+        "symbol": "Cr",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s1 3d5",
+        "group": 6,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "25": {
+        "name": "Manganese",
+        "atomic_mass": 54.9380443,
+        "period": 4,
+        "symbol": "Mn",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d5",
+        "group": 7,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "26": {
+        "name": "Iron",
+        "atomic_mass": 55.8452,
+        "period": 4,
+        "symbol": "Fe",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d6",
+        "group": 8,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "27": {
+        "name": "Cobalt",
+        "atomic_mass": 58.9331944,
+        "period": 4,
+        "symbol": "Co",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d7",
+        "group": 9,
+        "aromatic": false,
+        "organics": false,
+        "conflict": true,
+        "valences": [
+            8
+        ]
+    },
+    "28": {
+        "name": "Nickel",
+        "atomic_mass": 58.69344,
+        "period": 4,
+        "symbol": "Ni",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d8",
+        "group": 10,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "29": {
+        "name": "Copper",
+        "atomic_mass": 63.5463,
+        "period": 4,
+        "symbol": "Cu",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s1 3d10",
+        "group": 11,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "30": {
+        "name": "Zinc",
+        "atomic_mass": 65.382,
+        "period": 4,
+        "symbol": "Zn",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10",
+        "group": 12,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "31": {
+        "name": "Gallium",
+        "atomic_mass": 69.7231,
+        "period": 4,
+        "symbol": "Ga",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p1",
+        "group": 13,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            3
+        ]
+    },
+    "32": {
+        "name": "Germanium",
+        "atomic_mass": 72.6308,
+        "period": 4,
+        "symbol": "Ge",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p2",
+        "group": 14,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            4
+        ]
+    },
+    "33": {
+        "name": "Arsenic",
+        "atomic_mass": 74.9215956,
+        "period": 4,
+        "symbol": "As",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p3",
+        "group": 15,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            3,
+            5
+        ]
+    },
+    "34": {
+        "name": "Selenium",
+        "atomic_mass": 78.9718,
+        "period": 4,
+        "symbol": "Se",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p4",
+        "group": 16,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            2,
+            4,
+            6
+        ]
+    },
+    "35": {
+        "name": "Bromine",
+        "atomic_mass": 79.904,
+        "period": 4,
+        "symbol": "Br",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p5",
+        "group": 17,
+        "aromatic": false,
+        "organics": true,
+        "conflict": false,
+        "valences": [
+            1
+        ]
+    },
+    "36": {
+        "name": "Krypton",
+        "atomic_mass": 83.7982,
+        "period": 4,
+        "symbol": "Kr",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6",
+        "group": 18,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "37": {
+        "name": "Rubidium",
+        "atomic_mass": 85.46783,
+        "period": 5,
+        "symbol": "Rb",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s1",
+        "group": 1,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            1
+        ]
+    },
+    "38": {
+        "name": "Strontium",
+        "atomic_mass": 87.621,
+        "period": 5,
+        "symbol": "Sr",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2",
+        "group": 2,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            2
+        ]
+    },
+    "39": {
+        "name": "Yttrium",
+        "atomic_mass": 88.905842,
+        "period": 5,
+        "symbol": "Y",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d1",
+        "group": 3,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "40": {
+        "name": "Zirconium",
+        "atomic_mass": 91.2242,
+        "period": 5,
+        "symbol": "Zr",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d2",
+        "group": 4,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "41": {
+        "name": "Niobium",
+        "atomic_mass": 92.906372,
+        "period": 5,
+        "symbol": "Nb",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s1 4d4",
+        "group": 5,
+        "aromatic": false,
+        "organics": false,
+        "conflict": true,
+        "valences": [
+            8
+        ]
+    },
+    "42": {
+        "name": "Molybdenum",
+        "atomic_mass": 95.951,
+        "period": 5,
+        "symbol": "Mo",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s1 4d5",
+        "group": 6,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "43": {
+        "name": "Technetium",
+        "atomic_mass": 98,
+        "period": 5,
+        "symbol": "Tc",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d5",
+        "group": 7,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "44": {
+        "name": "Ruthenium",
+        "atomic_mass": 101.072,
+        "period": 5,
+        "symbol": "Ru",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s1 4d7",
+        "group": 8,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "45": {
+        "name": "Rhodium",
+        "atomic_mass": 102.905502,
+        "period": 5,
+        "symbol": "Rh",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s1 4d8",
+        "group": 9,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "46": {
+        "name": "Palladium",
+        "atomic_mass": 106.421,
+        "period": 5,
+        "symbol": "Pd",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 4d10",
+        "group": 10,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "47": {
+        "name": "Silver",
+        "atomic_mass": 107.86822,
+        "period": 5,
+        "symbol": "Ag",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s1 4d10",
+        "group": 11,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "48": {
+        "name": "Cadmium",
+        "atomic_mass": 112.4144,
+        "period": 5,
+        "symbol": "Cd",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10",
+        "group": 12,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "49": {
+        "name": "Indium",
+        "atomic_mass": 114.8181,
+        "period": 5,
+        "symbol": "In",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p1",
+        "group": 13,
+        "aromatic": false,
+        "organics": false,
+        "conflict": true,
+        "valences": [
+            3
+        ]
+    },
+    "50": {
+        "name": "Tin",
+        "atomic_mass": 118.7107,
+        "period": 5,
+        "symbol": "Sn",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p2",
+        "group": 14,
+        "aromatic": false,
+        "organics": false,
+        "conflict": true,
+        "valences": [
+            2,
+            4
+        ]
+    },
+    "51": {
+        "name": "Antimony",
+        "atomic_mass": 121.7601,
+        "period": 5,
+        "symbol": "Sb",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p3",
+        "group": 15,
+        "aromatic": false,
+        "organics": false,
+        "conflict": true,
+        "valences": [
+            3,
+            5
+        ]
+    },
+    "52": {
+        "name": "Tellurium",
+        "atomic_mass": 127.603,
+        "period": 5,
+        "symbol": "Te",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p4",
+        "group": 16,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            2,
+            4,
+            6
+        ]
+    },
+    "53": {
+        "name": "Iodine",
+        "atomic_mass": 126.904473,
+        "period": 5,
+        "symbol": "I",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p5",
+        "group": 17,
+        "aromatic": false,
+        "organics": true,
+        "conflict": false,
+        "valences": [
+            1,
+            3,
+            5,
+            7
+        ]
+    },
+    "54": {
+        "name": "Xenon",
+        "atomic_mass": 131.2936,
+        "period": 5,
+        "symbol": "Xe",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6",
+        "group": 18,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "55": {
+        "name": "Cesium",
+        "atomic_mass": 132.905451966,
+        "period": 6,
+        "symbol": "Cs",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s1",
+        "group": 1,
+        "aromatic": false,
+        "organics": false,
+        "conflict": true,
+        "valences": [
+            1
+        ]
+    },
+    "56": {
+        "name": "Barium",
+        "atomic_mass": 137.3277,
+        "period": 6,
+        "symbol": "Ba",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2",
+        "group": 2,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            2
+        ]
+    },
+    "57": {
+        "name": "Lanthanum",
+        "atomic_mass": 138.905477,
+        "period": 6,
+        "symbol": "La",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 5d1",
+        "group": 3,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "58": {
+        "name": "Cerium",
+        "atomic_mass": 140.1161,
+        "period": 6,
+        "symbol": "Ce",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 5d1 4f1",
+        "group": 4,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "59": {
+        "name": "Praseodymium",
+        "atomic_mass": 140.907662,
+        "period": 6,
+        "symbol": "Pr",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f3",
+        "group": 5,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "60": {
+        "name": "Neodymium",
+        "atomic_mass": 144.2423,
+        "period": 6,
+        "symbol": "Nd",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f4",
+        "group": 6,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "61": {
+        "name": "Promethium",
+        "atomic_mass": 145,
+        "period": 6,
+        "symbol": "Pm",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f5",
+        "group": 7,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "62": {
+        "name": "Samarium",
+        "atomic_mass": 150.362,
+        "period": 6,
+        "symbol": "Sm",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f6",
+        "group": 8,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "63": {
+        "name": "Europium",
+        "atomic_mass": 151.9641,
+        "period": 6,
+        "symbol": "Eu",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f7",
+        "group": 9,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "64": {
+        "name": "Gadolinium",
+        "atomic_mass": 157.253,
+        "period": 6,
+        "symbol": "Gd",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f7 5d1",
+        "group": 10,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "65": {
+        "name": "Terbium",
+        "atomic_mass": 158.925352,
+        "period": 6,
+        "symbol": "Tb",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f9",
+        "group": 11,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "66": {
+        "name": "Dysprosium",
+        "atomic_mass": 162.5001,
+        "period": 6,
+        "symbol": "Dy",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f10",
+        "group": 12,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "67": {
+        "name": "Holmium",
+        "atomic_mass": 164.930332,
+        "period": 6,
+        "symbol": "Ho",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f11",
+        "group": 13,
+        "aromatic": false,
+        "organics": false,
+        "conflict": true,
+        "valences": [
+            8
+        ]
+    },
+    "68": {
+        "name": "Erbium",
+        "atomic_mass": 167.2593,
+        "period": 6,
+        "symbol": "Er",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f12",
+        "group": 14,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "69": {
+        "name": "Thulium",
+        "atomic_mass": 168.934222,
+        "period": 6,
+        "symbol": "Tm",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f13",
+        "group": 15,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "70": {
+        "name": "Ytterbium",
+        "atomic_mass": 173.0451,
+        "period": 6,
+        "symbol": "Yb",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14",
+        "group": 16,
+        "aromatic": false,
+        "organics": false,
+        "conflict": true,
+        "valences": [
+            8
+        ]
+    },
+    "71": {
+        "name": "Lutetium",
+        "atomic_mass": 174.96681,
+        "period": 6,
+        "symbol": "Lu",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d1",
+        "group": 17,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "72": {
+        "name": "Hafnium",
+        "atomic_mass": 178.492,
+        "period": 6,
+        "symbol": "Hf",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d2",
+        "group": 4,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "73": {
+        "name": "Tantalum",
+        "atomic_mass": 180.947882,
+        "period": 6,
+        "symbol": "Ta",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d3",
+        "group": 5,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "74": {
+        "name": "Tungsten",
+        "atomic_mass": 183.841,
+        "period": 6,
+        "symbol": "W",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d4",
+        "group": 6,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "75": {
+        "name": "Rhenium",
+        "atomic_mass": 186.2071,
+        "period": 6,
+        "symbol": "Re",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d5",
+        "group": 7,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "76": {
+        "name": "Osmium",
+        "atomic_mass": 190.233,
+        "period": 6,
+        "symbol": "Os",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d6",
+        "group": 8,
+        "aromatic": false,
+        "organics": false,
+        "conflict": true,
+        "valences": [
+            8
+        ]
+    },
+    "77": {
+        "name": "Iridium",
+        "atomic_mass": 192.2173,
+        "period": 6,
+        "symbol": "Ir",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d7",
+        "group": 9,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "78": {
+        "name": "Platinum",
+        "atomic_mass": 195.0849,
+        "period": 6,
+        "symbol": "Pt",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s1 4f14 5d9",
+        "group": 10,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "79": {
+        "name": "Gold",
+        "atomic_mass": 196.9665695,
+        "period": 6,
+        "symbol": "Au",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s1 4f14 5d10",
+        "group": 11,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "80": {
+        "name": "Mercury",
+        "atomic_mass": 200.5923,
+        "period": 6,
+        "symbol": "Hg",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10",
+        "group": 12,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "81": {
+        "name": "Thallium",
+        "atomic_mass": 204.38,
+        "period": 6,
+        "symbol": "Tl",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p1",
+        "group": 13,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "82": {
+        "name": "Lead",
+        "atomic_mass": 207.21,
+        "period": 6,
+        "symbol": "Pb",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p2",
+        "group": 14,
+        "aromatic": false,
+        "organics": false,
+        "conflict": true,
+        "valences": [
+            2,
+            4
+        ]
+    },
+    "83": {
+        "name": "Bismuth",
+        "atomic_mass": 208.980401,
+        "period": 6,
+        "symbol": "Bi",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p3",
+        "group": 15,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            3,
+            5
+        ]
+    },
+    "84": {
+        "name": "Polonium",
+        "atomic_mass": 209,
+        "period": 6,
+        "symbol": "Po",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p4",
+        "group": 16,
+        "aromatic": false,
+        "organics": false,
+        "conflict": true,
+        "valences": [
+            2,
+            4,
+            6
+        ]
+    },
+    "85": {
+        "name": "Astatine",
+        "atomic_mass": 210,
+        "period": 6,
+        "symbol": "At",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p5",
+        "group": 17,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            1,
+            3,
+            5,
+            7
+        ]
+    },
+    "86": {
+        "name": "Radon",
+        "atomic_mass": 222,
+        "period": 6,
+        "symbol": "Rn",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6",
+        "group": 18,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "87": {
+        "name": "Francium",
+        "atomic_mass": 223,
+        "period": 7,
+        "symbol": "Fr",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s1",
+        "group": 1,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            1
+        ]
+    },
+    "88": {
+        "name": "Radium",
+        "atomic_mass": 226,
+        "period": 7,
+        "symbol": "Ra",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2",
+        "group": 2,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            2
+        ]
+    },
+    "89": {
+        "name": "Actinium",
+        "atomic_mass": 227,
+        "period": 7,
+        "symbol": "Ac",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 6d1",
+        "group": 3,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "90": {
+        "name": "Thorium",
+        "atomic_mass": 232.03774,
+        "period": 7,
+        "symbol": "Th",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 6d2",
+        "group": 4,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "91": {
+        "name": "Protactinium",
+        "atomic_mass": 231.035882,
+        "period": 7,
+        "symbol": "Pa",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f2 6d1",
+        "group": 5,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "92": {
+        "name": "Uranium",
+        "atomic_mass": 238.028913,
+        "period": 7,
+        "symbol": "U",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f3 6d1",
+        "group": 6,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "93": {
+        "name": "Neptunium",
+        "atomic_mass": 237,
+        "period": 7,
+        "symbol": "Np",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f4 6d1",
+        "group": 7,
+        "aromatic": false,
+        "organics": false,
+        "conflict": true,
+        "valences": [
+            8
+        ]
+    },
+    "94": {
+        "name": "Plutonium",
+        "atomic_mass": 244,
+        "period": 7,
+        "symbol": "Pu",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f6",
+        "group": 8,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "95": {
+        "name": "Americium",
+        "atomic_mass": 243,
+        "period": 7,
+        "symbol": "Am",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f7",
+        "group": 9,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "96": {
+        "name": "Curium",
+        "atomic_mass": 247,
+        "period": 7,
+        "symbol": "Cm",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f7 6d1",
+        "group": 10,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "97": {
+        "name": "Berkelium",
+        "atomic_mass": 247,
+        "period": 7,
+        "symbol": "Bk",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f9",
+        "group": 11,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "98": {
+        "name": "Californium",
+        "atomic_mass": 251,
+        "period": 7,
+        "symbol": "Cf",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f10",
+        "group": 12,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "99": {
+        "name": "Einsteinium",
+        "atomic_mass": 252,
+        "period": 7,
+        "symbol": "Es",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f11",
+        "group": 13,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "100": {
+        "name": "Fermium",
+        "atomic_mass": 257,
+        "period": 7,
+        "symbol": "Fm",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f12",
+        "group": 14,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "101": {
+        "name": "Mendelevium",
+        "atomic_mass": 258,
+        "period": 7,
+        "symbol": "Md",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f13",
+        "group": 15,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "102": {
+        "name": "Nobelium",
+        "atomic_mass": 259,
+        "period": 7,
+        "symbol": "No",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14",
+        "group": 16,
+        "aromatic": false,
+        "organics": false,
+        "conflict": true,
+        "valences": [
+            8
+        ]
+    },
+    "103": {
+        "name": "Lawrencium",
+        "atomic_mass": 266,
+        "period": 7,
+        "symbol": "Lr",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 7p1",
+        "group": 17,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "104": {
+        "name": "Rutherfordium",
+        "atomic_mass": 267,
+        "period": 7,
+        "symbol": "Rf",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d2",
+        "group": 4,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "105": {
+        "name": "Dubnium",
+        "atomic_mass": 268,
+        "period": 7,
+        "symbol": "Db",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d3",
+        "group": 5,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "106": {
+        "name": "Seaborgium",
+        "atomic_mass": 269,
+        "period": 7,
+        "symbol": "Sg",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d4",
+        "group": 6,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "107": {
+        "name": "Bohrium",
+        "atomic_mass": 270,
+        "period": 7,
+        "symbol": "Bh",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d5",
+        "group": 7,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "108": {
+        "name": "Hassium",
+        "atomic_mass": 269,
+        "period": 7,
+        "symbol": "Hs",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d6",
+        "group": 8,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "109": {
+        "name": "Meitnerium",
+        "atomic_mass": 278,
+        "period": 7,
+        "symbol": "Mt",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d7",
+        "group": 9,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "110": {
+        "name": "Darmstadtium",
+        "atomic_mass": 281,
+        "period": 7,
+        "symbol": "Ds",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d8",
+        "group": 10,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "111": {
+        "name": "Roentgenium",
+        "atomic_mass": 282,
+        "period": 7,
+        "symbol": "Rg",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d9",
+        "group": 11,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "112": {
+        "name": "Copernicium",
+        "atomic_mass": 285,
+        "period": 7,
+        "symbol": "Cn",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d10",
+        "group": 12,
+        "aromatic": false,
+        "organics": false,
+        "conflict": true,
+        "valences": [
+            8
+        ]
+    },
+    "113": {
+        "name": "Nihonium",
+        "atomic_mass": 286,
+        "period": 7,
+        "symbol": "Nh",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d10 7p1",
+        "group": 13,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "114": {
+        "name": "Flerovium",
+        "atomic_mass": 289,
+        "period": 7,
+        "symbol": "Fl",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d10 7p2",
+        "group": 14,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "115": {
+        "name": "Moscovium",
+        "atomic_mass": 289,
+        "period": 7,
+        "symbol": "Mc",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d10 7p3",
+        "group": 15,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "116": {
+        "name": "Livermorium",
+        "atomic_mass": 293,
+        "period": 7,
+        "symbol": "Lv",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d10 7p4",
+        "group": 16,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "117": {
+        "name": "Tennessine",
+        "atomic_mass": 294,
+        "period": 7,
+        "symbol": "Ts",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d10 7p5",
+        "group": 17,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    },
+    "118": {
+        "name": "Oganesson",
+        "atomic_mass": 294,
+        "period": 7,
+        "symbol": "Og",
+        "electron_configuration": "1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p6 5s2 4d10 5p6 6s2 4f14 5d10 6p6 7s2 5f14 6d10 7p6",
+        "group": 18,
+        "aromatic": false,
+        "organics": false,
+        "conflict": false,
+        "valences": [
+            8
+        ]
+    }
+}

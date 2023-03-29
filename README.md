@@ -3,209 +3,84 @@
 ---
 ---
 
+![PyPI](https://img.shields.io/pypi/v/bigsmiles)
+![downloads](https://static.pepy.tech/badge/bigsmiles)
+![license](https://img.shields.io/github/license/dylanwal/bigsmiles)
 
-**(still under development; but usable)**
+**(still under development)**
 
-SMILES (simplified molecular-input line-entry system) representation is a line notation for molecules with 
-given deterministic molecular structures. **BigSMILES** is an extension to SMILES which provides support for molecules 
-that contain stochastic molecular structures. The code here parses the string into and abstract syntax tree.
+**SMILES** (simplified molecular-input line-entry system) representation is a line notation for molecules with 
+given deterministic molecular structures. 
 
-[Learn more about BigSMILES Notation](https://olsenlabmit.github.io/BigSMILES/docs/line_notation.html#the-bigsmiles-line-notation)
+**BigSMILES** is an extension to SMILES which provides support for molecules 
+that contain stochastic molecular structures. 
 
+All SMILES are a valid BigSMILES; so this code can also be used with SMILES.
 
+<u>**Features**</u>
 
+* Parse BigSMILES/SMILES into tokens 
+* Parse BigSMILES into Compact Graph / Abstract Parse Tree (core data structure for this package)
+* Validation of BigSMILES/SMILES (not comprehensive yet)
+* Polymer and Atom properties
+  * Molar mass
+* Molecular weight distributions
+  * Create theory distributions (Poisson, Schulz Zimm, log normal, etc.) 
+  * Compute Mn, D, skew, kurtosis, etc.
+  * Quick plotting
+  * Assign to a stochastic object.
+* Generate molecules(SMILES) from a polymer BigSMILES + distribution
+* Visualization:
+  * Abstract parse tree
+  * Compact graph
+  
+## Documentation
+
+For quickstart, tutorials, reference material, BigSMILES, everything...: 
+
+[**Documention**](https://dylanwal.github.io/BigSMILES/)
 
 
 ---
 
 ## Installation
 
-Pip installable package available
+Pip installable package available ([pypi: bigsmiles](https://pypi.org/project/bigsmiles/))
 
 `pip install bigsmiles`
-
-[pypi: bigsmiles](https://pypi.org/project/bigsmiles/)
 
 
 ---
 
 ## Requirements / Dependencies
-Python 3.10+
+Python 3.7 and up
 
+No additional package for core functionality.
+
+Optional dependencies (you will be prompted to install when you use these parts of the code):
+
+* [Numpy](https://github.com/numpy/numpy) (Distributions)
+* [Scipy](https://github.com/scipy/scipy) (Distributions)
+* [Plotly](https://github.com/plotly/plotly.py) (Plotting)
 
 ---
 
 ## Basic Usage
 
-### Print Tree
+The following code generate the core data structure used in this package. During construction the BigSMILES string
+will be validated, the Compact graph will be created, and the Abstract parse tree will be generated.
+
 #### Code:
 ```python
-import bigsmiles
+import bigsmiles as bs
 
 polymer_string = "CC{[>][<]CC(C)[>][<]}CC(C)=C"
-polymer = bigsmiles.BigSMILES(polymer_string)
-polymer.print_tree()
+polymer = bs.BigSMILES(polymer_string)
 ```
-
-#### Output:
-```python
-BigSMILES: CC{[>][<]CC(C)[>][<]}CC(C)=C
-├── Atom: C
-├── Bond: 
-├── Atom: C
-├── Bond: 
-├── StochasticObject: {[>][<]CC(C)[>][<]}
-│    └── StochasticFragment: [<]CC(C)[>]
-│        ├── BondDescriptorAtom: [<]
-│        ├── Bond: 
-│        ├── Atom: C
-│        ├── Bond: 
-│        ├── Atom: C
-│        ├── Branch: (C)
-│        │    ├── Bond: 
-│        │    └── Atom: C
-│        ├── Bond: 
-│        └── BondDescriptorAtom: [>]
-├── Bond: 
-├── Atom: C
-├── Bond: 
-├── Atom: C
-├── Branch: (C)
-│    ├── Bond: 
-│    └── Atom: C
-├── Bond: =
-└── Atom: C
-```
-
----
----
-
-## Abstract Syntax Tree
-
-root node: `BigSMILES` 
-
-intermediate nodes: `StochasticObject`, `StochasticFragment`, `Branch`
-
-leaf nodes: `BondDescriptorAtom`, `Atom`, `Bond`
-
-The tree structure is built through the `nodes` attribute.
-
-**Note:** only main attributes shown in diagram below.
-
-```mermaid
-classDiagram
-
-    class BigSMILES {
-        list: nodes
-    }
-    
-    
-    class StochasticObject {
-        int: id_
-        list: nodes
-        BondingDescriptor: end_group_left
-        BondingDescriptor: end_group_right
-    }
-    
-    
-    class StochasticFragment {
-        int: id_
-        list: nodes
-    }
-    
-    
-    class Branch {
-        int: id_
-        list: nodes
-    }
-    
-    
-    class BondDescriptorAtom {
-        int: id_
-        BondDescriptor: descriptor
-        Bond: bond
-    }
-    
-    
-    class BondDescriptor {
-        str: symbol
-        int: index_
-        Enum: type_
-        list[BondDescriptorAtom]: instances
-    }
-
-    
-    class Bond {
-        int: id_
-        str: symbol
-        Enum: type_
-        Atom: atom1
-        Atom: atom2
-        int: ring_id
-    }
-    
-    class Atom {
-        int: id_
-        str: symbol
-        Enum: type_
-        int: isotope
-        int: charge
-        Enum: chiral
-        int: valance
-        bool: orgainic
-        list[Bond]: bonds
-    }
-
-    BigSMILES --|> Atom
-    BigSMILES --|> Bond
-    BigSMILES --|> Branch
-    BigSMILES --|> StochasticObject
-    StochasticObject --|> StochasticFragment
-    StochasticFragment --|> BondDescriptorAtom
-    BondDescriptor --|> BondDescriptorAtom
-    StochasticFragment --|> Atom
-    StochasticFragment --|> Bond
-    StochasticFragment --|> Branch
-    StochasticFragment --|> StochasticObject
-    Branch --|> BondDescriptorAtom
-    Branch --|> StochasticObject
-    Branch --|> Bond
-    Branch --|> Atom
-    
-```
-
----
----
-
-## Advanced Options
-
-### Colored outputs
-```python
-import bigsmiles
-
-bigsmiles.Config.color_output = True
-```
-
-BigSMILES: (html and letex verions shown)
-
-CC
-<span style="color:red">{</span>
-<span style="color:green">[>]</span>
-<span style="color:green">[<]</span>
-CC(C)
-<span style="color:green">[>]</span>
-<span style="color:green">[<]</span>
-<span style="color:red">}</span>
-CC(C)=C
 
 
 ## Features NOT implemented yet
-* Cis/Trans
-* Fragment Notation
 * ladder polymers
-* mixture notation '.'
-* reactions
-* Validation
-  * Some is present; but more needed:
-    * Validate bonding descriptors matching including endgroups
-
+* Validation is not comprehensive
+* Not all aromatic rings are processed correctly at the moment 
+... Lots more to come

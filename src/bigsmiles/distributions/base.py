@@ -7,6 +7,7 @@ import bigsmiles.distributions.utils as utils
 
 # TODO: add numerical bound of validity for all distirbutions; when distributions cut off at Zero cause issues
 
+
 class Distribution(abc.ABC):
     """
     Generic class for molecular weight distributions

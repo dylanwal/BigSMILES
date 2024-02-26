@@ -122,6 +122,8 @@ class DistributionContinuous(Distribution, abc.ABC):
 
     @wraps(Distribution.draw_mw)
     def draw_mw(self, n: int = 1, rng: np.random.Generator = None) -> int | float | np.ndarray:
+        if n < 1:
+            raise ValueError("'n' must be greater than 1. ")
         if rng is None:
             rng = self._DEFAULT_RNG
 
@@ -133,10 +135,15 @@ class DistributionContinuous(Distribution, abc.ABC):
     @wraps(Distribution.draw_N)
     @utils.check_for_repeat_MW
     def draw_N(self, n: int = 1,  rng: np.random.Generator = None) -> int | np.ndarray:  # noqa
+        if n < 1:
+            raise ValueError("'n' must be greater than 1. ")
         if rng is None:
             rng = self._DEFAULT_RNG
 
-        return rng.choice(self.N_i, n, p=self.x_i_pmd())
+        if n == 1:
+            return int(self.draw_mw(n, rng) / self.repeat_MW)
+
+        return (self.draw_mw(n, rng) / self.repeat_MW).astype(int)
 
 
 class LogNormal(DistributionContinuous):
@@ -416,6 +423,9 @@ class CustomDistribution(DistributionContinuous):
             repeat unit molecular weight
         """
         super().__init__(repeat_MW)
+
+        if (x_i is None and w_i is None) or (w_i is not None and x_i is not None):
+            raise ValueError("Must provide only one: 'x_i' or 'w_i'. ")
 
         self._raw_mw_i = None
         self._raw_x_i = None

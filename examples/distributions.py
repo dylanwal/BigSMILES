@@ -1,6 +1,6 @@
 import bigsmiles
 
-dis = bigsmiles.distributions.LogNormal(Mn=10_000, D=1.12, repeat_MW=104.15)
+dis = bigsmiles.distributions.LogNormal(Mn=100_000, D=1.6, repeat_MW=104.15)
 # dis = bigsmiles.distributions.Poisson(N=100, repeat_MW=104.12)
 
 print('Mn: ', dis.Mn)
